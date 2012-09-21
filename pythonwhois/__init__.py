@@ -52,6 +52,7 @@ grammar = {
 					 'Registrar Name:\s?(?P<val>.+)',
 					 'Record maintained by:\s?(?P<val>.+)',
 					 'Registration Service Provided By:\s?(?P<val>.+)',
+					 'Registrar of Record:\s?(?P<val>.+)',
 					 '\tName:\t\s(?P<val>.+)'],
 		'whois_server':		['Registrar Whois:\s?(?P<val>.+)'],
 		'name_servers':		['(?P<val>[a-z]*d?ns[0-9]+([a-z]{3})?\.([a-z0-9-]+\.)+[a-z0-9]+)',
@@ -59,7 +60,7 @@ grammar = {
 					 '(?P<val>([a-z0-9-]+\.)+[a-z0-9]+)(\s+([0-9]{1,3}\.){3}[0-9]{1,3})',
 					 'DNS[0-9]+:\s*(?P<val>.+)',
 					 'ns[0-9]+:\s*(?P<val>.+)',
-					 '[^a-z0-9-](?P<val>dns\.([a-z0-9-]+\.)+[a-z0-9]+)'],
+					 '[^a-z0-9-](?P<val>d?ns\.([a-z0-9-]+\.)+[a-z0-9]+)'],
 		'emails':		['(?P<val>[\w.-]+@[\w.-]+\.[\w]{2,4})']
 	},
 	"_dateformats": (
