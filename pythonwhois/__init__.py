@@ -18,13 +18,16 @@ grammar = {
 		'creation_date':	['Created on:\s?(?P<val>.+)',
 					 'Created on\s?[.]*:\s?(?P<val>.+)\.',
 					 'Date Registered\s?[.]*:\s?(?P<val>.+)',
-					 'Domain Created\s?[.]*:\s?(?P<val>.+)'],
+					 'Domain Created\s?[.]*:\s?(?P<val>.+)',
+					 'Domain registered\s?[.]*:\s?(?P<val>.+)'],
 		'expiration_date':	['Expires on:\s?(?P<val>.+)',
 					 'Expires on\s?[.]*:\s?(?P<val>.+)\.',
 					 'Expiry Date\s?[.]*:\s?(?P<val>.+)',
-					 'Domain Currently Expires\s?[.]*:\s?(?P<val>.+)'],
+					 'Domain Currently Expires\s?[.]*:\s?(?P<val>.+)',
+					 'Record will expire on\s?[.]*:\s?(?P<val>.+)'],
 		'registrar':		['Registered through:\s?(?P<val>.+)',
-					 'Registrar Name:\s?(?P<val>.+)'],
+					 'Registrar Name:\s?(?P<val>.+)',
+					 'Record maintained by:\s?(?P<val>.+)'],
 		'whois_server':		['Registrar Whois:\s?(?P<val>.+)'],
 		'name_servers':		['(?P<val>d?ns[0-9]+\.[a-z0-9-]+\.[a-z0-9]+)',
 					 '(?P<val>[a-z0-9-]+\.d?ns[0-9]*\.[a-z0-9-]+\.[a-z0-9]+)'],
@@ -34,9 +37,7 @@ grammar = {
 		'(?P<day>[0-9]{1,2})[./ -](?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[./ -](?P<year>[0-9]{4}|[0-9]{2})'
 			'(\s+(?P<hour>[0-9]{1,2})[:.](?P<minute>[0-9]{1,2})[:.](?P<second>[0-9]{1,2}))?',
 		'(?P<year>[0-9]{4})[./-](?P<month>[0-9]{1,2})[./-](?P<day>[0-9]{1,2})',
-		'(?P<day>[0-9]{1,2})(?P<month>[0-9]{1,2})(?P<year>[0-9]{4}|[0-9]{2})',
-		'(?P<day>)(?P<month>)(?P<year>)',
-		'(?P<day>)(?P<month>)(?P<year>)'
+		'(?P<day>[0-9]{1,2})[./ -](?P<month>[0-9]{1,2})[./ -](?P<year>[0-9]{4}|[0-9]{2})'
 	),
 	"_months": {
 		'jan': 1,
@@ -94,10 +95,12 @@ def whois(domain):
 			result = re.search(rule_regex, line, re.IGNORECASE)
 			
 			if result is not None:
-				try:
-					data[rule_key].append(result.group("val").strip())
-				except KeyError, e:
-					data[rule_key] = [result.group("val").strip()]
+				val = result.group("val").strip()
+				if val != "":
+					try:
+						data[rule_key].append(val)
+					except KeyError, e:
+						data[rule_key] = [val]
 	
 	# Run through fallback detection to gather missing info
 	for rule_key, rule_regexes in grammar['_fallback'].iteritems():
@@ -107,10 +110,12 @@ def whois(domain):
 					result = re.search(regex, line, re.IGNORECASE)
 					
 					if result is not None:
-						try:
-							data[rule_key].append(result.group("val").strip())
-						except KeyError, e:
-							data[rule_key] = [result.group("val").strip()]
+						val = result.group("val").strip()
+						if val != "":
+							try:
+								data[rule_key].append(val)
+							except KeyError, e:
+								data[rule_key] = [val]
 			
 			# Fill all missing values with None
 			if data.has_key(rule_key) == False:
@@ -133,38 +138,59 @@ def parse_dates(dates):
 			result = re.match(rule, date)
 			
 			if result is not None:
-				# These are always numeric.
-				year = int(result.group("year"))
-				day = int(result.group("day"))
-				
-				# This will require some more guesswork - some WHOIS servers present the name of the month
 				try:
-					month = int(result.group("month"))
-				except ValueError, e:
-					# Apparently not a number. Look up the corresponding number.
+					# These are always numeric. If they fail, there is no valid date present.
+					year = int(result.group("year"))
+					day = int(result.group("day"))
+				
+					# This will require some more guesswork - some WHOIS servers present the name of the month
 					try:
-						month = grammar['_months'][result.group("month").lower()]
-					except KeyError, e:
-						# Unknown month name, default to 0
-						month = 0
-				
-				try:
-					hour = int(result.group("hour"))
-				except IndexError, e:
+						month = int(result.group("month"))
+					except ValueError, e:
+						# Apparently not a number. Look up the corresponding number.
+						try:
+							month = grammar['_months'][result.group("month").lower()]
+						except KeyError, e:
+							# Unknown month name, default to 0
+							month = 0
+					
+					try:
+						hour = int(result.group("hour"))
+					except IndexError, e:
+						hour = 0
+					
+					try:
+						minute = int(result.group("minute"))
+					except IndexError, e:
+						minute = 0
+					
+					try:
+						second = int(result.group("second"))
+					except IndexError, e:
+						second = 0
+					
+					break
+				except ValueError, e:
+					# Something went horribly wrong, maybe there is no valid date present?
+					year = 0
+					month = 0
+					day = 0
 					hour = 0
-				
-				try:
-					minute = int(result.group("minute"))
-				except IndexError, e:
 					minute = 0
-				
-				try:
-					second = int(result.group("second"))
-				except IndexError, e:
 					second = 0
-				
-				break
-		
-		parsed_dates.append(datetime.datetime(year, month, day, hour, minute, second))
-		
-	return parsed_dates
+					print e.message
+		try:
+			if year > 0:
+				try:
+					parsed_dates.append(datetime.datetime(year, month, day, hour, minute, second))
+				except ValueError, e:
+					# We might have gotten the day and month the wrong way around, let's try it the other way around
+					# If you're not using an ISO-standard date format, you're an evil registrar!
+					parsed_dates.append(datetime.datetime(year, day, month, hour, minute, second))
+		except UnboundLocalError, e:
+			pass
+	
+	if len(parsed_dates) > 0:
+		return parsed_dates
+	else:
+		return None
