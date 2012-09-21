@@ -29,9 +29,17 @@ grammar = {
 					 'Record will expire on\s?[.]*:\s?(?P<val>.+)',
 					 'Domain expires\s?[.]*:\s*?(?P<val>.+)',
 					 'Record expires on\s?[.]*:?\s*?(?P<val>.+)'],
+		'updated_date':		['Database last updated on\s?[.]*:?\s*?(?P<val>.+)\s[a-z]+\.?',
+					 'Record last updated on\s?[.]*:\s?(?P<val>.+)\.',
+					 'Domain record last updated\s?[.]*:\s*?(?P<val>.+)',
+					 'Domain Last Updated\s?[.]*:\s*?(?P<val>.+)',
+					 'Last updated on:\s?(?P<val>.+)',
+					 'Date Modified\s?[.]*:\s?(?P<val>.+)',
+					 'Last update of whois database:\s?[a-z]{3}, (?P<val>.+) [a-z]{3}'],
 		'registrar':		['Registered through:\s?(?P<val>.+)',
 					 'Registrar Name:\s?(?P<val>.+)',
-					 'Record maintained by:\s?(?P<val>.+)'],
+					 'Record maintained by:\s?(?P<val>.+)',
+					 'Registration Service Provided By:\s?(?P<val>.+)'],
 		'whois_server':		['Registrar Whois:\s?(?P<val>.+)'],
 		'name_servers':		['(?P<val>d?ns[0-9]+\.([a-z0-9-]+\.)+[a-z0-9]+)',
 					 '(?P<val>[a-z0-9-]+\.d?ns[0-9]*\.([a-z0-9-]+\.)+[a-z0-9]+)',
@@ -76,7 +84,8 @@ grammar = {
 		'creation_date':	'created:\s*(?P<val>.+)',
 		'expiration_date':	'paid-till:\s*(?P<val>.+)',
 		'name_servers':		'nserver:\s*(?P<val>.+)',
-		'status':		'state:\s*(?P<val>.+)'
+		'status':		'state:\s*(?P<val>.+)',
+		'updated_date':		'Last updated on (?P<val>.+) [a-z]{3}'
 	}
 }
 
@@ -132,6 +141,9 @@ def whois(domain):
 	
 	if data['creation_date'] is not None:
 		data['creation_date'] = parse_dates(data['creation_date'])
+	
+	if data['updated_date'] is not None:
+		data['updated_date'] = parse_dates(data['updated_date'])
 	
 	if data['name_servers'] is not None:
 		data['name_servers'] = remove_duplicates(data['name_servers'])
