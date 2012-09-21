@@ -33,8 +33,8 @@ grammar = {
 					 'Registrar Name:\s?(?P<val>.+)',
 					 'Record maintained by:\s?(?P<val>.+)'],
 		'whois_server':		['Registrar Whois:\s?(?P<val>.+)'],
-		'name_servers':		['(?P<val>d?ns[0-9]+\.[a-z0-9-]+\.[a-z0-9]+)',
-					 '(?P<val>[a-z0-9-]+\.d?ns[0-9]*\.[a-z0-9-]+\.[a-z0-9]+)',
+		'name_servers':		['(?P<val>d?ns[0-9]+\.([a-z0-9-]+\.)+[a-z0-9]+)',
+					 '(?P<val>[a-z0-9-]+\.d?ns[0-9]*\.([a-z0-9-]+\.)+[a-z0-9]+)',
 					 '(?P<val>([a-z0-9-]+\.)+[a-z0-9]+)(\s+([0-9]{1,3}\.){3}[0-9]{1,3})'],
 		'emails':		['(?P<val>[\w.-]+@[\w.-]+\.[\w]{2,4})']
 	},
