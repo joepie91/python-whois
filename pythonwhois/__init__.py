@@ -36,6 +36,7 @@ grammar = {
 					 'Record expires\s?[.]*:?\s*?(?P<val>.+)',
 					 'Expires\s?[.]*:?\s*?(?P<val>.+)',
 					 'Expire Date\s?[.]*:?\s*?(?P<val>.+)',
+					 'Expired\s?[.]*:?\s*?(?P<val>.+)',
 					 'Domain Expiration Date\s?[.]*:?\s*?(?P<val>.+)'],
 		'updated_date':		['Database last updated on\s?[.]*:?\s*?(?P<val>.+)\s[a-z]+\.?',
 					 'Record last updated on\s?[.]*:\s?(?P<val>.+)\.',
