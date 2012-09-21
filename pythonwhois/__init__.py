@@ -51,13 +51,14 @@ grammar = {
 		'registrar':		['Registered through:\s?(?P<val>.+)',
 					 'Registrar Name:\s?(?P<val>.+)',
 					 'Record maintained by:\s?(?P<val>.+)',
-					 'Registration Service Provided By:\s?(?P<val>.+)'],
+					 'Registration Service Provided By:\s?(?P<val>.+)',
+					 '\tName:\t\s(?P<val>.+)'],
 		'whois_server':		['Registrar Whois:\s?(?P<val>.+)'],
 		'name_servers':		['(?P<val>[a-z]*d?ns[0-9]+([a-z]{3})?\.([a-z0-9-]+\.)+[a-z0-9]+)',
 					 '(?P<val>[a-z0-9-]+\.d?ns[0-9]*\.([a-z0-9-]+\.)+[a-z0-9]+)',
 					 '(?P<val>([a-z0-9-]+\.)+[a-z0-9]+)(\s+([0-9]{1,3}\.){3}[0-9]{1,3})',
 					 'DNS[0-9]+:\s*(?P<val>.+)',
-					 '(?P<val>dns\.([a-z0-9-]+\.)+[a-z0-9]+)'],
+					 '[^a-z0-9-](?P<val>dns\.([a-z0-9-]+\.)+[a-z0-9]+)'],
 		'emails':		['(?P<val>[\w.-]+@[\w.-]+\.[\w]{2,4})']
 	},
 	"_dateformats": (
@@ -205,6 +206,12 @@ def parse_dates(dates):
 					# These are always numeric. If they fail, there is no valid date present.
 					year = int(result.group("year"))
 					day = int(result.group("day"))
+					
+					# Detect and correct shorthand year notation
+					if year < 60:
+						year += 2000
+					elif year < 100:
+						year += 1900
 					
 					# This will require some more guesswork - some WHOIS servers present the name of the month
 					try:
