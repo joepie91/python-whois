@@ -92,10 +92,19 @@ grammar = {
 		'name_servers':		'nserver:\s*(?P<val>.+)',
 		'status':		'state:\s*(?P<val>.+)',
 		'updated_date':		'Last updated on (?P<val>.+) [a-z]{3}'
+	},
+	".*\.ee$": {
+		'domain_name':		'domain:\s*(?P<val>.+)',
+		'registrar':		'registrar:\s*(?P<val>.+)',
+		'creation_date':	'registered:\s*(?P<val>.+)',
+		'expiration_date':	'expire:\s*(?P<val>.+)',
+		'name_servers':		'nserver:\s*(?P<val>.+)',
+		'status':		'state:\s*(?P<val>.+)'
 	}
 }
 
 def whois(domain):
+	global grammar
 	ruleset = None
 	
 	for regex, rules in grammar.iteritems():
@@ -160,6 +169,7 @@ def whois(domain):
 	return data
 
 def parse_dates(dates):
+	global grammar
 	parsed_dates = []
 	
 	for date in dates:
