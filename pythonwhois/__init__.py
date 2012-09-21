@@ -128,6 +128,12 @@ def whois(domain):
 	if data['creation_date'] is not None:
 		data['creation_date'] = parse_dates(data['creation_date'])
 	
+	if data['name_servers'] is not None:
+		data['name_servers'] = remove_duplicates(data['name_servers'])
+	
+	if data['emails'] is not None:
+		data['emails'] = remove_duplicates(data['emails'])
+	
 	return data
 
 def parse_dates(dates):
@@ -194,3 +200,12 @@ def parse_dates(dates):
 		return parsed_dates
 	else:
 		return None
+
+def remove_duplicates(data):
+	cleaned_list = []
+	
+	for entry in data:
+		if entry not in cleaned_list:
+			cleaned_list.append(entry)
+	
+	return cleaned_list
