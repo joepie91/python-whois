@@ -34,6 +34,7 @@ grammar = {
 					 'Record expires on\s?[.]*:?\s*?(?P<val>.+)',
 					 'Record expires\s?[.]*:?\s*?(?P<val>.+)',
 					 'Expires\s?[.]*:?\s*?(?P<val>.+)',
+					 'Expire Date\s?[.]*:?\s*?(?P<val>.+)',
 					 'Domain Expiration Date\s?[.]*:?\s*?(?P<val>.+)'],
 		'updated_date':		['Database last updated on\s?[.]*:?\s*?(?P<val>.+)\s[a-z]+\.?',
 					 'Record last updated on\s?[.]*:\s?(?P<val>.+)\.',
@@ -45,6 +46,7 @@ grammar = {
 					 'Domain Last Updated Date\s?[.]*:\s?(?P<val>.+)',
 					 'Record last updated\s?[.]*:\s?(?P<val>.+)',
 					 'Modified\s?[.]*:\s?(?P<val>.+)',
+					 'Last Update\s?[.]*:\s?(?P<val>.+)',
 					 'Last update of whois database:\s?[a-z]{3}, (?P<val>.+) [a-z]{3}'],
 		'registrar':		['Registered through:\s?(?P<val>.+)',
 					 'Registrar Name:\s?(?P<val>.+)',
@@ -54,7 +56,8 @@ grammar = {
 		'name_servers':		['(?P<val>[a-z]*d?ns[0-9]+([a-z]{3})?\.([a-z0-9-]+\.)+[a-z0-9]+)',
 					 '(?P<val>[a-z0-9-]+\.d?ns[0-9]*\.([a-z0-9-]+\.)+[a-z0-9]+)',
 					 '(?P<val>([a-z0-9-]+\.)+[a-z0-9]+)(\s+([0-9]{1,3}\.){3}[0-9]{1,3})',
-					 'DNS[0-9]+:\s*(?P<val>.+)'],
+					 'DNS[0-9]+:\s*(?P<val>.+)',
+					 '(?P<val>dns\.([a-z0-9-]+\.)+[a-z0-9]+)'],
 		'emails':		['(?P<val>[\w.-]+@[\w.-]+\.[\w]{2,4})']
 	},
 	"_dateformats": (
