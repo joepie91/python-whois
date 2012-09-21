@@ -56,7 +56,8 @@ grammar = {
 			'(\s+(?P<hour>[0-9]{1,2})[:.](?P<minute>[0-9]{1,2})[:.](?P<second>[0-9]{1,2}))?'
 			'\s[a-z]{3}\s(?P<year>[0-9]{4}|[0-9]{2})',
 		'(?P<year>[0-9]{4})[./-](?P<month>[0-9]{1,2})[./-](?P<day>[0-9]{1,2})',
-		'(?P<day>[0-9]{1,2})[./ -](?P<month>[0-9]{1,2})[./ -](?P<year>[0-9]{4}|[0-9]{2})'
+		'(?P<day>[0-9]{1,2})[./ -](?P<month>[0-9]{1,2})[./ -](?P<year>[0-9]{4}|[0-9]{2})',
+		'(?P<year>[0-9]{4})(?P<month>[0-9]{2})(?P<day>[0-9]{2})\s((?P<hour>[0-9]{1,2})[:.](?P<minute>[0-9]{1,2})[:.](?P<second>[0-9]{1,2}))'
 	),
 	"_months": {
 		'jan': 1,
@@ -100,6 +101,12 @@ grammar = {
 		'expiration_date':	'expire:\s*(?P<val>.+)',
 		'name_servers':		'nserver:\s*(?P<val>.+)',
 		'status':		'state:\s*(?P<val>.+)'
+	},
+	".*\.at$": {
+		'domain_name':		'domain:\s*(?P<val>.+)',
+		'name_servers':		'nserver:\s*(?P<val>.+)',
+		'status':		'state:\s*(?P<val>.+)',
+		'updated_date':		'changed:\s*(?P<val>.+)'
 	}
 }
 
@@ -152,12 +159,15 @@ def whois(domain):
 	
 	# Parse dates
 	if data['expiration_date'] is not None:
+		data['expiration_date'] = remove_duplicates(data['expiration_date'])
 		data['expiration_date'] = parse_dates(data['expiration_date'])
 	
 	if data['creation_date'] is not None:
+		data['creation_date'] = remove_duplicates(data['creation_date'])
 		data['creation_date'] = parse_dates(data['creation_date'])
 	
 	if data['updated_date'] is not None:
+		data['updated_date'] = remove_duplicates(data['updated_date'])
 		data['updated_date'] = parse_dates(data['updated_date'])
 	
 	if data['name_servers'] is not None:
