@@ -118,6 +118,14 @@ grammar = {
 		'name_servers':		'nserver:\s*(?P<val>.+)',
 		'status':		'state:\s*(?P<val>.+)'
 	},
+	".*\.si$": {
+		'domain_name':		'domain:\s*(?P<val>.+)',
+		'registrar':		'registrar:\s*(?P<val>.+)',
+		'creation_date':	'created:\s*(?P<val>.+)',
+		'expiration_date':	'expire:\s*(?P<val>.+)',
+		'name_servers':		'nameserver:\s*(?P<val>.+)',
+		'status':		'status:\s*(?P<val>.+)'
+	},
 	".*\.at$": {
 		'domain_name':		'domain:\s*(?P<val>.+)',
 		'name_servers':		'nserver:\s*(?P<val>.+)',
