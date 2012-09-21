@@ -19,18 +19,21 @@ grammar = {
 					 'Created on\s?[.]*:\s?(?P<val>.+)\.',
 					 'Date Registered\s?[.]*:\s?(?P<val>.+)',
 					 'Domain Created\s?[.]*:\s?(?P<val>.+)',
-					 'Domain registered\s?[.]*:\s?(?P<val>.+)'],
+					 'Domain registered\s?[.]*:\s?(?P<val>.+)',
+					 'Domain record activated\s?[.]*:\s*?(?P<val>.+)'],
 		'expiration_date':	['Expires on:\s?(?P<val>.+)',
 					 'Expires on\s?[.]*:\s?(?P<val>.+)\.',
 					 'Expiry Date\s?[.]*:\s?(?P<val>.+)',
 					 'Domain Currently Expires\s?[.]*:\s?(?P<val>.+)',
-					 'Record will expire on\s?[.]*:\s?(?P<val>.+)'],
+					 'Record will expire on\s?[.]*:\s?(?P<val>.+)',
+					 'Domain expires\s?[.]*:\s*?(?P<val>.+)'],
 		'registrar':		['Registered through:\s?(?P<val>.+)',
 					 'Registrar Name:\s?(?P<val>.+)',
 					 'Record maintained by:\s?(?P<val>.+)'],
 		'whois_server':		['Registrar Whois:\s?(?P<val>.+)'],
 		'name_servers':		['(?P<val>d?ns[0-9]+\.[a-z0-9-]+\.[a-z0-9]+)',
-					 '(?P<val>[a-z0-9-]+\.d?ns[0-9]*\.[a-z0-9-]+\.[a-z0-9]+)'],
+					 '(?P<val>[a-z0-9-]+\.d?ns[0-9]*\.[a-z0-9-]+\.[a-z0-9]+)',
+					 '(?P<val>([a-z0-9-]+\.)+[a-z0-9]+)(\s+([0-9]{1,3}\.){3}[0-9]{1,3})'],
 		'emails':		['(?P<val>[\w.-]+@[\w.-]+\.[\w]{2,4})']
 	},
 	"_dateformats": (
@@ -164,15 +167,21 @@ def parse_dates(dates):
 						hour = int(result.group("hour"))
 					except IndexError, e:
 						hour = 0
+					except TypeError, e:
+						hour = 0
 					
 					try:
 						minute = int(result.group("minute"))
 					except IndexError, e:
 						minute = 0
+					except TypeError, e:
+						minute = 0
 					
 					try:
 						second = int(result.group("second"))
 					except IndexError, e:
+						second = 0
+					except TypeError, e:
 						second = 0
 					
 					break
