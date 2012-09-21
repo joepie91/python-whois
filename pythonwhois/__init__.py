@@ -166,6 +166,9 @@ def whois(domain):
 	if data['emails'] is not None:
 		data['emails'] = remove_duplicates(data['emails'])
 	
+	if data['registrar'] is not None:
+		data['registrar'] = remove_duplicates(data['registrar'])
+	
 	return data
 
 def parse_dates(dates):
