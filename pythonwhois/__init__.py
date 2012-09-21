@@ -21,20 +21,23 @@ grammar = {
 					 'Domain Created\s?[.]*:\s?(?P<val>.+)',
 					 'Domain registered\s?[.]*:\s?(?P<val>.+)',
 					 'Domain record activated\s?[.]*:\s*?(?P<val>.+)',
-					 'Record created on\s?[.]*:?\s*?(?P<val>.+)'],
+					 'Record created on\s?[.]*:?\s*?(?P<val>.+)',
+					 'Domain Registration Date\s?[.]*:?\s*?(?P<val>.+)'],
 		'expiration_date':	['Expires on:\s?(?P<val>.+)',
 					 'Expires on\s?[.]*:\s?(?P<val>.+)\.',
 					 'Expiry Date\s?[.]*:\s?(?P<val>.+)',
 					 'Domain Currently Expires\s?[.]*:\s?(?P<val>.+)',
 					 'Record will expire on\s?[.]*:\s?(?P<val>.+)',
 					 'Domain expires\s?[.]*:\s*?(?P<val>.+)',
-					 'Record expires on\s?[.]*:?\s*?(?P<val>.+)'],
+					 'Record expires on\s?[.]*:?\s*?(?P<val>.+)',
+					 'Domain Expiration Date\s?[.]*:?\s*?(?P<val>.+)'],
 		'updated_date':		['Database last updated on\s?[.]*:?\s*?(?P<val>.+)\s[a-z]+\.?',
 					 'Record last updated on\s?[.]*:\s?(?P<val>.+)\.',
 					 'Domain record last updated\s?[.]*:\s*?(?P<val>.+)',
 					 'Domain Last Updated\s?[.]*:\s*?(?P<val>.+)',
 					 'Last updated on:\s?(?P<val>.+)',
 					 'Date Modified\s?[.]*:\s?(?P<val>.+)',
+					 'Domain Last Updated Date\s?[.]*:\s?(?P<val>.+)',
 					 'Last update of whois database:\s?[a-z]{3}, (?P<val>.+) [a-z]{3}'],
 		'registrar':		['Registered through:\s?(?P<val>.+)',
 					 'Registrar Name:\s?(?P<val>.+)',
@@ -49,6 +52,9 @@ grammar = {
 	"_dateformats": (
 		'(?P<day>[0-9]{1,2})[./ -](?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[./ -](?P<year>[0-9]{4}|[0-9]{2})'
 			'(\s+(?P<hour>[0-9]{1,2})[:.](?P<minute>[0-9]{1,2})[:.](?P<second>[0-9]{1,2}))?',
+		'[a-z]{3}\s(?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[./ -](?P<day>[0-9]{1,2})'
+			'(\s+(?P<hour>[0-9]{1,2})[:.](?P<minute>[0-9]{1,2})[:.](?P<second>[0-9]{1,2}))?'
+			'\s[a-z]{3}\s(?P<year>[0-9]{4}|[0-9]{2})',
 		'(?P<year>[0-9]{4})[./-](?P<month>[0-9]{1,2})[./-](?P<day>[0-9]{1,2})',
 		'(?P<day>[0-9]{1,2})[./ -](?P<month>[0-9]{1,2})[./ -](?P<year>[0-9]{4}|[0-9]{2})'
 	),
@@ -158,14 +164,14 @@ def parse_dates(dates):
 	
 	for date in dates:
 		for rule in grammar['_dateformats']:
-			result = re.match(rule, date)
+			result = re.match(rule, date, re.IGNORECASE)
 			
 			if result is not None:
 				try:
 					# These are always numeric. If they fail, there is no valid date present.
 					year = int(result.group("year"))
 					day = int(result.group("day"))
-				
+					
 					# This will require some more guesswork - some WHOIS servers present the name of the month
 					try:
 						month = int(result.group("month"))
