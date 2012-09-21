@@ -24,6 +24,7 @@ grammar = {
 					 'Record created on\s?[.]*:?\s*?(?P<val>.+)',
 					 'Record created\s?[.]*:?\s*?(?P<val>.+)',
 					 'Created\s?[.]*:?\s*?(?P<val>.+)',
+					 'Registered on\s?[.]*:?\s*?(?P<val>.+)',
 					 'Domain Registration Date\s?[.]*:?\s*?(?P<val>.+)'],
 		'expiration_date':	['Expires on:\s?(?P<val>.+)',
 					 'Expires on\s?[.]*:\s?(?P<val>.+)\.',
@@ -60,8 +61,9 @@ grammar = {
 					 '(?P<val>([a-z0-9-]+\.)+[a-z0-9]+)(\s+([0-9]{1,3}\.){3}[0-9]{1,3})',
 					 'DNS[0-9]+:\s*(?P<val>.+)',
 					 'ns[0-9]+:\s*(?P<val>.+)',
-					 '[^a-z0-9-](?P<val>d?ns\.([a-z0-9-]+\.)+[a-z0-9]+)'],
-		'emails':		['(?P<val>[\w.-]+@[\w.-]+\.[\w]{2,4})']
+					 '[^a-z0-9.-](?P<val>d?ns\.([a-z0-9-]+\.)+[a-z0-9]+)'],
+		'emails':		['(?P<val>[\w.-]+@[\w.-]+\.[\w]{2,4})',
+					 '(?P<val>[\w.-]+\sAT\s[\w.-]+\sDOT\s[\w]{2,4})']
 	},
 	"_dateformats": (
 		'(?P<day>[0-9]{1,2})[./ -](?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[./ -](?P<year>[0-9]{4}|[0-9]{2})'
