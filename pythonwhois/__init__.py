@@ -150,7 +150,7 @@ def whois(domain):
 	
 	data = {}
 	
-	ping = subprocess.Popen(["whois", domain], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+	ping = subprocess.Popen(["jwhois", domain], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 	out, error = ping.communicate()
 	
 	for line in out.splitlines():
