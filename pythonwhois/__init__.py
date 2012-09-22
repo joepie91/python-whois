@@ -25,6 +25,8 @@ grammar = {
 					 'Record created\s?[.]*:?\s*?(?P<val>.+)',
 					 'Created\s?[.]*:?\s*?(?P<val>.+)',
 					 'Registered on\s?[.]*:?\s*?(?P<val>.+)',
+					 'Registered\s?[.]*:?\s*?(?P<val>.+)',
+					 'Domain Create Date\s?[.]*:?\s*?(?P<val>.+)',
 					 'Domain Registration Date\s?[.]*:?\s*?(?P<val>.+)'],
 		'expiration_date':	['Expires on:\s?(?P<val>.+)',
 					 'Expires on\s?[.]*:\s?(?P<val>.+)\.',
