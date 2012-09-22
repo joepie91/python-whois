@@ -158,7 +158,12 @@ def whois(domain):
 	
 	data = {}
 	
-	ping = subprocess.Popen(["jwhois", unicodedammit(domain).encode('idna')], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+	try:
+		encoded_domain = unicodedammit(domain).encode('idna')
+	except UnicodeError, e:
+		encoded_domain = domain
+	
+	ping = subprocess.Popen(["jwhois", encoded_domain], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 	out, error = ping.communicate()
 	
 	for line in out.splitlines():
