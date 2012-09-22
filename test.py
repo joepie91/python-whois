@@ -10,7 +10,8 @@ testlist = open("testlist.txt").readlines()
 #		print "WHOIS for %s does not contain an update date?" % line
 
 #result = pythonwhois.whois("google.com")
-result = pythonwhois.whois(sys.argv[1])
+raw, result = pythonwhois.whois(sys.argv[1])
+print raw
 print result
 		
 #print "Creation date: ",

@@ -206,7 +206,7 @@ def whois(domain):
 	if data['registrar'] is not None:
 		data['registrar'] = remove_duplicates(data['registrar'])
 	
-	return data
+	return out, data
 
 def parse_dates(dates):
 	global grammar
