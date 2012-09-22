@@ -15,6 +15,7 @@ grammar = {
 		'status':		'Status:\s?(?P<val>.+)'
 	},
 	"_fallback": {
+		'status':		['state:\s*(?P<val>.+)'],
 		'creation_date':	['Created on:\s?(?P<val>.+)',
 					 'Created on\s?[.]*:\s?(?P<val>.+)\.',
 					 'Date Registered\s?[.]*:\s?(?P<val>.+)',
@@ -39,7 +40,8 @@ grammar = {
 					 'Expires\s?[.]*:?\s*?(?P<val>.+)',
 					 'Expire Date\s?[.]*:?\s*?(?P<val>.+)',
 					 'Expired\s?[.]*:?\s*?(?P<val>.+)',
-					 'Domain Expiration Date\s?[.]*:?\s*?(?P<val>.+)'],
+					 'Domain Expiration Date\s?[.]*:?\s*?(?P<val>.+)',
+					 'paid-till:\s*(?P<val>.+)'],
 		'updated_date':		['Database last updated on\s?[.]*:?\s*?(?P<val>.+)\s[a-z]+\.?',
 					 'Record last updated on\s?[.]*:?\s?(?P<val>.+)\.',
 					 'Domain record last updated\s?[.]*:\s*?(?P<val>.+)',
