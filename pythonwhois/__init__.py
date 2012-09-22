@@ -137,6 +137,12 @@ grammar = {
 	}
 }
 
+def unicodedammit(input_string):
+	if isinstance(input_string, str):
+		return input_string.decode('utf-8')
+	else:
+		return input_string
+
 def whois(domain):
 	global grammar
 	ruleset = None
@@ -150,7 +156,7 @@ def whois(domain):
 	
 	data = {}
 	
-	ping = subprocess.Popen(["jwhois", domain], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+	ping = subprocess.Popen(["jwhois", unicodedammit(domain).encode('idna')], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 	out, error = ping.communicate()
 	
 	for line in out.splitlines():
