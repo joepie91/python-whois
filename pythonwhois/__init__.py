@@ -59,6 +59,7 @@ grammar = {
 					 'Record maintained by:\s?(?P<val>.+)',
 					 'Registration Service Provided By:\s?(?P<val>.+)',
 					 'Registrar of Record:\s?(?P<val>.+)',
+					 'Registrar:\s?(?P<val>.+)',
 					 '\tName:\t\s(?P<val>.+)'],
 		'whois_server':		['Registrar Whois:\s?(?P<val>.+)'],
 		'name_servers':		['(?P<val>[a-z]*d?ns[0-9]+([a-z]{3})?\.([a-z0-9-]+\.)+[a-z0-9]+)',
