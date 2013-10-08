@@ -165,7 +165,7 @@ def whois(domain):
 	except UnicodeError, e:
 		encoded_domain = domain
 	
-	ping = subprocess.Popen(["jwhois", encoded_domain], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+	ping = subprocess.Popen(["jwhois", "-i", encoded_domain], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 	out, error = ping.communicate()
 	
 	for line in out.splitlines():
