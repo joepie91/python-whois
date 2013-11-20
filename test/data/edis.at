@@ -1,0 +1,65 @@
+% Copyright (c)2013 by NIC.AT (1)                                       
+%
+% Restricted rights.
+%
+% Except  for  agreed Internet  operational  purposes, no  part  of this
+% information  may  be reproduced,  stored  in  a  retrieval  system, or
+% transmitted, in  any  form  or by  any means,  electronic, mechanical,
+% recording, or otherwise, without prior  permission of NIC.AT on behalf
+% of itself and/or the copyright  holders.  Any use of this  material to
+% target advertising  or similar activities is explicitly  forbidden and
+% can be prosecuted.
+%
+% It is furthermore strictly forbidden to use the Whois-Database in such
+% a  way  that  jeopardizes or  could jeopardize  the  stability  of the
+% technical  systems of  NIC.AT  under any circumstances. In particular,
+% this includes  any misuse  of the  Whois-Database and  any  use of the
+% Whois-Database which disturbs its operation.
+%
+% Should the  user violate  these points,  NIC.AT reserves  the right to
+% deactivate  the  Whois-Database   entirely  or  partly  for  the user.
+% Moreover,  the  user  shall be  held liable  for  any  and all  damage
+% arising from a violation of these points.
+
+domain:         edis.at
+registrant:     KG8294626-NICAT
+admin-c:        KG8294627-NICAT
+tech-c:         KG8294627-NICAT
+nserver:        ns1.edis.at
+remarks:        91.227.204.227
+nserver:        ns2.edis.at
+remarks:        91.227.205.227
+nserver:        ns5.edis.at
+remarks:        46.17.57.5
+nserver:        ns6.edis.at
+remarks:        178.209.42.105
+changed:        20111024 14:51:40
+source:         AT-DOM
+
+personname:     EDIS GmbH
+organization:   Kleewein Gerhard
+street address: Widmannstettergasse 3
+postal code:    8053
+city:           Graz
+country:        Austria
+phone:          +43316827500300
+fax-no:         +43316827500777
+e-mail:         support@edis.at
+nic-hdl:        KG8294626-NICAT
+changed:        20111024 14:51:40
+source:         AT-DOM
+
+personname:     EDIS GmbH
+organization:   Kleewein Gerhard
+street address: Hauptplatz 3
+postal code:    8010
+city:           Graz
+country:        Austria
+phone:          +43316827500300
+fax-no:         +43316827500777
+e-mail:         domreg@edis.at
+nic-hdl:        KG8294627-NICAT
+changed:        20130809 15:17:35
+source:         AT-DOM
+
+

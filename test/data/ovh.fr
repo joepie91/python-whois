@@ -1,0 +1,103 @@
+%%
+%% This is the AFNIC Whois server.
+%%
+%% complete date format : DD/MM/YYYY
+%% short date format    : DD/MM
+%% version              : FRNIC-2.5
+%%
+%% Rights restricted by copyright.
+%% See http://www.afnic.fr/afnic/web/mentions-legales-whois_en
+%%
+%% Use '-h' option to obtain more information about this service.
+%%
+%% [77.162.55.23 REQUEST] >> -V Md5.0 ovh.fr
+%%
+%% RL Net [##########] - RL IP [#########.]
+%%
+
+domain:      ovh.fr
+status:      ACTIVE
+hold:        NO
+holder-c:    SO255-FRNIC
+admin-c:     OK62-FRNIC
+tech-c:      OVH5-FRNIC
+zone-c:      NFC1-FRNIC
+nsl-id:      NSL16790-FRNIC
+registrar:   OVH
+anniversary: 12/11
+created:     12/11/1999
+last-update: 03/04/2009
+source:      FRNIC
+
+ns-list:     NSL16790-FRNIC
+nserver:     dns.ovh.net
+nserver:     dns10.ovh.net
+nserver:     ns.ovh.net
+nserver:     ns10.ovh.net
+source:      FRNIC
+
+registrar:   OVH
+type:        Isp Option 1
+address:     2 Rue Kellermann
+address:     ROUBAIX
+country:     FR
+phone:       +33 8 99 70 17 61
+fax-no:      +33 3 20 20 09 58
+e-mail:      support@ovh.net
+website:     http://www.ovh.com
+anonymous:   NO
+registered:  21/10/1999
+source:      FRNIC
+
+nic-hdl:     OVH5-FRNIC
+type:        ROLE
+contact:     OVH NET
+address:     OVH
+address:     140, quai du Sartel
+address:     59100 Roubaix
+country:     FR
+phone:       +33 8 99 70 17 61
+e-mail:      tech@ovh.net
+trouble:     Information: http://www.ovh.fr
+trouble:     Questions:  mailto:tech@ovh.net
+trouble:     Spam: mailto:abuse@ovh.net
+admin-c:     OK217-FRNIC
+tech-c:      OK217-FRNIC
+notify:      tech@ovh.net
+registrar:   OVH
+changed:     11/10/2006 tech@ovh.net
+anonymous:   NO
+obsoleted:   NO
+source:      FRNIC
+
+nic-hdl:     SO255-FRNIC
+type:        ORGANIZATION
+contact:     OVH SAS
+address:     140, quai du sartel
+address:     59100 Roubaix
+country:     FR
+phone:       +33 8 99 70 17 61
+fax-no:      +33 3 20 20 09 58
+e-mail:      oles@ovh.net
+registrar:   OVH
+changed:     28/10/2013 nic@nic.fr
+anonymous:   NO
+obsoleted:   NO
+eligstatus:  ok
+eligdate:    01/09/2011 12:03:35
+source:      FRNIC
+
+nic-hdl:     OK62-FRNIC
+type:        PERSON
+contact:     Octave Klaba
+address:     Sarl Ovh
+address:     140, quai du Sartel
+address:     59100 Roubaix
+country:     FR
+phone:       +33 3 20 20 09 57
+fax-no:      +33 3 20 20 09 58
+registrar:   OVH
+changed:     03/04/2009 nic@nic.fr
+anonymous:   NO
+obsoleted:   NO
+source:      FRNIC
