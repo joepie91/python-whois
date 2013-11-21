@@ -7,7 +7,11 @@ def get_whois_raw(domain, server="", previous=[]):
 		target_server = get_root_server(domain)
 	else:
 		target_server = server
-	response = whois_request(domain, target_server)
+	if domain.endswith(".jp") and target_server == "whois.jprs.jp":
+		request_domain = "%s/e" % domain # Suppress Japanese output
+	else:
+		request_domain = domain
+	response = whois_request(request_domain, target_server)
 	new_list = [response] + previous
 	for line in [x.strip() for x in response.splitlines()]:
 		match = re.match("(refer|whois server|referral url|whois server|registrar whois):\s*([^\s]+)", line, re.IGNORECASE)

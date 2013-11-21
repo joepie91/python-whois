@@ -2,9 +2,11 @@ import re, datetime
 
 grammar = {
 	"_data": {
-		'status':		['Status\s*:\s?(?P<val>.+)',
+		'status':		['\[Status\]\s*(?P<val>.+)',
+					 'Status\s*:\s?(?P<val>.+)',
 					 'state:\s*(?P<val>.+)'],
-		'creation_date':	['Creation Date:\s?(?P<val>.+)',
+		'creation_date':	['\[Created on\]\s*(?P<val>.+)',
+					 'Creation Date:\s?(?P<val>.+)',
 					 'Created on:\s?(?P<val>.+)',
 					 'Created on\s?[.]*:\s?(?P<val>.+)\.',
 					 'Date Registered\s?[.]*:\s?(?P<val>.+)',
@@ -20,7 +22,8 @@ grammar = {
 					 'Domain Registration Date\s?[.]*:?\s*?(?P<val>.+)',
 					 'created:\s*(?P<val>.+)',
 					 'registered:\s*(?P<val>.+)'],
-		'expiration_date':	['Expiration Date:\s?(?P<val>.+)',
+		'expiration_date':	['\[Expires on\]\s*(?P<val>.+)',
+					 'Expiration Date:\s?(?P<val>.+)',
 					 'Expires on:\s?(?P<val>.+)',
 					 'Expires on\s?[.]*:\s?(?P<val>.+)\.',
 					 'Expiry Date\s?[.]*:\s?(?P<val>.+)',
@@ -36,7 +39,8 @@ grammar = {
 					 'Domain Expiration Date\s?[.]*:?\s*?(?P<val>.+)',
 					 'paid-till:\s*(?P<val>.+)',
 					 'expire:\s*(?P<val>.+)'],
-		'updated_date':		['Updated Date:\s?(?P<val>.+)',
+		'updated_date':		['\[Last Updated\]\s*(?P<val>.+)',
+					 'Updated Date:\s?(?P<val>.+)',
 					 #'Database last updated on\s?[.]*:?\s*?(?P<val>.+)\s[a-z]+\.?',
 					 'Record last updated on\s?[.]*:?\s?(?P<val>.+)\.',
 					 'Domain record last updated\s?[.]*:\s*?(?P<val>.+)',
@@ -278,6 +282,7 @@ def parse_registrants(data):
 		"Registrant\n    (?P<name>.+)\n    Email:(?P<email>.+)\n    (?P<street1>.+)\n(?:    (?P<street2>.+)\n)?    (?P<postalcode>.+) (?P<city>.+)\n    (?P<country>.+)\n    Tel: (?P<phone>.+)\n\n", # internet.bs
 		"Holder of domain name:\n(?P<name>[\S\s]+)\n(?P<street>.+)\n(?P<postalcode>[A-Z0-9-]+)\s+(?P<city>.+)\n(?P<country>.+)\nContractual Language", # nic.ch
 		"\n\n(?:Owner)?\s+: (?P<name>.*)\n(?:\s+: (?P<organization>.*)\n)?\s+: (?P<street>.*)\n\s+: (?P<city>.*)\n\s+: (?P<state>.*)\n\s+: (?P<country>.*)\n", # nic.io
+		"Contact Information:\n\[Name\]\s*(?P<name>.*)\n\[Email\]\s*(?P<email>.*)\n\[Web Page\]\s*(?P<url>.*)\n\[Postal code\]\s*(?P<postalcode>.*)\n\[Postal Address\]\s*(?P<street1>.*)\n(?:\s+(?P<street2>.*)\n)?(?:\s+(?P<street3>.*)\n)?\[Phone\]\s*(?P<phone>.*)\n\[Fax\]\s*(?P<fax>.*)\n", # jprs.jp
 		"person:\s+(?P<name>.+)", # nic.ru (person)
 		"org:\s+(?P<organization>.+)", # nic.ru (organization)
 	]
