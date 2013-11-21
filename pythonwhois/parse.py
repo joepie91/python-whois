@@ -395,8 +395,7 @@ def parse_registrants(data):
 	for obj in (registrant, tech_contact, billing_contact, admin_contact):
 		if obj is not None:
 			for key in obj.keys():
-				#obj[key] = obj[key].strip("\r")
-				if obj[key] is None or obj[key] == "":
+				if obj[key] is None or obj[key].strip() == "": # Just chomp all surrounding whitespace
 					del obj[key]
 			if "phone_ext" in obj:
 				if "phone" in obj:
