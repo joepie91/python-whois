@@ -22,6 +22,7 @@ else:
 	data_map = OrderedDict({})
 	
 	# This defines the fields shown in the output
+	data_map["id"] = ("Domain ID", 1)
 	data_map["status"] = ("Status", 1)
 	data_map["registrar"] = ("Registrar", 1)
 	data_map["creation_date"] = ("Registration date", 1)
