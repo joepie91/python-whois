@@ -18,7 +18,7 @@ else:
 if args.raw == True:
 	print "\n--\n".join(data)
 else:
-	parsed = pythonwhois.parse.parse_raw_whois(data)
+	parsed = pythonwhois.parse.parse_raw_whois(data, normalized=True)
 	data_map = OrderedDict({})
 	
 	# This defines the fields shown in the output

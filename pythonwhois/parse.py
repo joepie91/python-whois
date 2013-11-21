@@ -116,7 +116,7 @@ grammar = {
 	}
 }
 	
-def parse_raw_whois(raw_data):
+def parse_raw_whois(raw_data, normalized=[]):
 	data = {}
 	
 	raw_data = [segment.replace("\r", "") for segment in raw_data] # Carriage returns are the devil
@@ -177,6 +177,42 @@ def parse_raw_whois(raw_data):
 		data['emails'] = [email for email in data["emails"] if email not in known_emails]
 	
 	data["raw"] = raw_data
+	
+	if normalized != []:
+		data = normalize_data(data, normalized)
+	
+	return data
+
+def normalize_data(data, normalized):
+	for key in ("name_servers", "emails", "whois_server"):
+		if key in data and data[key] is not None and (normalized == True or key in normalized):
+			if isinstance(data[key], basestring):
+				data[key] = data[key].lower()
+			else:
+				data[key] = [item.lower() for item in data[key]]
+	
+	for key in ("registrar", "status"):
+		if key in data and data[key] is not None and (normalized == True or key in normalized):
+			if isinstance(data[key], basestring) and data[key].isupper():
+				data[key] = " ".join(word.capitalize() for word in data[key].split(" "))
+			else:
+				data[key] = [" ".join(word.capitalize() for word in item.split(" ")) for item in data[key] if item.isupper()] + [item for item in data[key] if not item.isupper()]
+	
+	for contact_type, contact in data['contacts'].iteritems():
+		if contact is not None:
+			for key in ("email",):
+				if key in contact and contact[key] is not None and (normalized == True or key in normalized):
+					if isinstance(contact[key], basestring):
+						contact[key] = contact[key].lower()
+					else:
+						contact[key] = [item.lower() for item in contact[key]]
+			
+			for key in ("name", "street", "city", "state"):
+				if key in contact and contact[key] is not None and (normalized == True or key in normalized):
+					if isinstance(contact[key], basestring) and contact[key].isupper():
+						contact[key] = " ".join(word.capitalize() for word in contact[key].split(" "))
+					else:
+						contact[key] = [" ".join(word.capitalize() for word in item.split(" ")) for item in contact[key] if item.isupper()] + [item for item in contact[key] if not item.isupper()]
 	
 	return data
 
