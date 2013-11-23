@@ -45,6 +45,8 @@ If any of those apply, don't hesitate to file an issue! The goal is 100% coverag
 
 Feel free to fork and submit pull requests! If you change any parsing or normalization logic, ensure to run the full test suite before opening a pull request. Instructions for that are below.
 
+**Pull requests that do _not_ include output from test.py will be rejected!**
+
 ### Adding new WHOIS data to the testing set
 
 	pwhois --raw thedomain.com > test/data/thedomain.com
