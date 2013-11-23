@@ -9,10 +9,19 @@ def get_whois_raw(domain, server="", previous=[]):
 		target_server = server
 	if domain.endswith(".jp") and target_server == "whois.jprs.jp":
 		request_domain = "%s/e" % domain # Suppress Japanese output
+	elif target_server == "whois.verisign-grs.com":
+		request_domain = "=%s" % domain # Avoid partial matches
 	else:
 		request_domain = domain
 	response = whois_request(request_domain, target_server)
 	new_list = [response] + previous
+	if target_server == "whois.verisign-grs.com":
+		# VeriSign is a little... special. As it may return multiple full records and there's no way to do an exact query,
+		# we need to actually find the correct record in the list.
+		for record in response.split("\n\n"):
+			if re.search("Domain Name: %s\n" % domain.upper(), record):
+				response = record
+				break
 	for line in [x.strip() for x in response.splitlines()]:
 		match = re.match("(refer|whois server|referral url|whois server|registrar whois):\s*([^\s]+)", line, re.IGNORECASE)
 		if match is not None:
