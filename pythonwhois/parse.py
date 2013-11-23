@@ -228,11 +228,12 @@ def normalize_data(data, normalized):
 	for key in ("registrar", "status"):
 		if key in data and data[key] is not None and (normalized == True or key in normalized):
 			if isinstance(data[key], basestring) and data[key].isupper():
-				# This won't do newlines correctly... Fix that! (known issue with eg. donuts.co, swisscom.ch)
-				data[key] = " ".join(word.capitalize() for word in data[key].split(" "))
+				if len(data[key] > 3):  # Don't change abbreviations..
+					# This won't do newlines correctly... Fix that! (known issue with eg. donuts.co, swisscom.ch)
+					data[key] = " ".join(word.capitalize() for word in data[key].split(" "))
 			else:
 				# This might mess up the order? Also seems like there may be another bug here...
-				data[key] = [" ".join(word.capitalize() for word in item.split(" ")) for item in data[key] if item.isupper()] + [item for item in data[key] if not item.isupper()]
+				data[key] = [" ".join(word.capitalize() for word in item.split(" ")) for item in data[key] if item.isupper() and len(item) > 3] + [item for item in data[key] if not item.isupper() or len(item) <= 3]
 	
 	for contact_type, contact in data['contacts'].iteritems():
 		if contact is not None:
