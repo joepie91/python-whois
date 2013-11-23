@@ -153,22 +153,22 @@ def parse_raw_whois(raw_data, normalized=[]):
 			chunk = match.group(1)
 			for match in re.findall("[ ]+(.+)\n", chunk):
 				try:
-					data["name_servers"].append(match)
+					data["name_servers"].append(match.strip())
 				except KeyError, e:
-					data["name_servers"] = [match]
+					data["name_servers"] = [match.strip()]
 		# Nominet also needs some special attention
 		match = re.search("    Registrar:\n        (.+)\n", segment)
 		if match is not None:
-			data["registrar"] = [match.group(1)]
+			data["registrar"] = [match.group(1).strip()]
 		match = re.search("    Name servers:([\s\S]*?\n)\n", segment)
 		if match is not None:
 			chunk = match.group(1)
 			for match in re.findall("        (.+)\n", chunk):
 				match = match.split()[0]
 				try:
-					data["name_servers"].append(match)
+					data["name_servers"].append(match.strip())
 				except KeyError, e:
-					data["name_servers"] = [match]
+					data["name_servers"] = [match.strip()]
 
 	# Fill all missing values with None
 	for rule_key, rule_regexes in grammar['_data'].iteritems():		
@@ -244,11 +244,21 @@ def normalize_data(data, normalized):
 					else:
 						contact[key] = [item.lower() for item in contact[key]]
 			
-			for key in ("name", "street", "city", "state", "country"):
-				if key in contact and contact[key] is not None and (normalized == True or key in normalized):
+			for key in ("state", "country", "organization"):
+				if key in contact and contact[key] is not None and (normalized == True or key in normalized) and contact[key].isupper():
 					if len(contact[key]) > 2: # Two letter values are usually abbreviations and need to be in uppercase
 						contact[key] = " ".join(word.capitalize() for word in contact[key].strip(", ").split(" "))
-	
+						
+			for key in ("name", "street", "city"):
+				if key in contact and contact[key] is not None and (normalized == True or key in normalized) and (contact[key].islower() or contact[key].isupper()):
+					if len(contact[key]) > 2: # Two letter values are usually abbreviations and need to be in original case
+						contact[key] = " ".join(word.capitalize() for word in contact[key].strip(", ").split(" "))
+					
+			for key in contact.keys():
+				try:
+					contact[key] = contact[key].strip(", ")
+				except AttributeError, e:
+					pass # Not a string
 	return data
 
 def parse_dates(dates):
@@ -501,6 +511,8 @@ def parse_registrants(data):
 			for key in obj.keys():
 				if obj[key] is None or obj[key].strip() == "": # Just chomp all surrounding whitespace
 					del obj[key]
+				else:
+					obj[key] = obj[key].strip()
 			if "phone_ext" in obj:
 				if "phone" in obj:
 					obj["phone"] += "ext. %s" % obj["phone_ext"]
