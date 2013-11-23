@@ -67,7 +67,7 @@ if args.mode[0] == "run":
 			with open(os.path.join("test/target_normalized", target), "r") as f:
 				normalized = f.read()
 		except IOError, e:
-			sys.stderr.write("Missing target data for domain %(domain)s. Run `./test update %(domain)s` to correct this, after verifying that pythonwhois can correctly parse this particular domain.\n" % {"domain": target})
+			sys.stderr.write("Missing target data for domain %(domain)s. Run `./test.py update %(domain)s` to correct this, after verifying that pythonwhois can correctly parse this particular domain.\n" % {"domain": target})
 			errors = True
 			continue
 		
