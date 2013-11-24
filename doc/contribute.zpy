@@ -1,0 +1,7 @@
+# Contributing
+
+{>index}(<< back to index)
+
+Contributions are very welcome! For now, please refer to the README in the {https://github.com/joepie91/python-whois}(GitHub repository).
+
+Please do note that there is a solid testing procedure in place to prevent accidental parser breakage; contributions will only be accepted if they pass all tests!

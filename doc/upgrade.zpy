@@ -1,0 +1,24 @@
+# Upgrading pythonwhois
+
+{>index}(<< back to index)
+
+Depending on the version, upgrading to a new version of pythonwhois may entail a need for code changes. These are the usual guidelines:
+
+Major version (x.0.0)::
+	Major changes have been made to the API. This will almost certainly require a code change.
+	
+Minor version (0.x.0)::
+	Some changes have been made to the API, but these are backwards-compatible. There are probably new features that you're not yet utilizing, but current code will remain functional.
+	
+Patch version (0.0.x)::
+	Minor changes have been made that do not affect the API. Patch releases are usually changes in the parsing or normalization, or support for new WHOIS servers.
+
+More specific instructions are below.
+
+## Upgrading from 1.x to 2.x
+
+The `pythonwhois.whois` method has been removed, and is replaced by the `pythonwhois.get_whois` method, **which has a significantly different API.** The following important changes have to be taken into account:
+
+* __Empty keys are no longer filled with nulls; they are now simply absent. You cannot assume anymore that any keys will be present in the response, whatsoever.__
+* The `name_servers` key has been renamed to `nameservers`.
+* A new `contacts`key has been added. Refer to the {>usage}(usage instructions) for more information.

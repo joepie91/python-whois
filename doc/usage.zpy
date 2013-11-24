@@ -1,0 +1,189 @@
+# Using pythonwhois
+
+{>index}(<< back to index)
+
+This is a quick usage guide; pythonwhois is pretty simple.
+
+{TOC}
+
+## Normalization
+
+Before you start, it's important to understand the normalization functionality in pythonwhois. Since some WHOIS servers return data in all-uppercase or all-lowercase, and some registrants simply use the incorrect case themselves, reading WHOIS data can be a bit unpleasant.
+
+pythonwhois attempts to solve this problem by optionally 'normalizing' WHOIS data. Depending on the kind of field, the parser will try to create a readable and consistent version of the value. The `pwhois` command-line utility uses normalization by default; when using the Python module it's disabled by default.
+
+Normalization isn't perfect, and you shouldn't rely on it for technical purposes. It's intended for increasing human readability only. If you work with a lot of WHOIS data, it's recommended to turn off normalization or do your own post-processing.
+
+## From the commandline
+
+^ pwhois [--raw] [--json] [-f PATH] DOMAIN
+
+	`pwhois` is the WHOIS tool that is included with pythonwhois. It's really just a script that you can run from your terminal, and that gives you nicely formatted WHOIS output.
+	Normalization is turned on in `pwhois` by default, so it will try to make the output more readable (by fixing capitalization and such).
+	
+	@ Using `pwhois`
+		
+		$ sh$ pwhois cryto.net
+		
+		> Status            : clientTransferProhibited
+		Registrar         : Internet.bs Corp.
+		Registration date : 2010-02-14 00:00:00
+		Expiration date   : 2014-02-14 00:00:00
+		Last update       : 2013-02-11 00:00:00
+		Name server       : ns1.he.net
+		Name server       : ns2.he.net
+		Name server       : ns3.he.net
+		Name server       : ns4.he.net
+		Name server       : ns5.he.net
+
+		>> Registrant
+		    Name              : Sven Slootweg
+		    Street address    : Wijnstraat 211
+		    Postal code       : 3311BV
+		[...]
+		
+	There are several optional arguments that you can pass to `pwhois` to make it behave differently.
+	
+	--raw::
+		When you use this flag, `pwhois` will not attempt to parse the WHOIS data; it'll just follow redirects and output the raw data, delimited by double dashes (--).
+		
+	--json::
+		This flag will make `pwhois` output JSON instead of human-readable output. While not recommended, you can use this if you need parsed data in a non-Python application.
+		
+	-f PATH::
+		This will make `pwhois` read and parse WHOIS data from a specified file, instead of actually contacting a WHOIS server. Useful if you get your WHOIS data elsewhere.
+		
+	! Note that when using `-f PATH`, `pwhois` will still expect a domain to be specified! What you enter here doesn't really matter, you can also just specify a single dot `.` for the domain.
+
+## From your Python application
+
+To start using pythonwhois, use `import pythonwhois`.
+
+^ pythonwhois.get_whois(**domain**[, **normalized=[]**])
+
+	Retrieves and parses WHOIS data for a specified domain. Raises `pythonwhois.shared.WhoisException` if no root server for the TLD could be found.
+	
+	### Arguments
+	
+	domain::
+		The domain to WHOIS.
+		
+	normalized::
+		**Optional.** What data to normalize. By default, no data will be normalized. You can specify either a list of keys to normalize (see also the result reference below), an empty list (to turn off normalization), or `True` (to turn on normalization for all supported fields).
+		
+	### Returns
+	
+	A nested structured object, consisting of dicts and lists. The only key that is always present is `contacts`, but the keys inside the dict that it contains may not be.
+	
+	All lists are deduplicated where necessary; each item in a list is guaranteed unique. If this is not the case, that's a bug and you should {https://github.com/joepie91/python-whois/issues/new}(report) it :)
+	
+	id::
+		The Domain ID.
+	
+	status::
+		A list of current statuses of the domain at the registrar. May contain any string value.
+		
+	creation_date::
+		A list of `datetime.datetime` objects representing the creation date(s) of the domain.
+		
+	expiration_date::
+		A list of `datetime.datetime` objects representing the expiration date(s) of the domain.
+		
+	updated_date::
+		A list of `datetime.datetime` objects representing the update date(s) of the domain. Note that what an 'update date' entails, differs between WHOIS servers. For some, it means the last renewal data. For others, it means the last registrant info update. For yet others, it means the last update of their WHOIS database as a whole. This key is unlikely to be useful, unless you're trying to plot WHOIS data changes over time.
+		
+	registrar::
+		A list of registrar names. May contain any string value.
+		
+	whois_server::
+		A list of WHOIS servers refered to. This is unlikely to be a useful list.
+		
+	nameservers::
+		A list of nameservers for the domain, as indicated by the WHOIS server.
+		
+	emails::
+		A list of e-mail address for the domain. **This list does not include e-mail addresses from registrant data, only e-mail addresses from other places in the WHOIS data such as abuse report instructions.**
+		
+	contacts::
+		A dict containing contacts for the domain, each also a dict. Fields for these contacts are listed further down. If a specific type of contact was not listed for the domain, the key for it will still exist, but it will contain `None`.
+		
+		registrant::
+			The registrant or domain holder.
+		
+		tech::
+			The technical contact for the domain. May be either the registrar, or a party related to the registrant.
+			
+		admin::
+			The administrative contact for the domain.
+		
+		billing::
+			The billing contact for the domain.
+			
+	### Contact fields
+	
+	These are the fields that any contact dict may contain. If certain information for a contact was not found, the corresponding key will be absent.
+	
+	! Note that any of these fields may consist of multiple lines, although the `address` field is the only one that is **likely** to consist of multiple lines.
+	
+	handle::
+		The NIC handle for the contact.
+		
+	name::
+		The full name of the contact.
+		
+	organization::
+		The organization or company that the contact belongs to.
+		
+	street::
+		The street address of the contact (or organization).
+	
+	postalcode::
+		The postal code of the contact (or organization). This may or may not include a country prefix.
+		
+	city::
+		The city of the contact (or organization).
+		
+	state::
+		The state, province, or region of the contact (or organization). The actual values for this field vary widely.
+		
+	country::
+		The country of the contact (or organization).
+		
+	email::
+		The e-mail address of the contact (or organization).
+		
+	phone::
+		The phone number of the contact (or organization), including extension where applicable.
+		
+	fax::
+		The fax number of the contact (or organization), including extension where applicable.
+
+## When you need more control...
+
+^ pythonwhois.net.get_whois_raw(**domain**[, **server=""**])
+
+	Retrieves the raw WHOIS data for the specified domain, and returns it as a list of responses (one element for each WHOIS server queried). This method will keep following redirects, until it ends up at the right server (and all responses it picks up in the meantime, will be included). Raises `pythonwhois.shared.WhoisException` if no root server for the TLD could be found.
+	
+	domain::
+		The domain name to query for.
+		
+	server::
+		**Optional.** The WHOIS server to query. When not specified, it will default to the appropriate WHOIS server for the TLD.
+
+^ pythonwhois.net.get_root_server(**domain**)
+
+	Looks up the appropriate root server for a TLD, and returns it as a string. Raises `pythonwhois.shared.WhoisException` if no root server for the TLD could be found.
+	
+	domain::
+		The domain whose TLD you want to know the root WHOIS server for.
+	
+^ pythonwhois.parse.parse_raw_whois(**raw_data**[, **normalized**])
+
+	Parses the specified raw WHOIS data. It's useful to call this methid manually if you receive your WHOIS data from elsewhere, and don't need the retrieval capabilities of pythonwhois.
+	
+	raw_data::
+		A list of raw WHOIS responses to parse. This is the kind of list that `pythonwhois.net.get_whois_raw` outputs.
+	
+	normalized::
+		**Optional.** Like for `pythonwhois.get_whois`. Empty list or omitted to normalize nothing, `True` to normalize all supported fields, a list of keys if you only want certain keys to be normalized.
+

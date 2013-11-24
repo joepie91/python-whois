@@ -1,0 +1,161 @@
+<!doctype html>
+<html>
+	<head>
+		<style>
+			body {
+				background-color: #F5F5F5;
+				font-family: sans-serif;
+				margin-right: 40px;
+			}
+
+			h2, h3, h4, h5, h6, h7
+			{
+				margin-top: 16px;
+				margin-bottom: 4px;
+			}
+
+			.children { padding-left: 40px; }
+
+			.definition
+			{
+				font-weight: bold;
+				margin-bottom: 32px;
+			}
+
+			.example 
+			{ 
+				padding: 5px 6px;
+				font-weight: bold;
+				font-size: 15px;
+				background-color: #E6E6E6; 
+				margin-top: 11px;
+			}
+
+			.example > .children
+			{
+				padding-top: 11px;
+				padding-left: 10px;
+			}
+
+			.example > .children > h7
+			{
+				font-size: 13px;
+			}
+
+			h7
+			{
+				font-size: 14px;
+				font-weight: bold;
+				margin-bottom: 2px;
+			}
+
+			pre
+			{
+				margin-top: 0px;
+				padding: 6px 7px;
+				background-color: #D9D9D9;
+				font-weight: normal;
+				font-size: 13px;
+			}
+
+			dl
+			{
+				margin: 5px 0px;
+			}
+
+			dt
+			{
+				font-weight: bold;
+			}
+
+			dd
+			{
+				font-size: 14px;
+				font-weight: normal;
+				margin-left: 8px;
+			}
+			
+			dd > .children
+			{
+				font-size: 95%;
+			}
+			
+			dd > .children > dl > dd
+			{
+				margin-left: 13px;
+			}
+
+			.exclamation
+			{
+				padding: 7px 8px;
+				margin: 11px 0px;
+				background-color: #FFE9AA;
+				border: 1px solid yellow;
+				font-size: 15px;
+				font-weight: normal;
+			}
+
+			.text
+			{
+				font-size: 15px;
+				font-weight: normal;
+				margin-bottom: 14px;
+				margin-top: 10px;
+			}
+
+			.toc
+			{
+				border: 1px solid gray;
+				background-color: #E6E6E6;
+				padding: 8px 9px;
+				font-size: 15px;
+				margin-bottom: 12px;
+			}
+
+			.toc h2
+			{
+				margin: 0px 0px 3px 0px;
+				font-size: 19px;
+			}
+
+			.toc ul
+			{
+				margin-top: 0px;
+				margin-bottom: 0px;
+				padding-left: 25px;
+			}
+
+			.toc li
+			{
+				margin-bottom: 2px;
+			}
+
+			.toc .alternatives
+			{
+				font-size: 12px;
+			}
+
+			.toc a
+			{
+				color: #292722;
+			}
+
+			.toc a:hover
+			{
+				color: black;
+			}
+			
+			.fixed
+			{
+				font-family: monospace;
+				background-color: white;
+				padding: 1px 4px;
+				border: 1px solid silver;
+				border-radius: 4px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="children"><h1>Upgrading pythonwhois</h1><div class="text"><a href="index.html"><< back to index</a></div><div class="text">Depending on the version, upgrading to a new version of pythonwhois may entail a need for code changes. These are the usual guidelines:</div><dl><dt>Major version (x.0.0)</dt><dd>Major changes have been made to the API. This will almost certainly require a code change.<div class="children"></div></dd></dl><dl><dt>Minor version (0.x.0)</dt><dd>Some changes have been made to the API, but these are backwards-compatible. There are probably new features that you're not yet utilizing, but current code will remain functional.<div class="children"></div></dd></dl><dl><dt>Patch version (0.0.x)</dt><dd>Minor changes have been made that do not affect the API. Patch releases are usually changes in the parsing or normalization, or support for new WHOIS servers.<div class="children"></div></dd></dl><div class="text">More specific instructions are below.</div><h2>Upgrading from 1.x to 2.x</h2><div class="text">The <span class="fixed">pythonwhois.whois</span> method has been removed, and is replaced by the <span class="fixed">pythonwhois.get_whois</span> method, <em>which has a significantly different API.</em> The following important changes have to be taken into account:</div><ul><li><strong>Empty keys are no longer filled with nulls; they are now simply absent. You cannot assume anymore that any keys will be present in the response, whatsoever.</strong></li><li> The <span class="fixed">name_servers</span> key has been renamed to <span class="fixed">nameservers</span>.</li><li> A new <span class="fixed">contacts</span>key has been added. Refer to the <a href="usage.html">usage instructions</a> for more information.</li></ul></div>
+	</body>
+</html>

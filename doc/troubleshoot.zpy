@@ -1,0 +1,12 @@
+# Troubleshooting
+
+{>index}(<< back to index)
+
+Run through this checklist to make sure the issue is not on your end:
+
+* If certain information was not found, the key will simply be absent. Missing information is {>upgrade}(no longer) filled with `None`s, like in version 1.
+* Turn off normalization if the capitalization ends up being strange. If it's a serious issue (and one that really shouldn't be happening), you may want to {https://github.com/joepie91/python-whois/issues/new}(file a bug), and I'll try to improve the normalization algorithm.
+
+Still broken? {https://github.com/joepie91/python-whois/issues/new}(File an issue!)
+
+__The goal for pythonwhois is 100% coverage, and that is only possible with your feedback!__ If any information is missing or incorrect for a domain, **even if you think it's tiny and unimportant**, please {https://github.com/joepie91/python-whois/issues/new}(let me know!) I'm more than willing to fix any parsing issues that arise.
