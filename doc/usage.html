@@ -1,0 +1,176 @@
+<!doctype html>
+<html>
+	<head>
+		<style>
+			body {
+				background-color: #F5F5F5;
+				font-family: sans-serif;
+				margin-right: 40px;
+			}
+
+			h2, h3, h4, h5, h6, h7
+			{
+				margin-top: 16px;
+				margin-bottom: 4px;
+			}
+
+			.children { padding-left: 40px; }
+
+			.definition
+			{
+				font-weight: bold;
+				margin-bottom: 32px;
+			}
+
+			.example 
+			{ 
+				padding: 5px 6px;
+				font-weight: bold;
+				font-size: 15px;
+				background-color: #E6E6E6; 
+				margin-top: 11px;
+			}
+
+			.example > .children
+			{
+				padding-top: 11px;
+				padding-left: 10px;
+			}
+
+			.example > .children > h7
+			{
+				font-size: 13px;
+			}
+
+			h7
+			{
+				font-size: 14px;
+				font-weight: bold;
+				margin-bottom: 2px;
+			}
+
+			pre
+			{
+				margin-top: 0px;
+				padding: 6px 7px;
+				background-color: #D9D9D9;
+				font-weight: normal;
+				font-size: 13px;
+			}
+
+			dl
+			{
+				margin: 5px 0px;
+			}
+
+			dt
+			{
+				font-weight: bold;
+			}
+
+			dd
+			{
+				font-size: 14px;
+				font-weight: normal;
+				margin-left: 8px;
+			}
+			
+			dd > .children
+			{
+				font-size: 95%;
+			}
+			
+			dd > .children > dl > dd
+			{
+				margin-left: 13px;
+			}
+
+			.exclamation
+			{
+				padding: 7px 8px;
+				margin: 11px 0px;
+				background-color: #FFE9AA;
+				border: 1px solid yellow;
+				font-size: 15px;
+				font-weight: normal;
+			}
+
+			.text
+			{
+				font-size: 15px;
+				font-weight: normal;
+				margin-bottom: 14px;
+				margin-top: 10px;
+			}
+
+			.toc
+			{
+				border: 1px solid gray;
+				background-color: #E6E6E6;
+				padding: 8px 9px;
+				font-size: 15px;
+				margin-bottom: 12px;
+			}
+
+			.toc h2
+			{
+				margin: 0px 0px 3px 0px;
+				font-size: 19px;
+			}
+
+			.toc ul
+			{
+				margin-top: 0px;
+				margin-bottom: 0px;
+				padding-left: 25px;
+			}
+
+			.toc li
+			{
+				margin-bottom: 2px;
+			}
+
+			.toc .alternatives
+			{
+				font-size: 12px;
+			}
+
+			.toc a
+			{
+				color: #292722;
+			}
+
+			.toc a:hover
+			{
+				color: black;
+			}
+			
+			.fixed
+			{
+				font-family: monospace;
+				background-color: white;
+				padding: 1px 4px;
+				border: 1px solid silver;
+				border-radius: 4px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="children"><h1>Using pythonwhois</h1><div class="text"><a href="index.html"><< back to index</a></div><div class="text">This is a quick usage guide; pythonwhois is pretty simple.</div><div class="toc"><h2>Table of contents</h2><ul><li><a href="#pwhoisrawjsonfPATHDOMAIN">pwhois [--raw] [--json] [-f PATH] DOMAIN</a> <span class="fixed">pwhois</span> is the WHOIS tool that is included with pythonwhois. It's really just a... </li><li><a href="#pythonwhois_get_whoisdomainnormalized">pythonwhois.get_whois(domain[, normalized=[]])</a> Retrieves and parses WHOIS data for a specified domain. Raises `pythonwhois... </li><li><a href="#pythonwhois_net_get_whois_rawdomainserver">pythonwhois.net.get_whois_raw(domain[, server=""])</a> Retrieves the raw WHOIS data for the specified domain, and returns it as a list... </li><li><a href="#pythonwhois_net_get_root_serverdomain">pythonwhois.net.get_root_server(domain)</a> Looks up the appropriate root server for a TLD, and returns it as a string.... </li><li><a href="#pythonwhois_parse_parse_raw_whoisraw_datanormalized">pythonwhois.parse.parse_raw_whois(raw_data[, normalized])</a> Parses the specified raw WHOIS data. It's useful to call this methid manually if... </li></ul></div><h2>Normalization</h2><div class="text">Before you start, it's important to understand the normalization functionality in pythonwhois. Since some WHOIS servers return data in all-uppercase or all-lowercase, and some registrants simply use the incorrect case themselves, reading WHOIS data can be a bit unpleasant.</div><div class="text">pythonwhois attempts to solve this problem by optionally 'normalizing' WHOIS data. Depending on the kind of field, the parser will try to create a readable and consistent version of the value. The <span class="fixed">pwhois</span> command-line utility uses normalization by default; when using the Python module it's disabled by default.</div><div class="text">Normalization isn't perfect, and you shouldn't rely on it for technical purposes. It's intended for increasing human readability only. If you work with a lot of WHOIS data, it's recommended to turn off normalization or do your own post-processing.</div><h2>From the commandline</h2><div class="definition"><a name="pwhoisrawjsonfPATHDOMAIN">pwhois [--raw] [--json] [-f PATH] DOMAIN <div class="children"><div class="text"><span class="fixed">pwhois</span> is the WHOIS tool that is included with pythonwhois. It's really just a script that you can run from your terminal, and that gives you nicely formatted WHOIS output. Normalization is turned on in <span class="fixed">pwhois</span> by default, so it will try to make the output more readable (by fixing capitalization and such).</div><div class="example">Example: Using <span class="fixed">pwhois</span> <div class="children"><h7>Code:</h7><pre class="code">sh$ pwhois cryto.net</pre><h7>Output:</h7><pre class="output">Status            : clientTransferProhibited
+Registrar         : Internet.bs Corp.
+Registration date : 2010-02-14 00:00:00
+Expiration date   : 2014-02-14 00:00:00
+Last update       : 2013-02-11 00:00:00
+Name server       : ns1.he.net
+Name server       : ns2.he.net
+Name server       : ns3.he.net
+Name server       : ns4.he.net
+Name server       : ns5.he.net
+
+Registrant
+    Name              : Sven Slootweg
+    Street address    : Wijnstraat 211
+    Postal code       : 3311BV
+[...]</pre></div></div><div class="text">There are several optional arguments that you can pass to <span class="fixed">pwhois</span> to make it behave differently.</div><dl><dt>--raw</dt><dd>When you use this flag, <span class="fixed">pwhois</span> will not attempt to parse the WHOIS data; it'll just follow redirects and output the raw data, delimited by double dashes (--).<div class="children"></div></dd></dl><dl><dt>--json</dt><dd>This flag will make <span class="fixed">pwhois</span> output JSON instead of human-readable output. While not recommended, you can use this if you need parsed data in a non-Python application.<div class="children"></div></dd></dl><dl><dt>-f PATH</dt><dd>This will make <span class="fixed">pwhois</span> read and parse WHOIS data from a specified file, instead of actually contacting a WHOIS server. Useful if you get your WHOIS data elsewhere.<div class="children"></div></dd></dl><div class="exclamation"><strong>Important:</strong> Note that when using <span class="fixed">-f PATH</span>, <span class="fixed">pwhois</span> will still expect a domain to be specified! What you enter here doesn't really matter, you can also just specify a single dot <span class="fixed">.</span> for the domain. <div class="children"></div></div></div></a></div><h2>From your Python application</h2><div class="text">To start using pythonwhois, use <span class="fixed">import pythonwhois</span>.</div><div class="definition"><a name="pythonwhois_get_whoisdomainnormalized">pythonwhois.get_whois(<em>domain</em>[, <em>normalized=[]</em>]) <div class="children"><div class="text">Retrieves and parses WHOIS data for a specified domain. Raises <span class="fixed">pythonwhois.shared.WhoisException</span> if no root server for the TLD could be found.</div><h3>Arguments</h3><dl><dt>domain</dt><dd>The domain to WHOIS.<div class="children"></div></dd></dl><dl><dt>normalized</dt><dd><em>Optional.</em> What data to normalize. By default, no data will be normalized. You can specify either a list of keys to normalize (see also the result reference below), an empty list (to turn off normalization), or <span class="fixed">True</span> (to turn on normalization for all supported fields).<div class="children"></div></dd></dl><h3>Returns</h3><div class="text">A nested structured object, consisting of dicts and lists. The only key that is always present is <span class="fixed">contacts</span>, but the keys inside the dict that it contains may not be.</div><div class="text">All lists are deduplicated where necessary; each item in a list is guaranteed unique. If this is not the case, that's a bug and you should <a href="https://github.com/joepie91/python-whois/issues/new">report</a> it :)</div><dl><dt>id</dt><dd>The Domain ID.<div class="children"></div></dd></dl><dl><dt>status</dt><dd>A list of current statuses of the domain at the registrar. May contain any string value.<div class="children"></div></dd></dl><dl><dt>creation_date</dt><dd>A list of <span class="fixed">datetime.datetime</span> objects representing the creation date(s) of the domain.<div class="children"></div></dd></dl><dl><dt>expiration_date</dt><dd>A list of <span class="fixed">datetime.datetime</span> objects representing the expiration date(s) of the domain.<div class="children"></div></dd></dl><dl><dt>updated_date</dt><dd>A list of <span class="fixed">datetime.datetime</span> objects representing the update date(s) of the domain. Note that what an 'update date' entails, differs between WHOIS servers. For some, it means the last renewal data. For others, it means the last registrant info update. For yet others, it means the last update of their WHOIS database as a whole. This key is unlikely to be useful, unless you're trying to plot WHOIS data changes over time.<div class="children"></div></dd></dl><dl><dt>registrar</dt><dd>A list of registrar names. May contain any string value.<div class="children"></div></dd></dl><dl><dt>whois_server</dt><dd>A list of WHOIS servers refered to. This is unlikely to be a useful list.<div class="children"></div></dd></dl><dl><dt>nameservers</dt><dd>A list of nameservers for the domain, as indicated by the WHOIS server.<div class="children"></div></dd></dl><dl><dt>emails</dt><dd>A list of e-mail address for the domain. <em>This list does not include e-mail addresses from registrant data, only e-mail addresses from other places in the WHOIS data such as abuse report instructions.</em><div class="children"></div></dd></dl><dl><dt>contacts</dt><dd>A dict containing contacts for the domain, each also a dict. Fields for these contacts are listed further down. If a specific type of contact was not listed for the domain, the key for it will still exist, but it will contain <span class="fixed">None</span>.<div class="children"><dl><dt>registrant</dt><dd>The registrant or domain holder.<div class="children"></div></dd></dl><dl><dt>tech</dt><dd>The technical contact for the domain. May be either the registrar, or a party related to the registrant.<div class="children"></div></dd></dl><dl><dt>admin</dt><dd>The administrative contact for the domain.<div class="children"></div></dd></dl><dl><dt>billing</dt><dd>The billing contact for the domain.<div class="children"></div></dd></dl></div></dd></dl><h3>Contact fields</h3><div class="text">These are the fields that any contact dict may contain. If certain information for a contact was not found, the corresponding key will be absent.</div><div class="exclamation"><strong>Important:</strong> Note that any of these fields may consist of multiple lines, although the <span class="fixed">address</span> field is the only one that is <em>likely</em> to consist of multiple lines. <div class="children"></div></div><dl><dt>handle</dt><dd>The NIC handle for the contact.<div class="children"></div></dd></dl><dl><dt>name</dt><dd>The full name of the contact.<div class="children"></div></dd></dl><dl><dt>organization</dt><dd>The organization or company that the contact belongs to.<div class="children"></div></dd></dl><dl><dt>street</dt><dd>The street address of the contact (or organization).<div class="children"></div></dd></dl><dl><dt>postalcode</dt><dd>The postal code of the contact (or organization). This may or may not include a country prefix.<div class="children"></div></dd></dl><dl><dt>city</dt><dd>The city of the contact (or organization).<div class="children"></div></dd></dl><dl><dt>state</dt><dd>The state, province, or region of the contact (or organization). The actual values for this field vary widely.<div class="children"></div></dd></dl><dl><dt>country</dt><dd>The country of the contact (or organization).<div class="children"></div></dd></dl><dl><dt>email</dt><dd>The e-mail address of the contact (or organization).<div class="children"></div></dd></dl><dl><dt>phone</dt><dd>The phone number of the contact (or organization), including extension where applicable.<div class="children"></div></dd></dl><dl><dt>fax</dt><dd>The fax number of the contact (or organization), including extension where applicable.<div class="children"></div></dd></dl></div></a></div><h2>When you need more control...</h2><div class="definition"><a name="pythonwhois_net_get_whois_rawdomainserver">pythonwhois.net.get_whois_raw(<em>domain</em>[, <em>server=""</em>]) <div class="children"><div class="text">Retrieves the raw WHOIS data for the specified domain, and returns it as a list of responses (one element for each WHOIS server queried). This method will keep following redirects, until it ends up at the right server (and all responses it picks up in the meantime, will be included). Raises <span class="fixed">pythonwhois.shared.WhoisException</span> if no root server for the TLD could be found.</div><dl><dt>domain</dt><dd>The domain name to query for.<div class="children"></div></dd></dl><dl><dt>server</dt><dd><em>Optional.</em> The WHOIS server to query. When not specified, it will default to the appropriate WHOIS server for the TLD.<div class="children"></div></dd></dl></div></a></div><div class="definition"><a name="pythonwhois_net_get_root_serverdomain">pythonwhois.net.get_root_server(<em>domain</em>) <div class="children"><div class="text">Looks up the appropriate root server for a TLD, and returns it as a string. Raises <span class="fixed">pythonwhois.shared.WhoisException</span> if no root server for the TLD could be found.</div><dl><dt>domain</dt><dd>The domain whose TLD you want to know the root WHOIS server for.<div class="children"></div></dd></dl></div></a></div><div class="definition"><a name="pythonwhois_parse_parse_raw_whoisraw_datanormalized">pythonwhois.parse.parse_raw_whois(<em>raw_data</em>[, <em>normalized</em>]) <div class="children"><div class="text">Parses the specified raw WHOIS data. It's useful to call this methid manually if you receive your WHOIS data from elsewhere, and don't need the retrieval capabilities of pythonwhois.</div><dl><dt>raw_data</dt><dd>A list of raw WHOIS responses to parse. This is the kind of list that <span class="fixed">pythonwhois.net.get_whois_raw</span> outputs.<div class="children"></div></dd></dl><dl><dt>normalized</dt><dd><em>Optional.</em> Like for <span class="fixed">pythonwhois.get_whois</span>. Empty list or omitted to normalize nothing, <span class="fixed">True</span> to normalize all supported fields, a list of keys if you only want certain keys to be normalized.<div class="children"></div></dd></dl></div></a></div></div>
+	</body>
+</html>

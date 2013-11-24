@@ -1,0 +1,27 @@
+# pythonwhois
+
+A Python library for retrieving and parsing WHOIS data.
+
+* {>install}(Installing pythonwhois)
+* {>upgrade}(Upgrading from a previous pythonwhois version)
+* {>usage}(Using pythonwhois in your application)
+* {>troubleshoot}(What to do when it doesn't work)
+* {>contribute}(Contributing to pythonwhois)
+
+__pythonwhois is licensed under the {http://wtfpl.net/}(WTFPL).__ This means that you can pretty much do anything with it.
+
+$	DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE 
+		Version 2, December 2004 
+
+$$ Copyright (C) 2004 Sam Hocevar <sam@hocevar.net> 
+
+$$ Everyone is permitted to copy and distribute verbatim or modified 
+ copies of this license document, and changing it is allowed as long 
+ as the name is changed. 
+
+$$	  DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE 
+TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION 
+
+$$  0. You just DO WHAT THE FUCK YOU WANT TO.
+
+If you really don't like the WTFPL, {https://creativecommons.org/publicdomain/zero/1.0/}(CC0) is also fine.

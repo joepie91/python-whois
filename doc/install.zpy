@@ -1,0 +1,17 @@
+# Installing pythonwhois
+
+{>index}(<< back to index)
+
+To install pythonwhois, you need to have `pip` installed. It's available on most distributions in a package named `python-pip`.
+
+The pythonwhois package includes the `pwhois` tool.
+
+## Installing it from scratch
+
+$ pip install pythonwhois
+
+## Updating from a previous version
+
+Make sure to read the {>upgrade}(upgrade notes) before updating to a new major pythonwhois version!
+
+$ pip install --upgrade pythonwhois
