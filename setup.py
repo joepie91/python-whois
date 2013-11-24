@@ -8,5 +8,6 @@ setup(name='pythonwhois',
       url='http://cryto.net/pythonwhois',
       packages=['pythonwhois'],
       provides=['pythonwhois'],
-      scripts=["pwhois"]
+      scripts=["pwhois"],
+      license="WTFPL"
      )
