@@ -422,6 +422,7 @@ def parse_registrants(data):
 		"Registrant:[ ]*(?P<organization>.+)\n[\s\S]*Eligibility Type:[ ]*(Higher Education Institution|Company|Incorporated Association|Other)\n[\s\S]*Registrant Contact ID:[ ]*(?P<handle>.+)\n[\s\S]*Registrant Contact Name:[ ]*(?P<name>.+)\n", # .au educational, company, 'incorporated association' (non-profit?), other (spotted for linux.conf.au, unsure if also for others)
 		"    Registrant:\n        (?P<name>.+)\n\n    Registrant type:\n        .*\n\n    Registrant's address:\n        The registrant .* opted to have", # Nominet (.uk) with hidden address
 		"    Registrant:\n        (?P<name>.+)\n\n    Registrant type:\n        .*\n\n    Registrant's address:\n        (?P<street1>.+)\n        (?P<street2>.+)\n        (?P<street3>.+)\n        (?P<city>.+)\n        (?P<state>.+)\n        (?P<postalcode>.+)\n        (?P<country>.+)", # Nominet (.uk) with visible address
+		"owner:\s+(?P<name>.+)", # .br
 		"person:\s+(?P<name>.+)", # nic.ru (person)
 		"org:\s+(?P<organization>.+)", # nic.ru (organization)
 	]
