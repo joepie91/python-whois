@@ -218,6 +218,12 @@ def parse_raw_whois(raw_data, normalized=[]):
 		data['emails'] = [email for email in data["emails"] if email not in known_emails]
 	except KeyError, e:
 		pass # Not present
+		
+	try:
+		if len(data['emails']) == 0:
+			del data['emails']
+	except KeyError, e:
+		pass
 	
 	data["raw"] = raw_data
 	
