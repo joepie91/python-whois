@@ -1,7 +1,10 @@
 #!/usr/bin/env python2
 
 import argparse, pythonwhois, json, datetime
-from collections import OrderedDict
+try:
+	from collections import OrderedDict
+except ImportError, e:
+	from ordereddict import OrderedDict
 
 parser = argparse.ArgumentParser(description="Retrieves and parses WHOIS data for a domain name.")
 parser.add_argument("-r", "--raw", action="store_true", help="Outputs raw WHOIS data and doesn't attempt to parse it. Segments are separated by a double-dash (--).")
