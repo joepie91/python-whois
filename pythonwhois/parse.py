@@ -74,7 +74,7 @@ grammar = {
 					 '\tName:\t\s(?P<val>.+)'],
 		'whois_server':		['Whois Server:\s?(?P<val>.+)',
 					 'Registrar Whois:\s?(?P<val>.+)'],
-		'name_servers':		['Name Server:[ ]*(?P<val>[^ ]+)',
+		'nameservers':		['Name Server:[ ]*(?P<val>[^ ]+)',
 					 '(?<![^ .])(?P<val>[a-z]*d?ns[0-9]+([a-z]{3})?\.([a-z0-9-]+\.)+[a-z0-9]+)',
 					 'nameserver:\s*(?P<val>.+)',
 					 'nserver:\s*(?P<val>[^[\s]+)',
@@ -126,7 +126,7 @@ grammar = {
 		'december': 12
 	}
 }
-	
+
 def parse_raw_whois(raw_data, normalized=[]):
 	data = {}
 	
@@ -153,9 +153,9 @@ def parse_raw_whois(raw_data, normalized=[]):
 			chunk = match.group(1)
 			for match in re.findall("[ ]+(.+)\n", chunk):
 				try:
-					data["name_servers"].append(match.strip())
+					data["nameservers"].append(match.strip())
 				except KeyError, e:
-					data["name_servers"] = [match.strip()]
+					data["nameservers"] = [match.strip()]
 		# Nominet also needs some special attention
 		match = re.search("    Registrar:\n        (.+)\n", segment)
 		if match is not None:
@@ -166,38 +166,45 @@ def parse_raw_whois(raw_data, normalized=[]):
 			for match in re.findall("        (.+)\n", chunk):
 				match = match.split()[0]
 				try:
-					data["name_servers"].append(match.strip())
+					data["nameservers"].append(match.strip())
 				except KeyError, e:
-					data["name_servers"] = [match.strip()]
-
-	# Fill all missing values with None
-	for rule_key, rule_regexes in grammar['_data'].iteritems():		
-		if data.has_key(rule_key) == False:
-			data[rule_key] = None
+					data["nameservers"] = [match.strip()]
 			
 	data["contacts"] = parse_registrants(raw_data)
 			
 	# Parse dates
-	if data['expiration_date'] is not None:
+	try:
 		data['expiration_date'] = remove_duplicates(data['expiration_date'])
 		data['expiration_date'] = parse_dates(data['expiration_date'])
+	except KeyError, e:
+		pass # Not present
 	
-	if data['creation_date'] is not None:
+	try:
 		data['creation_date'] = remove_duplicates(data['creation_date'])
 		data['creation_date'] = parse_dates(data['creation_date'])
+	except KeyError, e:
+		pass # Not present
 	
-	if data['updated_date'] is not None:
+	try:
 		data['updated_date'] = remove_duplicates(data['updated_date'])
 		data['updated_date'] = parse_dates(data['updated_date'])
+	except KeyError, e:
+		pass # Not present
 	
-	if data['name_servers'] is not None:
-		data['name_servers'] = remove_duplicates([ns.rstrip(".") for ns in data['name_servers']])
+	try:
+		data['nameservers'] = remove_duplicates([ns.rstrip(".") for ns in data['nameservers']])
+	except KeyError, e:
+		pass # Not present
 	
-	if data['emails'] is not None:
+	try:
 		data['emails'] = remove_duplicates(data['emails'])
+	except KeyError, e:
+		pass # Not present
 	
-	if data['registrar'] is not None:
+	try:
 		data['registrar'] = remove_duplicates(data['registrar'])
+	except KeyError, e:
+		pass # Not present
 		
 	# Remove e-mail addresses if they are already listed for any of the contacts
 	known_emails = []
@@ -207,8 +214,10 @@ def parse_raw_whois(raw_data, normalized=[]):
 				known_emails.append(data["contacts"][contact]["email"])
 			except KeyError, e:
 				pass # No e-mail recorded for this contact...
-	if data['emails'] is not None:
+	try:
 		data['emails'] = [email for email in data["emails"] if email not in known_emails]
+	except KeyError, e:
+		pass # Not present
 	
 	data["raw"] = raw_data
 	
@@ -218,7 +227,7 @@ def parse_raw_whois(raw_data, normalized=[]):
 	return data
 
 def normalize_data(data, normalized):
-	for key in ("name_servers", "emails", "whois_server"):
+	for key in ("nameservers", "emails", "whois_server"):
 		if key in data and data[key] is not None and (normalized == True or key in normalized):
 			if isinstance(data[key], basestring):
 				data[key] = data[key].lower()

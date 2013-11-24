@@ -39,7 +39,7 @@ else:
 		data_map["creation_date"] = ("Registration date", 1)
 		data_map["expiration_date"] = ("Expiration date", 1)
 		data_map["updated_date"] = ("Last update", 1)
-		data_map["name_servers"] = ("Name server", "+")
+		data_map["nameservers"] = ("Name server", "+")
 		data_map["emails"] = ("E-mail address", "+")
 		
 		widest_label = 0
