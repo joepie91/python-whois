@@ -244,15 +244,13 @@ def normalize_data(data, normalized):
 					else:
 						contact[key] = [item.lower() for item in contact[key]]
 			
-			for key in ("state", "country", "organization"):
-				if key in contact and contact[key] is not None and (normalized == True or key in normalized) and contact[key].isupper():
-					if len(contact[key]) > 2: # Two letter values are usually abbreviations and need to be in uppercase
-						contact[key] = " ".join(word.capitalize() for word in contact[key].strip(", ").split(" "))
+			for key in ("name", "street"):
+				if key in contact and contact[key] is not None and (normalized == True or key in normalized):
+					contact[key] = normalize_name(contact[key], abbreviation_threshold=3)
 						
-			for key in ("name", "street", "city"):
-				if key in contact and contact[key] is not None and (normalized == True or key in normalized) and (contact[key].islower() or contact[key].isupper()):
-					if len(contact[key]) > 2: # Two letter values are usually abbreviations and need to be in original case
-						contact[key] = " ".join(word.capitalize() for word in contact[key].strip(", ").split(" "))
+			for key in ("city", "organization", "state", "country"):
+				if key in contact and contact[key] is not None and (normalized == True or key in normalized):
+					contact[key] = normalize_name(contact[key], abbreviation_threshold=3, length_threshold=3)
 					
 			for key in contact.keys():
 				try:
@@ -260,6 +258,40 @@ def normalize_data(data, normalized):
 				except AttributeError, e:
 					pass # Not a string
 	return data
+
+def normalize_name(value, abbreviation_threshold=4, length_threshold=8):
+	normalized_lines = []
+	for line in value.split("\n"):
+		line = line.strip(",") # Get rid of useless comma's
+		if (line.isupper() or line.islower()) and len(line) >= length_threshold:
+			# This line is likely not capitalized properly
+			words = line.split()
+			normalized_words = []
+			if len(words) >= 1:
+				# First word
+				if len(words[0]) >= abbreviation_threshold and "." not in words[0]:
+					normalized_words.append(words[0].capitalize())
+				else:
+					# Probably an abbreviation or domain, leave it alone
+					normalized_words.append(words[0])
+			if len(words) >= 3:
+				# Words between the first and last
+				for word in words[1:-1]:
+					if len(word) >= abbreviation_threshold and "." not in word:
+						normalized_words.append(word.capitalize())
+					else:
+						# Probably an abbreviation or domain, leave it alone
+						normalized_words.append(word)
+			if len(words) >= 2:
+				# Last word
+				if len(words[-1]) >= abbreviation_threshold and "." not in words[-1]:
+					normalized_words.append(words[-1].capitalize())
+				else:
+					# Probably an abbreviation or domain, leave it alone
+					normalized_words.append(words[-1])
+			line = " ".join(normalized_words)
+		normalized_lines.append(line)
+	return "\n".join(normalized_lines)
 
 def parse_dates(dates):
 	global grammar
