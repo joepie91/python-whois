@@ -45,6 +45,8 @@ If any of those apply, don't hesitate to file an issue! The goal is 100% coverag
 
 Feel free to fork and submit pull requests! If you change any parsing or normalization logic, ensure to run the full test suite before opening a pull request. Instructions for that are below.
 
+All commands are relative to the root directory of the repository.
+
 **Pull requests that do _not_ include output from test.py will be rejected!**
 
 ### Adding new WHOIS data to the testing set
@@ -71,3 +73,8 @@ Make sure to verify (using `pwhois` or otherwise) that the WHOIS data for the do
 
 	./test.py run thedomain.com
 
+### Generating documentation
+
+You need [ZippyDoc](http://cryto.net/zippydoc) (which can be installed through `pip install zippydoc`).
+
+	zpy2html doc/*.zpy
