@@ -11,11 +11,30 @@ OK = '\033[92m'
 FAIL = '\033[91m'
 ENDC = '\033[0m'
 
+def encoded_json_dumps(obj):
+	try:
+		return json.dumps(obj, default=json_fallback)
+	except UnicodeDecodeError, e:
+		return json.dumps(recursive_encode(obj, "latin-1"), default=json_fallback)
+
 def json_fallback(obj):
 	if isinstance(obj, datetime.datetime):
 		return obj.isoformat()
 	else:
 		return obj
+
+def recursive_encode(obj, encoding):
+	for key in obj.keys():
+		if isinstance(obj[key], dict):
+			obj[key] = recursive_encode(obj[key], encoding)
+		elif isinstance(obj[key], list):
+			obj[key] = [x.decode(encoding) for x in obj[key]]
+		else:
+			try:
+				obj[key] = obj[key].decode(encoding)
+			except:
+				pass
+	return obj
 
 def recursive_compare(obj1, obj2, chain=[]):
 	errors = []
@@ -84,7 +103,7 @@ if args.mode[0] == "run":
 	for target, data, target_default, target_normalized in suites:
 		for normalization in (True, []):
 			parsed = pythonwhois.parse.parse_raw_whois(data, normalized=normalization)
-			parsed = json.loads(json.dumps(parsed, default=json_fallback)) # Stupid Unicode hack
+			parsed = json.loads(encoded_json_dumps(parsed)) # Stupid Unicode hack
 			
 			if normalization == True:
 				target_data = json.loads(target_normalized)
@@ -148,7 +167,7 @@ elif args.mode[0] == "update":
 		default = pythonwhois.parse.parse_raw_whois(data)
 		normalized = pythonwhois.parse.parse_raw_whois(data, normalized=True)
 		with open(os.path.join("test/target_default", target), "w") as f:
-			f.write(json.dumps(default, default=json_fallback))
+			f.write(encoded_json_dumps(default))
 		with open(os.path.join("test/target_normalized", target), "w") as f:
-			f.write(json.dumps(normalized, default=json_fallback))
+			f.write(encoded_json_dumps(normalized))	
 		print "Generated target data for %s." % target
