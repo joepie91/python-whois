@@ -7,6 +7,10 @@ A WHOIS retrieval and parsing library for Python.
 
 None! All you need is the Python standard library.
 
+## Instructions
+
+The manual (including install instructions) can be found in the doc/ directory. A HTML version is also viewable [here](http://cryto.net/pythonwhois).
+
 ## Goals
 
 * 100% coverage of WHOIS formats.

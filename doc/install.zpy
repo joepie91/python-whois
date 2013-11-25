@@ -10,6 +10,10 @@ The pythonwhois package includes the `pwhois` tool.
 
 $ pip install pythonwhois
 
+If you are using Python 2.6 and get an ImportError about `OrderedDict`, also do the following:
+
+$ pip install ordereddict
+
 ## Updating from a previous version
 
 Make sure to read the {>upgrade}(upgrade notes) before updating to a new major pythonwhois version!
