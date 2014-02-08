@@ -397,6 +397,9 @@ def remove_duplicates(data):
 	
 	return cleaned_list
 
+def preprocess_regex(regex):
+	return re.sub(r"\\s\*\(\?P<([^>]+)>\.\+\)", r"\s*(?P<\1>\S.*)", regex)
+
 def parse_registrants(data):
 	registrant = None
 	tech_contact = None
@@ -498,6 +501,17 @@ def parse_registrants(data):
 			"billing-c:\s*(?P<handle>.+)" # iis.se
 		]
 	}
+	
+	# Why do the below? The below is meant to handle with an edge case (issue #2) where a partial match followed
+	# by a failure, for a regex containing the \s*.+ pattern, would send the regex module on a wild goose hunt for
+	# matching positions. The workaround is to use \S.* instead of .+, but in the interest of keeping the regexes
+	# consistent and compact, it's more practical to do this (predictable) conversion on runtime.
+	registrant_regexes = [preprocess_regex(regex) for regex in registrant_regexes]
+	tech_contact_regexes = [preprocess_regex(regex) for regex in tech_contact_regexes]
+	admin_contact_regexes = [preprocess_regex(regex) for regex in admin_contact_regexes]
+	billing_contact_regexes = [preprocess_regex(regex) for regex in billing_contact_regexes]
+	nic_contact_regexes = [preprocess_regex(regex) for regex in nic_contact_regexes]
+	nic_contact_references = {field: [preprocess_regex(regex) for regex in items] for field, items in nic_contact_references.iteritems()}
 	
 	for segment in data:
 		for regex in registrant_regexes:
