@@ -179,7 +179,7 @@ To start using pythonwhois, use `import pythonwhois`.
 	
 ^ pythonwhois.parse.parse_raw_whois(**raw_data**[, **normalized**])
 
-	Parses the specified raw WHOIS data. It's useful to call this methid manually if you receive your WHOIS data from elsewhere, and don't need the retrieval capabilities of pythonwhois.
+	Parses the specified raw WHOIS data. It's useful to call this method manually if you receive your WHOIS data from elsewhere, and don't need the retrieval capabilities of pythonwhois. Returns an object like `pythonwhois.get_whois` does.
 	
 	raw_data::
 		A list of raw WHOIS responses to parse. This is the kind of list that `pythonwhois.net.get_whois_raw` outputs.
