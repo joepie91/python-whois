@@ -1,0 +1,29 @@
+
+% Rights restricted by copyright; http://iedr.ie/index.php/mnudomregs/mnudnssearch/96 
+% Do not remove this notice
+
+domain:       ireland.ie
+descr:        Department of Finance
+descr:        Statutory Body
+descr:        State Agency Name
+admin-c:      AKJ531-IEDR
+tech-c:       AAM456-IEDR
+registration: 30-March-2000
+renewal:      30-March-2014
+holder-type:  Billable
+wipo-status:  N
+ren-status:   Active
+in-zone:      1
+nserver:      ns1.blacknight.com  
+nserver:      ns2.blacknight.com  
+source:       IEDR
+
+person:       Deirdre O'Keefe
+nic-hdl:      AKJ531-IEDR
+source:       IEDR
+
+person:       Blacknight.ie Hostmaster
+nic-hdl:      AAM456-IEDR
+source:       IEDR
+
+

@@ -5,10 +5,11 @@ grammar = {
 		'id':			['Domain ID:[ ]*(?P<val>.+)'],
 		'status':		['\[Status\]\s*(?P<val>.+)',
 					 'Status\s*:\s?(?P<val>.+)',
-					 'state:\s*(?P<val>.+)'],
+					 '^state:\s*(?P<val>.+)'],
 		'creation_date':	['\[Created on\]\s*(?P<val>.+)',
 					 'Created on[.]*: [a-zA-Z]+, (?P<val>.+)',
 					 'Creation Date:\s?(?P<val>.+)',
+					 'Creation date\s*:\s?(?P<val>.+)',
 					 'Created Date:\s?(?P<val>.+)',
 					 'Created on:\s?(?P<val>.+)',
 					 'Created on\s?[.]*:\s?(?P<val>.+)\.',
@@ -25,11 +26,13 @@ grammar = {
 					 'Domain Registration Date\s?[.]*:?\s*?(?P<val>.+)',
 					 'created:\s*(?P<val>.+)',
 					 'created-date:\s*(?P<val>.+)',
-					 'registered:\s*(?P<val>.+)'],
+					 'registered:\s*(?P<val>.+)',
+					 'registration:\s*(?P<val>.+)'],
 		'expiration_date':	['\[Expires on\]\s*(?P<val>.+)',
 					 'Registrar Registration Expiration Date:[ ]*(?P<val>.+)-[0-9]{4}',
 					 'Expires on[.]*: [a-zA-Z]+, (?P<val>.+)',
 					 'Expiration Date:\s?(?P<val>.+)',
+					 'Expiration date\s*:\s?(?P<val>.+)',
 					 'Expires on:\s?(?P<val>.+)',
 					 'Expires on\s?[.]*:\s?(?P<val>.+)\.',
 					 'Expiry Date\s?[.]*:\s?(?P<val>.+)',
@@ -44,10 +47,13 @@ grammar = {
 					 'Expired\s?[.]*:?\s*?(?P<val>.+)',
 					 'Domain Expiration Date\s?[.]*:?\s*?(?P<val>.+)',
 					 'paid-till:\s*(?P<val>.+)',
+					 'renewal:\s*(?P<val>.+)',
 					 'expire:\s*(?P<val>.+)'],
 		'updated_date':		['\[Last Updated\]\s*(?P<val>.+)',
+					 'Record modified on[.]*: (?P<val>.+) [a-zA-Z]+',
 					 'Record last updated on[.]*: [a-zA-Z]+, (?P<val>.+)',
 					 'Updated Date:\s?(?P<val>.+)',
+					 'Updated date\s*:\s?(?P<val>.+)',
 					 #'Database last updated on\s?[.]*:?\s*?(?P<val>.+)\s[a-z]+\.?',
 					 'Record last updated on\s?[.]*:?\s?(?P<val>.+)\.',
 					 'Domain record last updated\s?[.]*:\s*?(?P<val>.+)',
@@ -71,6 +77,7 @@ grammar = {
 					 'Record maintained by:\s?(?P<val>.+)',
 					 'Registration Service Provided By:\s?(?P<val>.+)',
 					 'Registrar of Record:\s?(?P<val>.+)',
+					 'Domain Registrar :\s?(?P<val>.+)',
 					 '\tName:\t\s(?P<val>.+)'],
 		'whois_server':		['Whois Server:\s?(?P<val>.+)',
 					 'Registrar Whois:\s?(?P<val>.+)'],
@@ -95,10 +102,11 @@ grammar = {
 		'[a-z]{3}\s(?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[./ -](?P<day>[0-9]{1,2})'
 			'(\s+(?P<hour>[0-9]{1,2})[:.](?P<minute>[0-9]{1,2})[:.](?P<second>[0-9]{1,2}))?'
 			'\s[a-z]{3}\s(?P<year>[0-9]{4}|[0-9]{2})',
-		'(?P<year>[0-9]{4})[./-]?(?P<month>[0-9]{2})[./-]?(?P<day>[0-9]{2})(\s|T)((?P<hour>[0-9]{1,2})[:.](?P<minute>[0-9]{1,2})[:.](?P<second>[0-9]{1,2}))',
+		'(?P<year>[0-9]{4})[./-]?(?P<month>[0-9]{2})[./-]?(?P<day>[0-9]{2})(\s|T|/)((?P<hour>[0-9]{1,2})[:.](?P<minute>[0-9]{1,2})[:.](?P<second>[0-9]{1,2}))',
 		'(?P<year>[0-9]{4})[./-](?P<month>[0-9]{1,2})[./-](?P<day>[0-9]{1,2})',
 		'(?P<day>[0-9]{1,2})[./ -](?P<month>[0-9]{1,2})[./ -](?P<year>[0-9]{4}|[0-9]{2})',
-		'(?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (?P<day>[0-9]{1,2}),? (?P<year>[0-9]{4})'
+		'(?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (?P<day>[0-9]{1,2}),? (?P<year>[0-9]{4})',
+		'(?P<day>[0-9]{1,2})-(?P<month>January|February|March|April|May|June|July|August|September|October|November|December)-(?P<year>[0-9]{4})'
 	),
 	"_months": {
 		'jan': 1,
@@ -148,7 +156,7 @@ def parse_raw_whois(raw_data, normalized=[]):
 								except KeyError, e:
 									data[rule_key] = [val]
 		
-		# Whois.com is a bit special...
+		# Whois.com is a bit special... Fabulous.com also seems to use this format.
 		match = re.search("Name Servers:([/s/S]+)\n\n", segment)
 		if match is not None:
 			chunk = match.group(1)
@@ -170,6 +178,33 @@ def parse_raw_whois(raw_data, normalized=[]):
 					data["nameservers"].append(match.strip())
 				except KeyError, e:
 					data["nameservers"] = [match.strip()]
+		# .am plays the same game
+		match = re.search("   DNS servers:([\s\S]*?\n)\n", segment)
+		if match is not None:
+			chunk = match.group(1)
+			for match in re.findall("      (.+)\n", chunk):
+				match = match.split()[0]
+				try:
+					data["nameservers"].append(match.strip())
+				except KeyError, e:
+					data["nameservers"] = [match.strip()]
+		# SIDN isn't very standard either.
+		match = re.search("Registrar:\n\s+(\S.*)", segment)
+		if match is not None:
+			data["registrar"].insert(0, match.group(1).strip())
+		match = re.search("Domain nameservers:([\s\S]*?\n)\n", segment)
+		if match is not None:
+			chunk = match.group(1)
+			for match in re.findall("   (.+)\n", chunk):
+				match = match.split()[0]
+				try:
+					data["nameservers"].append(match.strip())
+				except KeyError, e:
+					data["nameservers"] = [match.strip()]
+		# The .ie WHOIS server puts ambiguous status information in an unhelpful order
+		match = re.search('ren-status:\s*(.+)', segment)
+		if match is not None:
+			data["status"].insert(0, match.group(1).strip())
 			
 	data["contacts"] = parse_registrants(raw_data)
 			
@@ -413,20 +448,25 @@ def parse_registrants(data):
 		"Registrant ID:(?P<handle>.+)\nRegistrant Name:(?P<name>.*)\n(?:Registrant Organization:(?P<organization>.*)\n)?Registrant Address1?:(?P<street1>.*)\n(?:Registrant Address2:(?P<street2>.*)\n)?(?:Registrant Address3:(?P<street3>.*)\n)?Registrant City:(?P<city>.*)\nRegistrant State/Province:(?P<state>.*)\nRegistrant Country/Economy:(?P<country>.*)\nRegistrant Postal Code:(?P<postalcode>.*)\nRegistrant Phone:(?P<phone>.*)\n(?:Registrant Phone Ext.:(?P<phone_ext>.*)\n)?(?:Registrant FAX:(?P<fax>.*)\n)?(?:Registrant FAX Ext.:(?P<fax_ext>.*)\n)?Registrant E-mail:(?P<email>.*)", # .ME
 		"Registrant ID:\s*(?P<handle>.+)\nRegistrant Name:\s*(?P<name>.+)\nRegistrant Organization:\s*(?P<organization>.*)\nRegistrant Address1:\s*(?P<street1>.+)\nRegistrant Address2:\s*(?P<street2>.*)\nRegistrant City:\s*(?P<city>.+)\nRegistrant State/Province:\s*(?P<state>.+)\nRegistrant Postal Code:\s*(?P<postalcode>.+)\nRegistrant Country:\s*(?P<country>.+)\nRegistrant Country Code:\s*(?P<country_code>.+)\nRegistrant Phone Number:\s*(?P<phone>.+)\nRegistrant Email:\s*(?P<email>.+)\n", # .CO Internet
 		"Registrant Contact: (?P<handle>.+)\nRegistrant Organization: (?P<organization>.+)\nRegistrant Name: (?P<name>.+)\nRegistrant Street: (?P<street>.+)\nRegistrant City: (?P<city>.+)\nRegistrant Postal Code: (?P<postalcode>.+)\nRegistrant State: (?P<state>.+)\nRegistrant Country: (?P<country>.+)\nRegistrant Phone: (?P<phone>.*)\nRegistrant Phone Ext: (?P<phone_ext>.*)\nRegistrant Fax: (?P<fax>.*)\nRegistrant Fax Ext: (?P<fax_ext>.*)\nRegistrant Email: (?P<email>.*)\n", # Key-Systems GmbH
-		"(?:Registrant ID:[ ]*(?P<handle>.*)\n)?Registrant Name:[ ]*(?P<name>.*)\n(?:Registrant Organization:[ ]*(?P<organization>.*)\n)?Registrant Street:[ ]*(?P<street1>.+)\n(?:Registrant Street:[ ]*(?P<street2>.+)\n)?Registrant City:[ ]*(?P<city>.+)\nRegistrant State\/Province:[ ]*(?P<state>.+)\nRegistrant Postal Code:[ ]*(?P<postalcode>.+)\nRegistrant Country:[ ]*(?P<country>.+)\n(?:Registrant Phone:[ ]*(?P<phone>.*)\n)?(?:Registrant Phone Ext:[ ]*(?P<phone_ext>.*)\n)?(?:Registrant Fax:[ ]*(?P<fax>.*)\n)?(?:Registrant Fax Ext:[ ]*(?P<fax_ext>.*)\n)?(?:Registrant Email:[ ]*(?P<email>.+)\n)?", # WildWestDomains, GoDaddy, Namecheap/eNom, Ascio, Musedoma (.museum)
+		"(?:Registrant ID:[ ]*(?P<handle>.*)\n)?Registrant Name:[ ]*(?P<name>.*)\n(?:Registrant Organization:[ ]*(?P<organization>.*)\n)?Registrant Street:[ ]*(?P<street1>.+)\n(?:Registrant Street:[ ]*(?P<street2>.+)\n)?Registrant City:[ ]*(?P<city>.+)\nRegistrant State(?:\/Province)?:[ ]*(?P<state>.+)\nRegistrant Postal Code:[ ]*(?P<postalcode>.+)\nRegistrant Country:[ ]*(?P<country>.+)\n(?:Registrant Phone:[ ]*(?P<phone>.*)\n)?(?:Registrant Phone Ext:[ ]*(?P<phone_ext>.*)\n)?(?:Registrant Fax:[ ]*(?P<fax>.*)\n)?(?:Registrant Fax Ext:[ ]*(?P<fax_ext>.*)\n)?(?:Registrant Email:[ ]*(?P<email>.+)\n)?", # WildWestDomains, GoDaddy, Namecheap/eNom, Ascio, Musedoma (.museum)
 		"Registrant\n(?:    (?P<organization>.+)\n)?    (?P<name>.+)\n    Email:(?P<email>.+)\n    (?P<street1>.+)\n(?:    (?P<street2>.+)\n)?    (?P<postalcode>.+) (?P<city>.+)\n    (?P<country>.+)\n    Tel: (?P<phone>.+)\n\n", # internet.bs
 		" Registrant Contact Details:[ ]*\n    (?P<organization>.*)\n    (?P<name>.*)[ ]{2,}\((?P<email>.*)\)\n    (?P<street1>.*)\n(?:    (?P<street2>.*)\n)?(?:    (?P<street3>.*)\n)?    (?P<city>.*)\n    (?P<state>.*),(?P<postalcode>.*)\n    (?P<country>.*)\n    Tel. (?P<phone>.*)", # Whois.com
 		"owner-id:[ ]*(?P<handle>.*)\n(?:owner-organization:[ ]*(?P<organization>.*)\n)?owner-name:[ ]*(?P<name>.*)\nowner-street:[ ]*(?P<street>.*)\nowner-city:[ ]*(?P<city>.*)\nowner-zip:[ ]*(?P<postalcode>.*)\nowner-country:[ ]*(?P<country>.*)\n(?:owner-phone:[ ]*(?P<phone>.*)\n)?(?:owner-fax:[ ]*(?P<fax>.*)\n)?owner-email:[ ]*(?P<email>.*)", # InterNetworX
+		"Registrant:\n registrant_org: (?P<organization>.*)\n registrant_name: (?P<name>.*)\n registrant_email: (?P<email>.*)\n registrant_address: (?P<address>.*)\n registrant_city: (?P<city>.*)\n registrant_state: (?P<state>.*)\n registrant_zip: (?P<postalcode>.*)\n registrant_country: (?P<country>.*)\n registrant_phone: (?P<phone>.*)", # Bellnames
 		"Holder of domain name:\n(?P<name>[\S\s]+)\n(?P<street>.+)\n(?P<postalcode>[A-Z0-9-]+)\s+(?P<city>.+)\n(?P<country>.+)\nContractual Language", # nic.ch
 		"\n\n(?:Owner)?\s+: (?P<name>.*)\n(?:\s+: (?P<organization>.*)\n)?\s+: (?P<street>.*)\n\s+: (?P<city>.*)\n\s+: (?P<state>.*)\n\s+: (?P<country>.*)\n", # nic.io
 		"Contact Information:\n\[Name\]\s*(?P<name>.*)\n\[Email\]\s*(?P<email>.*)\n\[Web Page\]\s*(?P<url>.*)\n\[Postal code\]\s*(?P<postalcode>.*)\n\[Postal Address\]\s*(?P<street1>.*)\n(?:\s+(?P<street2>.*)\n)?(?:\s+(?P<street3>.*)\n)?\[Phone\]\s*(?P<phone>.*)\n\[Fax\]\s*(?P<fax>.*)\n", # jprs.jp
-		"Registrant ID:[ ]*(?P<handle>.*)\nRegistrant Name:[ ]*(?P<name>.*)\nRegistrant Address1:[ ]*(?P<street1>.*)\n(?:Registrant Address2:[ ]*(?P<street2>.*)\n)?(?:Registrant Address3:[ ]*(?P<street3>.*)\n)?Registrant City:[ ]*(?P<city>.*)\nRegistrant State/Province:[ ]*(?P<state>.*)\nRegistrant Postal Code:[ ]*(?P<postalcode>.*)\nRegistrant Country:[ ]*(?P<country>.*)\nRegistrant Country Code:[ ]*.*\nRegistrant Phone Number:[ ]*(?P<phone>.*)\nRegistrant Email:[ ]*(?P<email>.*)", # .US (NeuStar)
+		"Registrant ID:[ ]*(?P<handle>.*)\nRegistrant Name:[ ]*(?P<name>.*)\n(?:Registrant Organization:[ ]*(?P<organization>.*)\n)?Registrant Address1:[ ]*(?P<street1>.*)\n(?:Registrant Address2:[ ]*(?P<street2>.*)\n)?(?:Registrant Address3:[ ]*(?P<street3>.*)\n)?Registrant City:[ ]*(?P<city>.*)\nRegistrant State/Province:[ ]*(?P<state>.*)\nRegistrant Postal Code:[ ]*(?P<postalcode>.*)\nRegistrant Country:[ ]*(?P<country>.*)\nRegistrant Country Code:[ ]*.*\nRegistrant Phone Number:[ ]*(?P<phone>.*)\n(?:Registrant Facsimile Number:[ ]*(?P<facsimile>.*)\n)?Registrant Email:[ ]*(?P<email>.*)", # .US (NeuStar)
 		"  Organisation Name[.]* (?P<name>.*)\n  Organisation Address[.]* (?P<street1>.*)\n  Organisation Address[.]* (?P<street2>.*)\n(?:  Organisation Address[.]* (?P<street3>.*)\n)?  Organisation Address[.]* (?P<city>.*)\n  Organisation Address[.]* (?P<postalcode>.*)\n  Organisation Address[.]* (?P<state>.*)\n  Organisation Address[.]* (?P<country>.*)", # Melbourne IT (what a horrid format...)
 		"Registrant:[ ]*(?P<name>.+)\n[\s\S]*Eligibility Name:[ ]*(?P<organization>.+)\n[\s\S]*Registrant Contact ID:[ ]*(?P<handle>.+)\n", # .au business
 		"Eligibility Type:[ ]*Citizen\/Resident\n[\s\S]*Registrant Contact ID:[ ]*(?P<handle>.+)\n[\s\S]*Registrant Contact Name:[ ]*(?P<name>.+)\n", # .au individual
 		"Registrant:[ ]*(?P<organization>.+)\n[\s\S]*Eligibility Type:[ ]*(Higher Education Institution|Company|Incorporated Association|Other)\n[\s\S]*Registrant Contact ID:[ ]*(?P<handle>.+)\n[\s\S]*Registrant Contact Name:[ ]*(?P<name>.+)\n", # .au educational, company, 'incorporated association' (non-profit?), other (spotted for linux.conf.au, unsure if also for others)
 		"    Registrant:\n        (?P<name>.+)\n\n    Registrant type:\n        .*\n\n    Registrant's address:\n        The registrant .* opted to have", # Nominet (.uk) with hidden address
 		"    Registrant:\n        (?P<name>.+)\n\n    Registrant type:\n        .*\n\n    Registrant's address:\n        (?P<street1>.+)\n        (?P<street2>.+)\n        (?P<street3>.+)\n        (?P<city>.+)\n        (?P<state>.+)\n        (?P<postalcode>.+)\n        (?P<country>.+)", # Nominet (.uk) with visible address
+		"Registrant contact:\n  (?P<name>.+)\n  (?P<street>.*)\n  (?P<city>.+), (?P<state>.+) (?P<postalcode>.+) (?P<country>.+)\n\n", # Fabulous.com
+		"Registrant Contact Information :[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication
+		"Contact Information : For Customer # [0-9]+[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication alternative (private WHOIS) format?
+		"   Registrant:\n      (?P<name>.+)\n      (?P<street>.+)\n      (?P<city>.+) (?P<state>\S+),[ ]+(?P<postalcode>.+)\n      (?P<country>.+)", # .am
 		"owner:\s+(?P<name>.+)", # .br
 		"person:\s+(?P<name>.+)", # nic.ru (person)
 		"org:\s+(?P<organization>.+)", # nic.ru (organization)
@@ -439,14 +479,18 @@ def parse_registrants(data):
 		"Tech ID:(?P<handle>.+)\nTech Name:(?P<name>.*)\n(?:Tech Organization:(?P<organization>.*)\n)?Tech Address1?:(?P<street1>.*)\n(?:Tech Address2:(?P<street2>.*)\n)?(?:Tech Address3:(?P<street3>.*)\n)?Tech City:(?P<city>.*)\nTech State/Province:(?P<state>.*)\nTech Country/Economy:(?P<country>.*)\nTech Postal Code:(?P<postalcode>.*)\nTech Phone:(?P<phone>.*)\n(?:Tech Phone Ext.:(?P<phone_ext>.*)\n)?(?:Tech FAX:(?P<fax>.*)\n)?(?:Tech FAX Ext.:(?P<fax_ext>.*)\n)?Tech E-mail:(?P<email>.*)", # .ME
 		"Technical Contact ID:\s*(?P<handle>.+)\nTechnical Contact Name:\s*(?P<name>.+)\nTechnical Contact Organization:\s*(?P<organization>.*)\nTechnical Contact Address1:\s*(?P<street1>.+)\nTechnical Contact Address2:\s*(?P<street2>.*)\nTechnical Contact City:\s*(?P<city>.+)\nTechnical Contact State/Province:\s*(?P<state>.+)\nTechnical Contact Postal Code:\s*(?P<postalcode>.+)\nTechnical Contact Country:\s*(?P<country>.+)\nTechnical Contact Country Code:\s*(?P<country_code>.+)\nTechnical Contact Phone Number:\s*(?P<phone>.+)\nTechnical Contact Email:\s*(?P<email>.+)\n", # .CO Internet
 		"Tech Contact: (?P<handle>.+)\nTech Organization: (?P<organization>.+)\nTech Name: (?P<name>.+)\nTech Street: (?P<street>.+)\nTech City: (?P<city>.+)\nTech Postal Code: (?P<postalcode>.+)\nTech State: (?P<state>.+)\nTech Country: (?P<country>.+)\nTech Phone: (?P<phone>.*)\nTech Phone Ext: (?P<phone_ext>.*)\nTech Fax: (?P<fax>.*)\nTech Fax Ext: (?P<fax_ext>.*)\nTech Email: (?P<email>.*)\n", # Key-Systems GmbH
-		"(?:Tech ID:[ ]*(?P<handle>.*)\n)?Tech[ ]*Name:[ ]*(?P<name>.*)\n(?:Tech[ ]*Organization:[ ]*(?P<organization>.*)\n)?Tech[ ]*Street:[ ]*(?P<street1>.+)\n(?:Tech[ ]*Street:[ ]*(?P<street2>.+)\n)?Tech[ ]*City:[ ]*(?P<city>.+)\nTech[ ]*State\/Province:[ ]*(?P<state>.+)\nTech[ ]*Postal[ ]*Code:[ ]*(?P<postalcode>.+)\nTech[ ]*Country:[ ]*(?P<country>.+)\n(?:Tech[ ]*Phone:[ ]*(?P<phone>.*)\n)?(?:Tech[ ]*Phone[ ]*Ext:[ ]*(?P<phone_ext>.*)\n)?(?:Tech[ ]*Fax:[ ]*(?P<fax>.*)\n)?(?:Tech[ ]*Fax[ ]*Ext:\s*?(?P<fax_ext>.*)\n)?(?:Tech[ ]*Email:[ ]*(?P<email>.+)\n)?", # WildWestDomains, GoDaddy, Namecheap/eNom, Ascio, Musedoma (.museum)
+		"(?:Tech ID:[ ]*(?P<handle>.*)\n)?Tech[ ]*Name:[ ]*(?P<name>.*)\n(?:Tech[ ]*Organization:[ ]*(?P<organization>.*)\n)?Tech[ ]*Street:[ ]*(?P<street1>.+)\n(?:Tech[ ]*Street:[ ]*(?P<street2>.+)\n)?Tech[ ]*City:[ ]*(?P<city>.+)\nTech[ ]*State(?:\/Province)?:[ ]*(?P<state>.+)\nTech[ ]*Postal[ ]*Code:[ ]*(?P<postalcode>.+)\nTech[ ]*Country:[ ]*(?P<country>.+)\n(?:Tech[ ]*Phone:[ ]*(?P<phone>.*)\n)?(?:Tech[ ]*Phone[ ]*Ext:[ ]*(?P<phone_ext>.*)\n)?(?:Tech[ ]*Fax:[ ]*(?P<fax>.*)\n)?(?:Tech[ ]*Fax[ ]*Ext:\s*?(?P<fax_ext>.*)\n)?(?:Tech[ ]*Email:[ ]*(?P<email>.+)\n)?", # WildWestDomains, GoDaddy, Namecheap/eNom, Ascio, Musedoma (.museum)
 		"Technical Contact\n(?:    (?P<organization>.+)\n)?    (?P<name>.+)\n    Email:(?P<email>.+)\n    (?P<street1>.+)\n(?:    (?P<street2>.+)\n)?    (?P<postalcode>.+) (?P<city>.+)\n    (?P<country>.+)\n    Tel: (?P<phone>.+)\n\n", # internet.bs
 		" Technical Contact Details:[ ]*\n    (?P<organization>.*)\n    (?P<name>.*)[ ]{2,}\((?P<email>.*)\)\n    (?P<street1>.*)\n(?:    (?P<street2>.*)\n)?(?:    (?P<street3>.*)\n)?    (?P<city>.*)\n    (?P<state>.*),(?P<postalcode>.*)\n    (?P<country>.*)\n    Tel. (?P<phone>.*)", # Whois.com
 		"tech-id:[ ]*(?P<handle>.*)\n(?:tech-organization:[ ]*(?P<organization>.*)\n)?tech-name:[ ]*(?P<name>.*)\ntech-street:[ ]*(?P<street>.*)\ntech-city:[ ]*(?P<city>.*)\ntech-zip:[ ]*(?P<postalcode>.*)\ntech-country:[ ]*(?P<country>.*)\n(?:tech-phone:[ ]*(?P<phone>.*)\n)?(?:tech-fax:[ ]*(?P<fax>.*)\n)?tech-email:[ ]*(?P<email>.*)", # InterNetworX
+		"Technical Contact:\n tech_org: (?P<organization>.*)\n tech_name: (?P<name>.*)\n tech_email: (?P<email>.*)\n tech_address: (?P<address>.*)\n tech_city: (?P<city>.*)\n tech_state: (?P<state>.*)\n tech_zip: (?P<postalcode>.*)\n tech_country: (?P<country>.*)\n tech_phone: (?P<phone>.*)", # Bellnames
 		"Technical contact:\n(?P<name>[\S\s]+)\n(?P<street>.+)\n(?P<postalcode>[A-Z0-9-]+)\s+(?P<city>.+)\n(?P<country>.+)\n\n", # nic.ch
 		"Tech Contact ID:[ ]*(?P<handle>.+)\nTech Contact Name:[ ]*(?P<name>.+)", # .au
-		"Technical Contact ID:[ ]*(?P<handle>.*)\nTechnical Contact Name:[ ]*(?P<name>.*)\nTechnical Contact Address1:[ ]*(?P<street1>.*)\n(?:Technical Contact Address2:[ ]*(?P<street2>.*)\n)?(?:Technical Contact Address3:[ ]*(?P<street3>.*)\n)?Technical Contact City:[ ]*(?P<city>.*)\nTechnical Contact State/Province:[ ]*(?P<state>.*)\nTechnical Contact Postal Code:[ ]*(?P<postalcode>.*)\nTechnical Contact Country:[ ]*(?P<country>.*)\nTechnical Contact Country Code:[ ]*.*\nTechnical Contact Phone Number:[ ]*(?P<phone>.*)\nTechnical Contact Email:[ ]*(?P<email>.*)", # .US (NeuStar)
+		"Technical Contact ID:[ ]*(?P<handle>.*)\nTechnical Contact Name:[ ]*(?P<name>.*)\n(?:Technical Contact Organization:[ ]*(?P<organization>.*)\n)?Technical Contact Address1:[ ]*(?P<street1>.*)\n(?:Technical Contact Address2:[ ]*(?P<street2>.*)\n)?(?:Technical Contact Address3:[ ]*(?P<street3>.*)\n)?Technical Contact City:[ ]*(?P<city>.*)\nTechnical Contact State/Province:[ ]*(?P<state>.*)\nTechnical Contact Postal Code:[ ]*(?P<postalcode>.*)\nTechnical Contact Country:[ ]*(?P<country>.*)\nTechnical Contact Country Code:[ ]*.*\nTechnical Contact Phone Number:[ ]*(?P<phone>.*)\n(?:Technical Contact Facsimile Number:[ ]*(?P<facsimile>.*)\n)?Technical Contact Email:[ ]*(?P<email>.*)", # .US (NeuStar)
 		"Tech Name[.]* (?P<name>.*)\n  Tech Address[.]* (?P<street1>.*)\n  Tech Address[.]* (?P<street2>.*)\n(?:  Tech Address[.]* (?P<street3>.*)\n)?  Tech Address[.]* (?P<city>.*)\n  Tech Address[.]* (?P<postalcode>.*)\n  Tech Address[.]* (?P<state>.*)\n  Tech Address[.]* (?P<country>.*)\n  Tech Email[.]* (?P<email>.*)\n  Tech Phone[.]* (?P<phone>.*)\n  Tech Fax[.]* (?P<fax>.*)", # Melbourne IT
+		"Technical contact:\n(?:  (?P<organization>.+)\n)?  (?P<name>.+)\n  (?P<email>.+)\n  (?P<street>.+)\n  (?P<city>.+), (?P<state>.+) (?P<postalcode>.+) (?P<country>.+)\n  Phone: (?P<phone>.*)\n  Fax: (?P<fax>.*)\n", # Fabulous.com
+		"Admin Contact Information :[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication
+		"   Technical contact:\n      (?P<name>.+)\n      (?P<organization>.*)\n      (?P<street>.+)\n      (?P<city>.+) (?P<state>\S+),[ ]+(?P<postalcode>.+)\n      (?P<country>.+)\n      (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)", # .am
 	]
 	
 	admin_contact_regexes = [
@@ -456,12 +500,16 @@ def parse_registrants(data):
 		"Admin ID:(?P<handle>.+)\nAdmin Name:(?P<name>.*)\n(?:Admin Organization:(?P<organization>.*)\n)?Admin Address1?:(?P<street1>.*)\n(?:Admin Address2:(?P<street2>.*)\n)?(?:Admin Address3:(?P<street3>.*)\n)?Admin City:(?P<city>.*)\nAdmin State/Province:(?P<state>.*)\nAdmin Country/Economy:(?P<country>.*)\nAdmin Postal Code:(?P<postalcode>.*)\nAdmin Phone:(?P<phone>.*)\n(?:Admin Phone Ext.:(?P<phone_ext>.*)\n)?(?:Admin FAX:(?P<fax>.*)\n)?(?:Admin FAX Ext.:(?P<fax_ext>.*)\n)?Admin E-mail:(?P<email>.*)", # .ME
 		"Administrative Contact ID:\s*(?P<handle>.+)\nAdministrative Contact Name:\s*(?P<name>.+)\nAdministrative Contact Organization:\s*(?P<organization>.*)\nAdministrative Contact Address1:\s*(?P<street1>.+)\nAdministrative Contact Address2:\s*(?P<street2>.*)\nAdministrative Contact City:\s*(?P<city>.+)\nAdministrative Contact State/Province:\s*(?P<state>.+)\nAdministrative Contact Postal Code:\s*(?P<postalcode>.+)\nAdministrative Contact Country:\s*(?P<country>.+)\nAdministrative Contact Country Code:\s*(?P<country_code>.+)\nAdministrative Contact Phone Number:\s*(?P<phone>.+)\nAdministrative Contact Email:\s*(?P<email>.+)\n", # .CO Internet
 		"Admin Contact: (?P<handle>.+)\nAdmin Organization: (?P<organization>.+)\nAdmin Name: (?P<name>.+)\nAdmin Street: (?P<street>.+)\nAdmin City: (?P<city>.+)\nAdmin State: (?P<state>.+)\nAdmin Postal Code: (?P<postalcode>.+)\nAdmin Country: (?P<country>.+)\nAdmin Phone: (?P<phone>.*)\nAdmin Phone Ext: (?P<phone_ext>.*)\nAdmin Fax: (?P<fax>.*)\nAdmin Fax Ext: (?P<fax_ext>.*)\nAdmin Email: (?P<email>.*)\n", # Key-Systems GmbH
-		"(?:Admin ID:[ ]*(?P<handle>.*)\n)?Admin[ ]*Name:[ ]*(?P<name>.*)\n(?:Admin[ ]*Organization:[ ]*(?P<organization>.*)\n)?Admin[ ]*Street:[ ]*(?P<street1>.+)\n(?:Admin[ ]*Street:[ ]*(?P<street2>.+)\n)?Admin[ ]*City:[ ]*(?P<city>.+)\nAdmin[ ]*State\/Province:[ ]*(?P<state>.+)\nAdmin[ ]*Postal[ ]*Code:[ ]*(?P<postalcode>.+)\nAdmin[ ]*Country:[ ]*(?P<country>.+)\n(?:Admin[ ]*Phone:[ ]*(?P<phone>.*)\n)?(?:Admin[ ]*Phone[ ]*Ext:[ ]*(?P<phone_ext>.*)\n)?(?:Admin[ ]*Fax:[ ]*(?P<fax>.*)\n)?(?:Admin[ ]*Fax[ ]*Ext:\s*?(?P<fax_ext>.*)\n)?(?:Admin[ ]*Email:[ ]*(?P<email>.+)\n)?", # WildWestDomains, GoDaddy, Namecheap/eNom, Ascio, Musedoma (.museum)
+		"(?:Admin ID:[ ]*(?P<handle>.*)\n)?Admin[ ]*Name:[ ]*(?P<name>.*)\n(?:Admin[ ]*Organization:[ ]*(?P<organization>.*)\n)?Admin[ ]*Street:[ ]*(?P<street1>.+)\n(?:Admin[ ]*Street:[ ]*(?P<street2>.+)\n)?Admin[ ]*City:[ ]*(?P<city>.+)\nAdmin[ ]*State(?:\/Province)?:[ ]*(?P<state>.+)\nAdmin[ ]*Postal[ ]*Code:[ ]*(?P<postalcode>.+)\nAdmin[ ]*Country:[ ]*(?P<country>.+)\n(?:Admin[ ]*Phone:[ ]*(?P<phone>.*)\n)?(?:Admin[ ]*Phone[ ]*Ext:[ ]*(?P<phone_ext>.*)\n)?(?:Admin[ ]*Fax:[ ]*(?P<fax>.*)\n)?(?:Admin[ ]*Fax[ ]*Ext:\s*?(?P<fax_ext>.*)\n)?(?:Admin[ ]*Email:[ ]*(?P<email>.+)\n)?", # WildWestDomains, GoDaddy, Namecheap/eNom, Ascio, Musedoma (.museum)
 		"Administrative Contact\n(?:    (?P<organization>.+)\n)?    (?P<name>.+)\n    Email:(?P<email>.+)\n    (?P<street1>.+)\n(?:    (?P<street2>.+)\n)?    (?P<postalcode>.+) (?P<city>.+)\n    (?P<country>.+)\n    Tel: (?P<phone>.+)\n\n", # internet.bs
 		" Administrative Contact Details:[ ]*\n    (?P<organization>.*)\n    (?P<name>.*)[ ]{2,}\((?P<email>.*)\)\n    (?P<street1>.*)\n(?:    (?P<street2>.*)\n)?(?:    (?P<street3>.*)\n)?    (?P<city>.*)\n    (?P<state>.*),(?P<postalcode>.*)\n    (?P<country>.*)\n    Tel. (?P<phone>.*)", # Whois.com
 		"admin-id:[ ]*(?P<handle>.*)\n(?:admin-organization:[ ]*(?P<organization>.*)\n)?admin-name:[ ]*(?P<name>.*)\nadmin-street:[ ]*(?P<street>.*)\nadmin-city:[ ]*(?P<city>.*)\nadmin-zip:[ ]*(?P<postalcode>.*)\nadmin-country:[ ]*(?P<country>.*)\n(?:admin-phone:[ ]*(?P<phone>.*)\n)?(?:admin-fax:[ ]*(?P<fax>.*)\n)?admin-email:[ ]*(?P<email>.*)", # InterNetworX
-		"Administrative Contact ID:[ ]*(?P<handle>.*)\nAdministrative Contact Name:[ ]*(?P<name>.*)\nAdministrative Contact Address1:[ ]*(?P<street1>.*)\n(?:Administrative Contact Address2:[ ]*(?P<street2>.*)\n)?(?:Administrative Contact Address3:[ ]*(?P<street3>.*)\n)?Administrative Contact City:[ ]*(?P<city>.*)\nAdministrative Contact State/Province:[ ]*(?P<state>.*)\nAdministrative Contact Postal Code:[ ]*(?P<postalcode>.*)\nAdministrative Contact Country:[ ]*(?P<country>.*)\nAdministrative Contact Country Code:[ ]*.*\nAdministrative Contact Phone Number:[ ]*(?P<phone>.*)\nAdministrative Contact Email:[ ]*(?P<email>.*)", # .US (NeuStar)
+		"Administrative Contact:\n admin_org: (?P<organization>.*)\n admin_name: (?P<name>.*)\n admin_email: (?P<email>.*)\n admin_address: (?P<address>.*)\n admin_city: (?P<city>.*)\n admin_state: (?P<state>.*)\n admin_zip: (?P<postalcode>.*)\n admin_country: (?P<country>.*)\n admin_phone: (?P<phone>.*)", # Bellnames
+		"Administrative Contact ID:[ ]*(?P<handle>.*)\nAdministrative Contact Name:[ ]*(?P<name>.*)\n(?:Administrative Contact Organization:[ ]*(?P<organization>.*)\n)?Administrative Contact Address1:[ ]*(?P<street1>.*)\n(?:Administrative Contact Address2:[ ]*(?P<street2>.*)\n)?(?:Administrative Contact Address3:[ ]*(?P<street3>.*)\n)?Administrative Contact City:[ ]*(?P<city>.*)\nAdministrative Contact State/Province:[ ]*(?P<state>.*)\nAdministrative Contact Postal Code:[ ]*(?P<postalcode>.*)\nAdministrative Contact Country:[ ]*(?P<country>.*)\nAdministrative Contact Country Code:[ ]*.*\nAdministrative Contact Phone Number:[ ]*(?P<phone>.*)\n(?:Administrative Contact Facsimile Number:[ ]*(?P<facsimile>.*)\n)?Administrative Contact Email:[ ]*(?P<email>.*)", # .US (NeuStar)
 		"Admin Name[.]* (?P<name>.*)\n  Admin Address[.]* (?P<street1>.*)\n  Admin Address[.]* (?P<street2>.*)\n(?:  Admin Address[.]* (?P<street3>.*)\n)?  Admin Address[.]* (?P<city>.*)\n  Admin Address[.]* (?P<postalcode>.*)\n  Admin Address[.]* (?P<state>.*)\n  Admin Address[.]* (?P<country>.*)\n  Admin Email[.]* (?P<email>.*)\n  Admin Phone[.]* (?P<phone>.*)\n  Admin Fax[.]* (?P<fax>.*)", # Melbourne IT
+		"Administrative contact:\n(?:  (?P<organization>.+)\n)?  (?P<name>.+)\n  (?P<email>.+)\n  (?P<street>.+)\n  (?P<city>.+), (?P<state>.+) (?P<postalcode>.+) (?P<country>.+)\n  Phone: (?P<phone>.*)\n  Fax: (?P<fax>.*)\n", # Fabulous.com
+		"Tech Contact Information :[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication
+		"   Administrative contact:\n      (?P<name>.+)\n      (?P<organization>.*)\n      (?P<street>.+)\n      (?P<city>.+) (?P<state>\S+),[ ]+(?P<postalcode>.+)\n      (?P<country>.+)\n      (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)", # .am
 	]
 	
 	billing_contact_regexes = [
@@ -472,13 +520,17 @@ def parse_registrants(data):
 		"Billing Contact:\n  (?P<name>.+)\n  (?P<street1>.+)\n(?:  (?P<street2>.*)\n)?(?:  (?P<street3>.*)\n)?  (?P<postalcode>.+), (?P<city>.+)\n  (?P<country>.+)\n  (?P<phone>.+)\n  (?P<email>.+)\n\n", # OVH
 		" Billing Contact Details:[ ]*\n    (?P<organization>.*)\n    (?P<name>.*)[ ]{2,}\((?P<email>.*)\)\n    (?P<street1>.*)\n(?:    (?P<street2>.*)\n)?(?:    (?P<street3>.*)\n)?    (?P<city>.*)\n    (?P<state>.*),(?P<postalcode>.*)\n    (?P<country>.*)\n    Tel. (?P<phone>.*)", # Whois.com
 		"billing-id:[ ]*(?P<handle>.*)\n(?:billing-organization:[ ]*(?P<organization>.*)\n)?billing-name:[ ]*(?P<name>.*)\nbilling-street:[ ]*(?P<street>.*)\nbilling-city:[ ]*(?P<city>.*)\nbilling-zip:[ ]*(?P<postalcode>.*)\nbilling-country:[ ]*(?P<country>.*)\n(?:billing-phone:[ ]*(?P<phone>.*)\n)?(?:billing-fax:[ ]*(?P<fax>.*)\n)?billing-email:[ ]*(?P<email>.*)", # InterNetworX
-		"Billing Contact ID:[ ]*(?P<handle>.*)\nBilling Contact Name:[ ]*(?P<name>.*)\nBilling Contact Address1:[ ]*(?P<street1>.*)\n(?:Billing Contact Address2:[ ]*(?P<street2>.*)\n)?(?:Billing Contact Address3:[ ]*(?P<street3>.*)\n)?Billing Contact City:[ ]*(?P<city>.*)\nBilling Contact State/Province:[ ]*(?P<state>.*)\nBilling Contact Postal Code:[ ]*(?P<postalcode>.*)\nBilling Contact Country:[ ]*(?P<country>.*)\nBilling Contact Country Code:[ ]*.*\nBilling Contact Phone Number:[ ]*(?P<phone>.*)\nBilling Contact Email:[ ]*(?P<email>.*)", # .US (NeuStar)
+		"Billing Contact:\n bill_org: (?P<organization>.*)\n bill_name: (?P<name>.*)\n bill_email: (?P<email>.*)\n bill_address: (?P<address>.*)\n bill_city: (?P<city>.*)\n bill_state: (?P<state>.*)\n bill_zip: (?P<postalcode>.*)\n bill_country: (?P<country>.*)\n bill_phone: (?P<phone>.*)", # Bellnames
+		"Billing Contact ID:[ ]*(?P<handle>.*)\nBilling Contact Name:[ ]*(?P<name>.*)\n(?:Billing Contact Organization:[ ]*(?P<organization>.*)\n)?Billing Contact Address1:[ ]*(?P<street1>.*)\n(?:Billing Contact Address2:[ ]*(?P<street2>.*)\n)?(?:Billing Contact Address3:[ ]*(?P<street3>.*)\n)?Billing Contact City:[ ]*(?P<city>.*)\nBilling Contact State/Province:[ ]*(?P<state>.*)\nBilling Contact Postal Code:[ ]*(?P<postalcode>.*)\nBilling Contact Country:[ ]*(?P<country>.*)\nBilling Contact Country Code:[ ]*.*\nBilling Contact Phone Number:[ ]*(?P<phone>.*)\n(?:Billing Contact Facsimile Number:[ ]*(?P<facsimile>.*)\n)?Billing Contact Email:[ ]*(?P<email>.*)", # .US (NeuStar)
+		"Billing contact:\n(?:  (?P<organization>.+)\n)?  (?P<name>.+)\n  (?P<email>.+)\n  (?P<street>.+)\n  (?P<city>.+), (?P<state>.+) (?P<postalcode>.+) (?P<country>.+)\n  Phone: (?P<phone>.*)\n  Fax: (?P<fax>.*)\n", # Fabulous.com
+		"Billing Contact Information :[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication
 	]
 	
 	# Some registries use NIC handle references instead of directly listing contacts...
 	
 	nic_contact_regexes = [
 		"personname:\s*(?P<name>.+)\norganization:\s*(?P<organization>.+)\nstreet address:\s*(?P<street>.+)\npostal code:\s*(?P<postalcode>.+)\ncity:\s*(?P<city>.+)\ncountry:\s*(?P<country>.+)\n(?:phone:\s*(?P<phone>.+)\n)?(?:fax-no:\s*(?P<fax>.+)\n)?(?:e-mail:\s*(?P<email>.+)\n)?nic-hdl:\s*(?P<handle>.+)\nchanged:\s*(?P<changedate>.+)", # nic.at
+		"person:\s*(?P<name>.+)\nnic-hdl:\s*(?P<handle>.+)\n", # .ie
 		"nic-hdl:\s*(?P<handle>.+)\ntype:\s*(?P<type>.+)\ncontact:\s*(?P<name>.+)\n(?:.+\n)*?(?:address:\s*(?P<street1>.+)\naddress:\s*(?P<street2>.+)\naddress:\s*(?P<street3>.+)\naddress:\s*(?P<country>.+)\n)?(?:phone:\s*(?P<phone>.+)\n)?(?:fax-no:\s*(?P<fax>.+)\n)?(?:.+\n)*?(?:e-mail:\s*(?P<email>.+)\n)?(?:.+\n)*?changed:\s*(?P<changedate>[0-9]{2}\/[0-9]{2}\/[0-9]{4}).*\n", # AFNIC madness without country field
 		"nic-hdl:\s*(?P<handle>.+)\ntype:\s*(?P<type>.+)\ncontact:\s*(?P<name>.+)\n(?:.+\n)*?(?:address:\s*(?P<street1>.+)\n)?(?:address:\s*(?P<street2>.+)\n)?(?:address:\s*(?P<street3>.+)\n)?(?:phone:\s*(?P<phone>.+)\n)?(?:fax-no:\s*(?P<fax>.+)\n)?(?:.+\n)*?(?:e-mail:\s*(?P<email>.+)\n)?(?:.+\n)*?changed:\s*(?P<changedate>[0-9]{2}\/[0-9]{2}\/[0-9]{4}).*\n", # AFNIC madness any country -at all-
 		"nic-hdl:\s*(?P<handle>.+)\ntype:\s*(?P<type>.+)\ncontact:\s*(?P<name>.+)\n(?:.+\n)*?(?:address:\s*(?P<street1>.+)\n)?(?:address:\s*(?P<street2>.+)\n)?(?:address:\s*(?P<street3>.+)\n)?(?:address:\s*(?P<street4>.+)\n)?country:\s*(?P<country>.+)\n(?:phone:\s*(?P<phone>.+)\n)?(?:fax-no:\s*(?P<fax>.+)\n)?(?:.+\n)*?(?:e-mail:\s*(?P<email>.+)\n)?(?:.+\n)*?changed:\s*(?P<changedate>[0-9]{2}\/[0-9]{2}\/[0-9]{4}).*\n", # AFNIC madness with country field
@@ -506,12 +558,11 @@ def parse_registrants(data):
 	# by a failure, for a regex containing the \s*.+ pattern, would send the regex module on a wild goose hunt for
 	# matching positions. The workaround is to use \S.* instead of .+, but in the interest of keeping the regexes
 	# consistent and compact, it's more practical to do this (predictable) conversion on runtime.
+	# FIXME: This breaks on NIC contact regex for nic.at. Why?
 	registrant_regexes = [preprocess_regex(regex) for regex in registrant_regexes]
 	tech_contact_regexes = [preprocess_regex(regex) for regex in tech_contact_regexes]
 	admin_contact_regexes = [preprocess_regex(regex) for regex in admin_contact_regexes]
 	billing_contact_regexes = [preprocess_regex(regex) for regex in billing_contact_regexes]
-	nic_contact_regexes = [preprocess_regex(regex) for regex in nic_contact_regexes]
-	nic_contact_references = {field: [preprocess_regex(regex) for regex in items] for field, items in nic_contact_references.iteritems()}
 	
 	for segment in data:
 		for regex in registrant_regexes:
@@ -605,6 +656,13 @@ def parse_registrants(data):
 					obj["postalcode"] = postal_code
 					obj["city"] = city
 					obj["street"] = "\n".join(lines[:-1])
+			if 'firstname' in obj or 'lastname' in obj:
+				elements = []
+				if 'firstname' in obj:
+					elements.append(obj["firstname"])
+				if 'lastname' in obj:
+					elements.append(obj["lastname"])
+				obj["name"] = " ".join(elements)
 	
 	return {
 		"registrant": registrant,
