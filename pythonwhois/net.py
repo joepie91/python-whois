@@ -9,7 +9,7 @@ def get_whois_raw(domain, server="", previous=[]):
 		target_server = server
 	if domain.endswith(".jp") and target_server == "whois.jprs.jp":
 		request_domain = "%s/e" % domain # Suppress Japanese output
-        elif domain.endswith(".de"):
+        elif domain.endswith(".de") and ( target_server == "whois.denic.de" or target_server == "de.whois-servers.net" ):
                 request_domain = "-T dn,ace -C US-ASCII %s" % domain # regional specific stuff
 	elif target_server == "whois.verisign-grs.com":
 		request_domain = "=%s" % domain # Avoid partial matches
