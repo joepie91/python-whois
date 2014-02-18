@@ -160,7 +160,7 @@ To start using pythonwhois, use `import pythonwhois`.
 
 ## When you need more control...
 
-^ pythonwhois.net.get_whois_raw(**domain**[, **server=""**])
+^ pythonwhois.net.get_whois_raw(**domain**[, **server=""**, **rfc3490=True**])
 
 	Retrieves the raw WHOIS data for the specified domain, and returns it as a list of responses (one element for each WHOIS server queried). This method will keep following redirects, until it ends up at the right server (and all responses it picks up in the meantime, will be included). Raises `pythonwhois.shared.WhoisException` if no root server for the TLD could be found.
 	
@@ -169,6 +169,10 @@ To start using pythonwhois, use `import pythonwhois`.
 		
 	server::
 		**Optional.** The WHOIS server to query. When not specified, it will default to the appropriate WHOIS server for the TLD.
+
+	rfc3490::
+                **Optional.** If set to `True` a given domain will be encoded through the **toASCII** method as documented in RFC3490 before its submission to the whois service. If the domain isn't given in unicode, the method will handle the decoding by itself.
+
 
 ^ pythonwhois.net.get_root_server(**domain**)
 

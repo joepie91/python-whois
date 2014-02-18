@@ -22,19 +22,43 @@
 				margin-bottom: 32px;
 			}
 
-			.example 
+			.example , .section
 			{ 
 				padding: 5px 6px;
 				font-weight: bold;
-				font-size: 15px;
-				background-color: #E6E6E6; 
 				margin-top: 11px;
 			}
+			
+			.example
+			{
+				font-size: 15px;
+				background-color: #E6E6E6; 
+			}
+			
+			.section
+			{
+				background-color: #E8E8E8; 
+			}
+			
+			.section > .title
+			{
+				font-size: 16px;
+			}
 
-			.example > .children
+			.example > .children, .section > .children
 			{
 				padding-top: 11px;
 				padding-left: 10px;
+			}
+			
+			.section > .children
+			{
+				font-size: 95%;
+			}
+			
+			.section > .children > div.text:first-child, .section > .children > dl:first-child
+			{
+				margin-top: 0px;
 			}
 
 			.example > .children > h7
