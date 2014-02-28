@@ -68,7 +68,8 @@ grammar = {
 					 'Last Update\s?[.]*:\s?(?P<val>.+)',
 					 'Last updated on (?P<val>.+) [a-z]{3,4}',
 					 'Last updated:\s*(?P<val>.+)',
-					 'Last update of whois database:\s?[a-z]{3}, (?P<val>.+) [a-z]{3,4}'],
+					 'Last update of whois database:\s?[a-z]{3}, (?P<val>.+) [a-z]{3,4}',
+                                         'Changed:\s*(?P<val>.+)'],
 		'registrar':		['registrar:\s*(?P<val>.+)',
 					 'Registrar:\s*(?P<val>.+)',
 					 'Sponsoring Registrar Organization:\s*(?P<val>.+)',
@@ -92,7 +93,8 @@ grammar = {
 					 'NS [0-9]+\s*:\s*(?P<val>.+)',
 					 '(?<![^ .])(?P<val>[a-z0-9-]+\.d?ns[0-9]*\.([a-z0-9-]+\.)+[a-z0-9]+)',
 					 '(?<![^ .])(?P<val>([a-z0-9-]+\.)+[a-z0-9]+)(\s+([0-9]{1,3}\.){3}[0-9]{1,3})',
-					 '(?<![^ .])[^a-z0-9.-](?P<val>d?ns\.([a-z0-9-]+\.)+[a-z0-9]+)'],
+					 '(?<![^ .])[^a-z0-9.-](?P<val>d?ns\.([a-z0-9-]+\.)+[a-z0-9]+)',
+                                         'Nserver:\s*(?P<val>.+)'],
 		'emails':		['(?P<val>[\w.-]+@[\w.-]+\.[\w]{2,6})', # Really need to fix this, much longer TLDs now exist...
 					 '(?P<val>[\w.-]+\sAT\s[\w.-]+\sDOT\s[\w]{2,6})']
 	},
@@ -106,7 +108,8 @@ grammar = {
 		'(?P<year>[0-9]{4})[./-](?P<month>[0-9]{1,2})[./-](?P<day>[0-9]{1,2})',
 		'(?P<day>[0-9]{1,2})[./ -](?P<month>[0-9]{1,2})[./ -](?P<year>[0-9]{4}|[0-9]{2})',
 		'(?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (?P<day>[0-9]{1,2}),? (?P<year>[0-9]{4})',
-		'(?P<day>[0-9]{1,2})-(?P<month>January|February|March|April|May|June|July|August|September|October|November|December)-(?P<year>[0-9]{4})'
+		'(?P<day>[0-9]{1,2})-(?P<month>January|February|March|April|May|June|July|August|September|October|November|December)-(?P<year>[0-9]{4})',
+                '(?P<year>[0-9]{4})-(?P<month>[0-9]{2})-(?P<day>[0-9]{2})T(?P<hour>[0-9]{2}):(?P<minute>[0-9]{2}):(?P<second>[0-9]{2})',
 	),
 	"_months": {
 		'jan': 1,
