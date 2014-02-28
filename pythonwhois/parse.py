@@ -64,12 +64,11 @@ grammar = {
 					 'Domain Last Updated Date\s?[.]*:\s?(?P<val>.+)',
 					 'Record last updated\s?[.]*:\s?(?P<val>.+)',
 					 'Modified\s?[.]*:\s?(?P<val>.+)',
-					 'changed:\s*(?P<val>.+)',
+					 '(C|c)hanged:\s*(?P<val>.+)',
 					 'Last Update\s?[.]*:\s?(?P<val>.+)',
 					 'Last updated on (?P<val>.+) [a-z]{3,4}',
 					 'Last updated:\s*(?P<val>.+)',
-					 'Last update of whois database:\s?[a-z]{3}, (?P<val>.+) [a-z]{3,4}',
-                                         'Changed:\s*(?P<val>.+)'],
+					 'Last update of whois database:\s?[a-z]{3}, (?P<val>.+) [a-z]{3,4}'],
 		'registrar':		['registrar:\s*(?P<val>.+)',
 					 'Registrar:\s*(?P<val>.+)',
 					 'Sponsoring Registrar Organization:\s*(?P<val>.+)',
@@ -493,6 +492,7 @@ def parse_registrants(data):
 		"Technical contact:\n(?:  (?P<organization>.+)\n)?  (?P<name>.+)\n  (?P<email>.+)\n  (?P<street>.+)\n  (?P<city>.+), (?P<state>.+) (?P<postalcode>.+) (?P<country>.+)\n  Phone: (?P<phone>.*)\n  Fax: (?P<fax>.*)\n", # Fabulous.com
 		"Admin Contact Information :[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication
 		"   Technical contact:\n      (?P<name>.+)\n      (?P<organization>.*)\n      (?P<street>.+)\n      (?P<city>.+) (?P<state>\S+),[ ]+(?P<postalcode>.+)\n      (?P<country>.+)\n      (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)", # .am
+                "\[Zone-C\]\nType: (?P<type>.+)\nName: (?P<name>.+)\n(Organisation: (?P<organization>.+)\n){0,1}Address: (?P<street>.+)\nPostalCode: (?P<postalcode>.+)\nCity: (?P<city>.+)\nCountryCode: (?P<country>[A-Za-z]{2})\nPhone: (?P<phone>[0-9\+.]+)\nFax: (?P<fax>[0-9\+.]+)\nEmail: (?P<email>.+)\nChanged: (?P<changed>.+)", # DeNIC
 	]
 	
 	admin_contact_regexes = [
@@ -512,6 +512,7 @@ def parse_registrants(data):
 		"Administrative contact:\n(?:  (?P<organization>.+)\n)?  (?P<name>.+)\n  (?P<email>.+)\n  (?P<street>.+)\n  (?P<city>.+), (?P<state>.+) (?P<postalcode>.+) (?P<country>.+)\n  Phone: (?P<phone>.*)\n  Fax: (?P<fax>.*)\n", # Fabulous.com
 		"Tech Contact Information :[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication
 		"   Administrative contact:\n      (?P<name>.+)\n      (?P<organization>.*)\n      (?P<street>.+)\n      (?P<city>.+) (?P<state>\S+),[ ]+(?P<postalcode>.+)\n      (?P<country>.+)\n      (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)", # .am
+                "\[Tech-C\]\nType: (?P<type>.+)\nName: (?P<name>.+)\n(Organisation: (?P<organization>.+)\n){0,1}Address: (?P<street>.+)\nPostalCode: (?P<postalcode>.+)\nCity: (?P<city>.+)\nCountryCode: (?P<country>[A-Za-z]{2})\nPhone: (?P<phone>[0-9\+.]+)\nFax: (?P<fax>[0-9\+.]+)\nEmail: (?P<email>.+)\nChanged: (?P<changed>.+)", # DeNIC
 	]
 	
 	billing_contact_regexes = [
