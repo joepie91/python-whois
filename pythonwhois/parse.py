@@ -1,4 +1,13 @@
-import re, datetime
+from __future__ import print_function
+import re, sys, datetime
+
+if sys.version_info[0] >= 3:
+	def iteritems(d):
+		return iter(d.items())
+else:
+	def iteritems(d):
+		return d.iteritems()
+
 
 grammar = {
 	"_data": {
@@ -142,8 +151,8 @@ def parse_raw_whois(raw_data, normalized=[]):
 	raw_data = [segment.replace("\r", "") for segment in raw_data] # Carriage returns are the devil
 	
 	for segment in raw_data:
-		for rule_key, rule_regexes in grammar['_data'].iteritems():
-			if data.has_key(rule_key) == False:
+		for rule_key, rule_regexes in iteritems(grammar['_data']):
+			if rule_key not in data:
 				for line in segment.splitlines():
 					for regex in rule_regexes:
 						result = re.search(regex, line, re.IGNORECASE)
@@ -153,7 +162,7 @@ def parse_raw_whois(raw_data, normalized=[]):
 							if val != "":
 								try:
 									data[rule_key].append(val)
-								except KeyError, e:
+								except KeyError as e:
 									data[rule_key] = [val]
 		
 		# Whois.com is a bit special... Fabulous.com also seems to use this format.
@@ -163,7 +172,7 @@ def parse_raw_whois(raw_data, normalized=[]):
 			for match in re.findall("[ ]+(.+)\n", chunk):
 				try:
 					data["nameservers"].append(match.strip())
-				except KeyError, e:
+				except KeyError as e:
 					data["nameservers"] = [match.strip()]
 		# Nominet also needs some special attention
 		match = re.search("    Registrar:\n        (.+)\n", segment)
@@ -176,7 +185,7 @@ def parse_raw_whois(raw_data, normalized=[]):
 				match = match.split()[0]
 				try:
 					data["nameservers"].append(match.strip())
-				except KeyError, e:
+				except KeyError as e:
 					data["nameservers"] = [match.strip()]
 		# .am plays the same game
 		match = re.search("   DNS servers:([\s\S]*?\n)\n", segment)
@@ -186,7 +195,7 @@ def parse_raw_whois(raw_data, normalized=[]):
 				match = match.split()[0]
 				try:
 					data["nameservers"].append(match.strip())
-				except KeyError, e:
+				except KeyError as e:
 					data["nameservers"] = [match.strip()]
 		# SIDN isn't very standard either.
 		match = re.search("Registrar:\n\s+(\S.*)", segment)
@@ -199,7 +208,7 @@ def parse_raw_whois(raw_data, normalized=[]):
 				match = match.split()[0]
 				try:
 					data["nameservers"].append(match.strip())
-				except KeyError, e:
+				except KeyError as e:
 					data["nameservers"] = [match.strip()]
 		# The .ie WHOIS server puts ambiguous status information in an unhelpful order
 		match = re.search('ren-status:\s*(.+)', segment)
@@ -212,34 +221,34 @@ def parse_raw_whois(raw_data, normalized=[]):
 	try:
 		data['expiration_date'] = remove_duplicates(data['expiration_date'])
 		data['expiration_date'] = parse_dates(data['expiration_date'])
-	except KeyError, e:
+	except KeyError as e:
 		pass # Not present
 	
 	try:
 		data['creation_date'] = remove_duplicates(data['creation_date'])
 		data['creation_date'] = parse_dates(data['creation_date'])
-	except KeyError, e:
+	except KeyError as e:
 		pass # Not present
 	
 	try:
 		data['updated_date'] = remove_duplicates(data['updated_date'])
 		data['updated_date'] = parse_dates(data['updated_date'])
-	except KeyError, e:
+	except KeyError as e:
 		pass # Not present
 	
 	try:
 		data['nameservers'] = remove_duplicates([ns.rstrip(".") for ns in data['nameservers']])
-	except KeyError, e:
+	except KeyError as e:
 		pass # Not present
 	
 	try:
 		data['emails'] = remove_duplicates(data['emails'])
-	except KeyError, e:
+	except KeyError as e:
 		pass # Not present
 	
 	try:
 		data['registrar'] = remove_duplicates(data['registrar'])
-	except KeyError, e:
+	except KeyError as e:
 		pass # Not present
 		
 	# Remove e-mail addresses if they are already listed for any of the contacts
@@ -248,11 +257,11 @@ def parse_raw_whois(raw_data, normalized=[]):
 		if data["contacts"][contact] is not None:
 			try:
 				known_emails.append(data["contacts"][contact]["email"])
-			except KeyError, e:
+			except KeyError as e:
 				pass # No e-mail recorded for this contact...
 	try:
 		data['emails'] = [email for email in data["emails"] if email not in known_emails]
-	except KeyError, e:
+	except KeyError as e:
 		pass # Not present
 	
 	for key in data.keys():
@@ -281,7 +290,7 @@ def normalize_data(data, normalized):
 			else:
 				data[key] = [normalize_name(item, abbreviation_threshold=threshold, length_threshold=1) for item in data[key]]
 	
-	for contact_type, contact in data['contacts'].iteritems():
+	for contact_type, contact in iteritems(data['contacts']):
 		if contact is not None:
 			for key in ("email",):
 				if key in contact and contact[key] is not None and (normalized == True or key in normalized):
@@ -301,7 +310,7 @@ def normalize_data(data, normalized):
 			for key in contact.keys():
 				try:
 					contact[key] = contact[key].strip(", ")
-				except AttributeError, e:
+				except AttributeError as e:
 					pass # Not a string
 	return data
 
@@ -368,37 +377,37 @@ def parse_dates(dates):
 					# This will require some more guesswork - some WHOIS servers present the name of the month
 					try:
 						month = int(result.group("month"))
-					except ValueError, e:
+					except ValueError as e:
 						# Apparently not a number. Look up the corresponding number.
 						try:
 							month = grammar['_months'][result.group("month").lower()]
-						except KeyError, e:
+						except KeyError as e:
 							# Unknown month name, default to 0
 							month = 0
 					
 					try:
 						hour = int(result.group("hour"))
-					except IndexError, e:
+					except IndexError as e:
 						hour = 0
-					except TypeError, e:
+					except TypeError as e:
 						hour = 0
 					
 					try:
 						minute = int(result.group("minute"))
-					except IndexError, e:
+					except IndexError as e:
 						minute = 0
-					except TypeError, e:
+					except TypeError as e:
 						minute = 0
 					
 					try:
 						second = int(result.group("second"))
-					except IndexError, e:
+					except IndexError as e:
 						second = 0
-					except TypeError, e:
+					except TypeError as e:
 						second = 0
 					
 					break
-				except ValueError, e:
+				except ValueError as e:
 					# Something went horribly wrong, maybe there is no valid date present?
 					year = 0
 					month = 0
@@ -406,16 +415,16 @@ def parse_dates(dates):
 					hour = 0
 					minute = 0
 					second = 0
-					print e.message
+					print(e.message)
 		try:
 			if year > 0:
 				try:
 					parsed_dates.append(datetime.datetime(year, month, day, hour, minute, second))
-				except ValueError, e:
+				except ValueError as e:
 					# We might have gotten the day and month the wrong way around, let's try it the other way around
 					# If you're not using an ISO-standard date format, you're an evil registrar!
 					parsed_dates.append(datetime.datetime(year, day, month, hour, minute, second))
-		except UnboundLocalError, e:
+		except UnboundLocalError as e:
 			pass
 	
 	if len(parsed_dates) > 0:
@@ -623,7 +632,7 @@ def parse_registrants(data):
 							admin_contact = data_reference
 					break
 		
-	# Post-processing		
+	# Post-processing
 	for obj in (registrant, tech_contact, billing_contact, admin_contact):
 		if obj is not None:
 			for key in obj.keys():
@@ -642,7 +651,7 @@ def parse_registrants(data):
 					try:
 						street_items.append(obj["street%d" % i])
 						del obj["street%d" % i]
-					except KeyError, e:
+					except KeyError as e:
 						break
 					i += 1
 				obj["street"] = "\n".join(street_items)
