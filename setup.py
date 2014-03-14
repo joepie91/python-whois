@@ -7,6 +7,7 @@ setup(name='pythonwhois',
       author_email='pythonwhois@cryto.net',
       url='http://cryto.net/pythonwhois',
       packages=['pythonwhois'],
+      install_requires=['argparse'],
       provides=['pythonwhois'],
       scripts=["pwhois"],
       license="WTFPL"
