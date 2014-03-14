@@ -69,13 +69,17 @@ Make sure to verify (using `pwhois` or otherwise) that the WHOIS data for the do
 
 	./test.py update thedomain.com
 	
-### Running the full test suite
+### Running all tests
 
 	./test.py run all
 	
 ### Testing a specific domain
 
 	./test.py run thedomain.com
+
+### Running the full test suite including support for multiple python versions
+
+    tox
 
 ### Generating documentation
 
