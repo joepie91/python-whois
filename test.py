@@ -1,6 +1,27 @@
 #!/usr/bin/env python2
 
-import sys, argparse, os, pythonwhois, json, datetime
+import sys, argparse, os, pythonwhois, json, datetime, codecs
+import pkgutil
+import encodings
+
+
+def get_codecs():
+	"""Dynamically get list of codecs in python."""
+	false_positives = set(["aliases"])
+	found = set(name for imp, name, ispkg in pkgutil.iter_modules(encodings.__path__) if not ispkg)
+	found.difference_update(false_positives)
+	return found
+
+
+def read_encoded_file(file_path):
+	"""Try reading file using all codecs. Return the first succesfull one."""
+	for encoding in get_codecs():
+		try:
+			with codecs.open(file_path, "r", encoding) as f:
+				return f.read()
+		except Exception:
+			pass
+
 
 parser = argparse.ArgumentParser(description="Runs or modifies the test suite for python-whois.")
 parser.add_argument("mode", nargs=1, choices=["run", "update"], default="run", help="Whether to run or update the tests. Only update if you know what you're doing!")
@@ -14,7 +35,7 @@ ENDC = '\033[0m'
 def encoded_json_dumps(obj):
 	try:
 		return json.dumps(obj, default=json_fallback)
-	except UnicodeDecodeError, e:
+	except UnicodeDecodeError as e:
 		return json.dumps(recursive_encode(obj, "latin-1"), default=json_fallback)
 
 def json_fallback(obj):
@@ -24,7 +45,7 @@ def json_fallback(obj):
 		return obj
 
 def recursive_encode(obj, encoding):
-	for key in obj.keys():
+	for key in list(obj.keys()):
 		if isinstance(obj[key], dict):
 			obj[key] = recursive_encode(obj[key], encoding)
 		elif isinstance(obj[key], list):
@@ -74,18 +95,26 @@ if args.mode[0] == "run":
 	suites = []
 	for target in targets:
 		try:
-			with open(os.path.join("test/data", target), "r") as f:
+			with codecs.open(os.path.join("test/data", target), "r") as f:
 				data = f.read().split("\n--\n")
-		except IOError, e:
+		except IOError as e:
 			sys.stderr.write("Invalid domain %(domain)s specified. No test case or base data exists.\n" % {"domain": target})
 			errors = True
 			continue
-		try:			
-			with open(os.path.join("test/target_default", target), "r") as f:
+		except UnicodeDecodeError:
+			try:
+				# Try cp1252 (ufpa.br uses that)
+				with codecs.open(os.path.join("test/data", target), "r", 'cp1252') as f:
+					data = f.read().split("\n--\n")
+			except UnicodeDecodeError as e:
+				# Fall back to trying all registered codecs
+				data = read_encoded_file(os.path.join("test/data", target)).split("\n--\n")
+		try:
+			with codecs.open(os.path.join("test/target_default", target), "r") as f:
 				default = f.read()
-			with open(os.path.join("test/target_normalized", target), "r") as f:
+			with codecs.open(os.path.join("test/target_normalized", target), "r") as f:
 				normalized = f.read()
-		except IOError, e:
+		except IOError as e:
 			sys.stderr.write("Missing target data for domain %(domain)s. Run `./test.py update %(domain)s` to correct this, after verifying that pythonwhois can correctly parse this particular domain.\n" % {"domain": target})
 			errors = True
 			continue
@@ -152,10 +181,10 @@ elif args.mode[0] == "update":
 	updates = []
 	for target in targets:
 		try:
-			with open(os.path.join("test/data", target), "r") as f:
+			with codecs.open(os.path.join("test/data", target), "r") as f:
 				data = f.read().split("\n--\n")
 			updates.append((target, data))
-		except IOError, e:
+		except IOError as e:
 			sys.stderr.write("Invalid domain %(domain)s specified. No base data exists.\n" % {"domain": target})
 			errors = True
 			continue
@@ -166,8 +195,8 @@ elif args.mode[0] == "update":
 	for target, data in updates:
 		default = pythonwhois.parse.parse_raw_whois(data)
 		normalized = pythonwhois.parse.parse_raw_whois(data, normalized=True)
-		with open(os.path.join("test/target_default", target), "w") as f:
+		with codecs.open(os.path.join("test/target_default", target), "w") as f:
 			f.write(encoded_json_dumps(default))
-		with open(os.path.join("test/target_normalized", target), "w") as f:
-			f.write(encoded_json_dumps(normalized))	
-		print "Generated target data for %s." % target
+		with codecs.open(os.path.join("test/target_normalized", target), "w") as f:
+			f.write(encoded_json_dumps(normalized))
+		print("Generated target data for %s." % target)
