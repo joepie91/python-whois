@@ -1,7 +1,12 @@
 import socket, re
+from codecs import encode, decode
 from . import shared
 
-def get_whois_raw(domain, server="", previous=[]):
+def get_whois_raw(domain, server="", previous=[], rfc3490=True):
+
+        if rfc3490:
+            domain = encode( domain if type(domain) is unicode else decode(domain, "utf8"), "idna" )
+
 	if len(previous) == 0:
 		# Root query
 		target_server = get_root_server(domain)
@@ -9,6 +14,8 @@ def get_whois_raw(domain, server="", previous=[]):
 		target_server = server
 	if domain.endswith(".jp") and target_server == "whois.jprs.jp":
 		request_domain = "%s/e" % domain # Suppress Japanese output
+        elif domain.endswith(".de") and ( target_server == "whois.denic.de" or target_server == "de.whois-servers.net" ):
+                request_domain = "-T dn,ace %s" % domain # regional specific stuff
 	elif target_server == "whois.verisign-grs.com":
 		request_domain = "=%s" % domain # Avoid partial matches
 	else:
