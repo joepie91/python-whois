@@ -22,19 +22,43 @@
 				margin-bottom: 32px;
 			}
 
-			.example 
+			.example , .section
 			{ 
 				padding: 5px 6px;
 				font-weight: bold;
-				font-size: 15px;
-				background-color: #E6E6E6; 
 				margin-top: 11px;
 			}
+			
+			.example
+			{
+				font-size: 15px;
+				background-color: #E6E6E6; 
+			}
+			
+			.section
+			{
+				background-color: #E8E8E8; 
+			}
+			
+			.section > .title
+			{
+				font-size: 16px;
+			}
 
-			.example > .children
+			.example > .children, .section > .children
 			{
 				padding-top: 11px;
 				padding-left: 10px;
+			}
+			
+			.section > .children
+			{
+				font-size: 95%;
+			}
+			
+			.section > .children > div.text:first-child, .section > .children > dl:first-child
+			{
+				margin-top: 0px;
 			}
 
 			.example > .children > h7
@@ -156,6 +180,6 @@
 		</style>
 	</head>
 	<body>
-		<div class="children"><h1>Installing pythonwhois</h1><div class="text"><a href="index.html"><< back to index</a></div><div class="text">To install pythonwhois, you need to have <span class="fixed">pip</span> installed. It's available on most distributions in a package named <span class="fixed">python-pip</span>.</div><div class="text">The pythonwhois package includes the <span class="fixed">pwhois</span> tool.</div><h2>Installing it from scratch</h2><h7>Code:</h7><pre class="code">pip install pythonwhois</pre><h2>Updating from a previous version</h2><div class="text">Make sure to read the <a href="upgrade.html">upgrade notes</a> before updating to a new major pythonwhois version!</div><h7>Code:</h7><pre class="code">pip install --upgrade pythonwhois</pre></div>
+		<div class="children"><h1>Installing pythonwhois</h1><div class="text"><a href="index.html"><< back to index</a></div><div class="text">To install pythonwhois, you need to have <span class="fixed">pip</span> installed. It's available on most distributions in a package named <span class="fixed">python-pip</span>.</div><div class="text">The pythonwhois package includes the <span class="fixed">pwhois</span> tool.</div><h2>Installing it from scratch</h2><h7>Code:</h7><pre class="code">pip install pythonwhois</pre><div class="text">If you are using Python 2.6 and get an ImportError about <span class="fixed">OrderedDict</span>, also do the following:</div><h7>Code:</h7><pre class="code">pip install ordereddict</pre><h2>Updating from a previous version</h2><div class="text">Make sure to read the <a href="upgrade.html">upgrade notes</a> before updating to a new major pythonwhois version!</div><h7>Code:</h7><pre class="code">pip install --upgrade pythonwhois</pre></div>
 	</body>
 </html>
