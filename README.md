@@ -47,7 +47,9 @@ If any of those apply, don't hesitate to file an issue! The goal is 100% coverag
 
 ## Contributing
 
-Feel free to fork and submit pull requests! If you change any parsing or normalization logic, ensure to run the full test suite before opening a pull request. Instructions for that are below.
+Feel free to fork and submit pull requests (to the `develop` branch)! If you change any parsing or normalization logic, ensure to run the full test suite before opening a pull request. Instructions for that are below.
+
+Please note that this project uses tabs for indentation.
 
 All commands are relative to the root directory of the repository.
 
