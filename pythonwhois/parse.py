@@ -48,6 +48,7 @@ grammar = {
 					 'Expired\s?[.]*:?\s*?(?P<val>.+)',
 					 'Domain Expiration Date\s?[.]*:?\s*?(?P<val>.+)',
 					 'paid-till:\s*(?P<val>.+)',
+					 'expiration_date:\s*(?P<val>.+)',
 					 'renewal:\s*(?P<val>.+)',
 					 'expire:\s*(?P<val>.+)'],
 		'updated_date':		['\[Last Updated\]\s*(?P<val>.+)',
@@ -66,6 +67,7 @@ grammar = {
 					 'Record last updated\s?[.]*:\s?(?P<val>.+)',
 					 'Modified\s?[.]*:\s?(?P<val>.+)',
 					 '(C|c)hanged:\s*(?P<val>.+)',
+					 'last_update:\s*(?P<val>.+)',
 					 'Last Update\s?[.]*:\s?(?P<val>.+)',
 					 'Last updated on (?P<val>.+) [a-z]{3,4}',
 					 'Last updated:\s*(?P<val>.+)',
@@ -182,6 +184,9 @@ def parse_raw_whois(raw_data, normalized=[]):
 		match = re.search("    Registrar:\n        (.+)\n", segment)
 		if match is not None:
 			data["registrar"] = [match.group(1).strip()]
+		match = re.search("    Registration status:\n        (.+)\n", segment)
+		if match is not None:
+			data["status"] = [match.group(1).strip()]
 		match = re.search("    Name servers:([\s\S]*?\n)\n", segment)
 		if match is not None:
 			chunk = match.group(1)
@@ -475,8 +480,9 @@ def parse_registrants(data):
 		"Eligibility Type:[ ]*Citizen\/Resident\n[\s\S]*Registrant Contact ID:[ ]*(?P<handle>.+)\n[\s\S]*Registrant Contact Name:[ ]*(?P<name>.+)\n", # .au individual
 		"Registrant:[ ]*(?P<organization>.+)\n[\s\S]*Eligibility Type:[ ]*(Higher Education Institution|Company|Incorporated Association|Other)\n[\s\S]*Registrant Contact ID:[ ]*(?P<handle>.+)\n[\s\S]*Registrant Contact Name:[ ]*(?P<name>.+)\n", # .au educational, company, 'incorporated association' (non-profit?), other (spotted for linux.conf.au, unsure if also for others)
 		"    Registrant:\n        (?P<name>.+)\n\n    Registrant type:\n        .*\n\n    Registrant's address:\n        The registrant .* opted to have", # Nominet (.uk) with hidden address
-		"    Registrant:\n        (?P<name>.+)\n\n    Registrant type:\n        .*\n\n    Registrant's address:\n        (?P<street1>.+)\n        (?P<street2>.+)\n        (?P<street3>.+)\n        (?P<city>.+)\n        (?P<state>.+)\n        (?P<postalcode>.+)\n        (?P<country>.+)", # Nominet (.uk) with visible address
+		"    Registrant:\n        (?P<name>.+)\n\n    Registrant type:\n        .*\n\n    Registrant's address:\n        (?P<street1>.+)\n(?:        (?P<street2>.+)\n)?(?:        (?P<street3>.+)\n)?        (?P<city>.+)\n        (?P<state>.+)\n        (?P<postalcode>.+)\n        (?P<country>.+)", # Nominet (.uk) with visible address
 		"Registrant contact:\n  (?P<name>.+)\n  (?P<street>.*)\n  (?P<city>.+), (?P<state>.+) (?P<postalcode>.+) (?P<country>.+)\n\n", # Fabulous.com
+		"registrant-name:\s*(?P<name>.+)\nregistrant-type:\s*(?P<type>.+)\nregistrant-address:\s*(?P<street>.+)\nregistrant-postcode:\s*(?P<postalcode>.+)\nregistrant-city:\s*(?P<city>.+)\nregistrant-country:\s*(?P<country>.+)\n(?:registrant-phone:\s*(?P<phone>.+)\n)?(?:registrant-email:\s*(?P<email>.+)\n)?", # Hetzner
 		"Registrant Contact Information :[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication
 		"Contact Information : For Customer # [0-9]+[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication alternative (private WHOIS) format?
 		"   Registrant:\n      (?P<name>.+)\n      (?P<street>.+)\n      (?P<city>.+) (?P<state>\S+),[ ]+(?P<postalcode>.+)\n      (?P<country>.+)", # .am
@@ -502,6 +508,7 @@ def parse_registrants(data):
 		"Technical Contact ID:[ ]*(?P<handle>.*)\nTechnical Contact Name:[ ]*(?P<name>.*)\n(?:Technical Contact Organization:[ ]*(?P<organization>.*)\n)?Technical Contact Address1:[ ]*(?P<street1>.*)\n(?:Technical Contact Address2:[ ]*(?P<street2>.*)\n)?(?:Technical Contact Address3:[ ]*(?P<street3>.*)\n)?Technical Contact City:[ ]*(?P<city>.*)\nTechnical Contact State/Province:[ ]*(?P<state>.*)\nTechnical Contact Postal Code:[ ]*(?P<postalcode>.*)\nTechnical Contact Country:[ ]*(?P<country>.*)\nTechnical Contact Country Code:[ ]*.*\nTechnical Contact Phone Number:[ ]*(?P<phone>.*)\n(?:Technical Contact Facsimile Number:[ ]*(?P<facsimile>.*)\n)?Technical Contact Email:[ ]*(?P<email>.*)", # .US (NeuStar)
 		"Tech Name[.]* (?P<name>.*)\n  Tech Address[.]* (?P<street1>.*)\n  Tech Address[.]* (?P<street2>.*)\n(?:  Tech Address[.]* (?P<street3>.*)\n)?  Tech Address[.]* (?P<city>.*)\n  Tech Address[.]* (?P<postalcode>.*)\n  Tech Address[.]* (?P<state>.*)\n  Tech Address[.]* (?P<country>.*)\n  Tech Email[.]* (?P<email>.*)\n  Tech Phone[.]* (?P<phone>.*)\n  Tech Fax[.]* (?P<fax>.*)", # Melbourne IT
 		"Technical contact:\n(?:  (?P<organization>.+)\n)?  (?P<name>.+)\n  (?P<email>.+)\n  (?P<street>.+)\n  (?P<city>.+), (?P<state>.+) (?P<postalcode>.+) (?P<country>.+)\n  Phone: (?P<phone>.*)\n  Fax: (?P<fax>.*)\n", # Fabulous.com
+		"tech-c-name:\s*(?P<name>.+)\ntech-c-type:\s*(?P<type>.+)\ntech-c-address:\s*(?P<street>.+)\ntech-c-postcode:\s*(?P<postalcode>.+)\ntech-c-city:\s*(?P<city>.+)\ntech-c-country:\s*(?P<country>.+)\n(?:tech-c-phone:\s*(?P<phone>.+)\n)?(?:tech-c-email:\s*(?P<email>.+)\n)?", # Hetzner
 		"Admin Contact Information :[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication
 		"   Technical contact:\n      (?P<name>.+)\n      (?P<organization>.*)\n      (?P<street>.+)\n      (?P<city>.+) (?P<state>\S+),[ ]+(?P<postalcode>.+)\n      (?P<country>.+)\n      (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)", # .am
                 "\[Zone-C\]\nType: (?P<type>.+)\nName: (?P<name>.+)\n(Organisation: (?P<organization>.+)\n){0,1}(Address: (?P<street1>.+)\n){1}(Address: (?P<street2>.+)\n){0,1}(Address: (?P<street3>.+)\n){0,1}(Address: (?P<street4>.+)\n){0,1}PostalCode: (?P<postalcode>.+)\nCity: (?P<city>.+)\nCountryCode: (?P<country>[A-Za-z]{2})\nPhone: (?P<phone>.+)\nFax: (?P<fax>.+)\nEmail: (?P<email>.+)\n(Remarks: (?P<remark>.+)\n){0,1}Changed: (?P<changed>.+)", # DeNIC
@@ -522,6 +529,7 @@ def parse_registrants(data):
 		"Administrative Contact ID:[ ]*(?P<handle>.*)\nAdministrative Contact Name:[ ]*(?P<name>.*)\n(?:Administrative Contact Organization:[ ]*(?P<organization>.*)\n)?Administrative Contact Address1:[ ]*(?P<street1>.*)\n(?:Administrative Contact Address2:[ ]*(?P<street2>.*)\n)?(?:Administrative Contact Address3:[ ]*(?P<street3>.*)\n)?Administrative Contact City:[ ]*(?P<city>.*)\nAdministrative Contact State/Province:[ ]*(?P<state>.*)\nAdministrative Contact Postal Code:[ ]*(?P<postalcode>.*)\nAdministrative Contact Country:[ ]*(?P<country>.*)\nAdministrative Contact Country Code:[ ]*.*\nAdministrative Contact Phone Number:[ ]*(?P<phone>.*)\n(?:Administrative Contact Facsimile Number:[ ]*(?P<facsimile>.*)\n)?Administrative Contact Email:[ ]*(?P<email>.*)", # .US (NeuStar)
 		"Admin Name[.]* (?P<name>.*)\n  Admin Address[.]* (?P<street1>.*)\n  Admin Address[.]* (?P<street2>.*)\n(?:  Admin Address[.]* (?P<street3>.*)\n)?  Admin Address[.]* (?P<city>.*)\n  Admin Address[.]* (?P<postalcode>.*)\n  Admin Address[.]* (?P<state>.*)\n  Admin Address[.]* (?P<country>.*)\n  Admin Email[.]* (?P<email>.*)\n  Admin Phone[.]* (?P<phone>.*)\n  Admin Fax[.]* (?P<fax>.*)", # Melbourne IT
 		"Administrative contact:\n(?:  (?P<organization>.+)\n)?  (?P<name>.+)\n  (?P<email>.+)\n  (?P<street>.+)\n  (?P<city>.+), (?P<state>.+) (?P<postalcode>.+) (?P<country>.+)\n  Phone: (?P<phone>.*)\n  Fax: (?P<fax>.*)\n", # Fabulous.com
+		"admin-c-name:\s*(?P<name>.+)\nadmin-c-type:\s*(?P<type>.+)\nadmin-c-address:\s*(?P<street>.+)\nadmin-c-postcode:\s*(?P<postalcode>.+)\nadmin-c-city:\s*(?P<city>.+)\nadmin-c-country:\s*(?P<country>.+)\n(?:admin-c-phone:\s*(?P<phone>.+)\n)?(?:admin-c-email:\s*(?P<email>.+)\n)?", # Hetzner
 		"Tech Contact Information :[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication
 		"   Administrative contact:\n      (?P<name>.+)\n      (?P<organization>.*)\n      (?P<street>.+)\n      (?P<city>.+) (?P<state>\S+),[ ]+(?P<postalcode>.+)\n      (?P<country>.+)\n      (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)", # .am
                 "\[Tech-C\]\nType: (?P<type>.+)\nName: (?P<name>.+)\n(Organisation: (?P<organization>.+)\n){0,1}(Address: (?P<street1>.+)\n){1}(Address: (?P<street2>.+)\n){0,1}(Address: (?P<street3>.+)\n){0,1}(Address: (?P<street4>.+)\n){0,1}PostalCode: (?P<postalcode>.+)\nCity: (?P<city>.+)\nCountryCode: (?P<country>[A-Za-z]{2})\nPhone: (?P<phone>.+)\nFax: (?P<fax>.+)\nEmail: (?P<email>.+)\n(Remarks: (?P<remark>.+)\n){0,1}Changed: (?P<changed>.+)", # DeNIC

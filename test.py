@@ -174,6 +174,7 @@ if args.mode[0] == "run":
 		sys.stdout.write(FAIL)
 		sys.stdout.write("%d tests failed, %d errors in total.\n" % (total_failed, total_errors))
 		sys.stderr.write(ENDC)
+		exit(1)
 					
 						
 elif args.mode[0] == "update":
