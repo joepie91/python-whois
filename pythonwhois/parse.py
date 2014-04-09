@@ -182,6 +182,9 @@ def parse_raw_whois(raw_data, normalized=[]):
 		match = re.search("    Registrar:\n        (.+)\n", segment)
 		if match is not None:
 			data["registrar"] = [match.group(1).strip()]
+		match = re.search("    Registration status:\n        (.+)\n", segment)
+		if match is not None:
+			data["status"] = [match.group(1).strip()]
 		match = re.search("    Name servers:([\s\S]*?\n)\n", segment)
 		if match is not None:
 			chunk = match.group(1)
@@ -475,7 +478,7 @@ def parse_registrants(data):
 		"Eligibility Type:[ ]*Citizen\/Resident\n[\s\S]*Registrant Contact ID:[ ]*(?P<handle>.+)\n[\s\S]*Registrant Contact Name:[ ]*(?P<name>.+)\n", # .au individual
 		"Registrant:[ ]*(?P<organization>.+)\n[\s\S]*Eligibility Type:[ ]*(Higher Education Institution|Company|Incorporated Association|Other)\n[\s\S]*Registrant Contact ID:[ ]*(?P<handle>.+)\n[\s\S]*Registrant Contact Name:[ ]*(?P<name>.+)\n", # .au educational, company, 'incorporated association' (non-profit?), other (spotted for linux.conf.au, unsure if also for others)
 		"    Registrant:\n        (?P<name>.+)\n\n    Registrant type:\n        .*\n\n    Registrant's address:\n        The registrant .* opted to have", # Nominet (.uk) with hidden address
-		"    Registrant:\n        (?P<name>.+)\n\n    Registrant type:\n        .*\n\n    Registrant's address:\n        (?P<street1>.+)\n        (?P<street2>.+)\n        (?P<street3>.+)\n        (?P<city>.+)\n        (?P<state>.+)\n        (?P<postalcode>.+)\n        (?P<country>.+)", # Nominet (.uk) with visible address
+		"    Registrant:\n        (?P<name>.+)\n\n    Registrant type:\n        .*\n\n    Registrant's address:\n        (?P<street1>.+)\n(?:        (?P<street2>.+)\n)?(?:        (?P<street3>.+)\n)?        (?P<city>.+)\n        (?P<state>.+)\n        (?P<postalcode>.+)\n        (?P<country>.+)", # Nominet (.uk) with visible address
 		"Registrant contact:\n  (?P<name>.+)\n  (?P<street>.*)\n  (?P<city>.+), (?P<state>.+) (?P<postalcode>.+) (?P<country>.+)\n\n", # Fabulous.com
 		"Registrant Contact Information :[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication
 		"Contact Information : For Customer # [0-9]+[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication alternative (private WHOIS) format?
