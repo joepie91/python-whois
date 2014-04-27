@@ -172,7 +172,7 @@ def parse_raw_whois(raw_data, normalized=[]):
 									data[rule_key] = [val]
 
 		# Whois.com is a bit special... Fabulous.com also seems to use this format.
-		match = re.search("Name Servers:([/s/S]+)\n\n", segment)
+		match = re.search("Name [Ss]ervers:([/s/S]+)\n\n", segment)
 		if match is not None:
 			chunk = match.group(1)
 			for match in re.findall("[ ]+(.+)\n", chunk):
@@ -206,19 +206,21 @@ def parse_raw_whois(raw_data, normalized=[]):
 					data["nameservers"].append(match.strip())
 				except KeyError as e:
 					data["nameservers"] = [match.strip()]
-		# SIDN isn't very standard either.
-		match = re.search("Registrar:\n\s+(\S.*)", segment)
+		# SIDN isn't very standard either. And EURid uses a similar format.
+		match = re.search("Registrar:\n\s+(?:Name:\s*)?(\S.*)", segment)
 		if match is not None:
 			data["registrar"].insert(0, match.group(1).strip())
-		match = re.search("Domain nameservers:([\s\S]*?\n)\n", segment)
+		match = re.search("(?:Domain nameservers|Name servers):([\s\S]*?\n)\n", segment)
 		if match is not None:
 			chunk = match.group(1)
-			for match in re.findall("   (.+)\n", chunk):
+			for match in re.findall("\s+?(.+)\n", chunk):
 				match = match.split()[0]
-				try:
-					data["nameservers"].append(match.strip())
-				except KeyError as e:
-					data["nameservers"] = [match.strip()]
+				# Prevent nameserver aliases from being picked up.
+				if not match.startswith("[") and not match.endswith("]"):
+					try:
+						data["nameservers"].append(match.strip())
+					except KeyError as e:
+						data["nameservers"] = [match.strip()]
 		# The .ie WHOIS server puts ambiguous status information in an unhelpful order
 		match = re.search('ren-status:\s*(.+)', segment)
 		if match is not None:
@@ -424,7 +426,7 @@ def parse_dates(dates):
 					hour = 0
 					minute = 0
 					second = 0
-					print(e.message)
+					print(e.message) # FIXME: This should have proper logging of some sort...?
 		try:
 			if year > 0:
 				try:
@@ -511,6 +513,7 @@ def parse_registrants(data):
 		"tech-c-name:\s*(?P<name>.+)\ntech-c-type:\s*(?P<type>.+)\ntech-c-address:\s*(?P<street>.+)\ntech-c-postcode:\s*(?P<postalcode>.+)\ntech-c-city:\s*(?P<city>.+)\ntech-c-country:\s*(?P<country>.+)\n(?:tech-c-phone:\s*(?P<phone>.+)\n)?(?:tech-c-email:\s*(?P<email>.+)\n)?", # Hetzner
 		"Admin Contact Information :[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication
 		"   Technical contact:\n      (?P<name>.+)\n      (?P<organization>.*)\n      (?P<street>.+)\n      (?P<city>.+) (?P<state>\S+),[ ]+(?P<postalcode>.+)\n      (?P<country>.+)\n      (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)", # .am
+		"Technical:\n\s*Name:\s*(?P<name>.*)\n\s*Organisation:\s*(?P<organization>.*)\n\s*Language:.*\n\s*Phone:\s*(?P<phone>.*)\n\s*Fax:\s*(?P<fax>.*)\n\s*Email:\s*(?P<email>.*)\n", # EURid
                 "\[Zone-C\]\nType: (?P<type>.+)\nName: (?P<name>.+)\n(Organisation: (?P<organization>.+)\n){0,1}(Address: (?P<street1>.+)\n){1}(Address: (?P<street2>.+)\n){0,1}(Address: (?P<street3>.+)\n){0,1}(Address: (?P<street4>.+)\n){0,1}PostalCode: (?P<postalcode>.+)\nCity: (?P<city>.+)\nCountryCode: (?P<country>[A-Za-z]{2})\nPhone: (?P<phone>.+)\nFax: (?P<fax>.+)\nEmail: (?P<email>.+)\n(Remarks: (?P<remark>.+)\n){0,1}Changed: (?P<changed>.+)", # DeNIC
 	]
 
