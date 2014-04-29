@@ -557,6 +557,7 @@ def parse_registrants(data):
 
 	nic_contact_regexes = [
 		"personname:\s*(?P<name>.+)\norganization:\s*(?P<organization>.+)\nstreet address:\s*(?P<street>.+)\npostal code:\s*(?P<postalcode>.+)\ncity:\s*(?P<city>.+)\ncountry:\s*(?P<country>.+)\n(?:phone:\s*(?P<phone>.+)\n)?(?:fax-no:\s*(?P<fax>.+)\n)?(?:e-mail:\s*(?P<email>.+)\n)?nic-hdl:\s*(?P<handle>.+)\nchanged:\s*(?P<changedate>.+)", # nic.at
+		"contact-handle:[ ]*(?P<handle>.+)\ncontact:[ ]*(?P<name>.+)\n(?:organisation:[ ]*(?P<organization>.+)\n)?address:[ ]*(?P<street1>.+)\n(?:address:[ ]*(?P<street2>.+)\n)?(?:address:[ ]*(?P<street3>.+)\n)?(?:address:[ ]*(?P<street4>.+)\n)?address:[ ]*(?P<city>.+)\naddress:[ ]*(?P<state>.+)\naddress:[ ]*(?P<postalcode>.+)\naddress:[ ]*(?P<country>.+)\n(?:phone:[ ]*(?P<phone>.+)\n)?(?:fax:[ ]*(?P<fax>.+)\n)?(?:email:[ ]*(?P<email>.+)\n)?", # LCN.com
 		"person:\s*(?P<name>.+)\nnic-hdl:\s*(?P<handle>.+)\n", # .ie
 		"nic-hdl:\s*(?P<handle>.+)\ntype:\s*(?P<type>.+)\ncontact:\s*(?P<name>.+)\n(?:.+\n)*?(?:address:\s*(?P<street1>.+)\naddress:\s*(?P<street2>.+)\naddress:\s*(?P<street3>.+)\naddress:\s*(?P<country>.+)\n)?(?:phone:\s*(?P<phone>.+)\n)?(?:fax-no:\s*(?P<fax>.+)\n)?(?:.+\n)*?(?:e-mail:\s*(?P<email>.+)\n)?(?:.+\n)*?changed:\s*(?P<changedate>[0-9]{2}\/[0-9]{2}\/[0-9]{4}).*\n", # AFNIC madness without country field
 		"nic-hdl:\s*(?P<handle>.+)\ntype:\s*(?P<type>.+)\ncontact:\s*(?P<name>.+)\n(?:.+\n)*?(?:address:\s*(?P<street1>.+)\n)?(?:address:\s*(?P<street2>.+)\n)?(?:address:\s*(?P<street3>.+)\n)?(?:phone:\s*(?P<phone>.+)\n)?(?:fax-no:\s*(?P<fax>.+)\n)?(?:.+\n)*?(?:e-mail:\s*(?P<email>.+)\n)?(?:.+\n)*?changed:\s*(?P<changedate>[0-9]{2}\/[0-9]{2}\/[0-9]{4}).*\n", # AFNIC madness any country -at all-
@@ -567,17 +568,21 @@ def parse_registrants(data):
 	nic_contact_references = {
 		"registrant": [
 			"registrant:\s*(?P<handle>.+)", # nic.at
+			"owner-contact:\s*(?P<handle>.+)", # LCN.com
 			"holder-c:\s*(?P<handle>.+)", # AFNIC
 			"holder:\s*(?P<handle>.+)", # iis.se (they apparently want to be difficult, and won't give you contact info for the handle over their WHOIS service)
 		],
 		"tech": [
 			"tech-c:\s*(?P<handle>.+)", # nic.at, AFNIC, iis.se
+			"technical-contact:\s*(?P<handle>.+)", # LCN.com
 		],
 		"admin": [
 			"admin-c:\s*(?P<handle>.+)", # nic.at, AFNIC, iis.se
+			"admin-contact:\s*(?P<handle>.+)", # LCN.com
 		],
 		"billing": [
-			"billing-c:\s*(?P<handle>.+)" # iis.se
+			"billing-c:\s*(?P<handle>.+)", # iis.se
+			"billing-contact:\s*(?P<handle>.+)", # LCN.com
 		]
 	}
 
@@ -634,8 +639,8 @@ def parse_registrants(data):
 				match = re.search(regex, segment)
 				if match is not None:
 					data_reference = match.groupdict()
-					if data_reference["handle"] == "-":
-						pass  # Blank
+					if data_reference["handle"] == "-" or re.match("https?:\/\/", data_reference["handle"]) is not None:
+						pass  # Reference was either blank or a URL; the latter is to deal with false positives for nic.ru
 					else:
 						for contact in handle_contacts:
 							if contact["handle"] == data_reference["handle"]:
