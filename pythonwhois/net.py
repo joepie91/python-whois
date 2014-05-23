@@ -3,13 +3,24 @@ from codecs import encode, decode
 from . import shared
 
 def get_whois_raw(domain, server="", previous=[], rfc3490=True):
-
+	# Sometimes IANA simply won't give us the right root WHOIS server
+	exceptions = {
+		".ac.uk": "whois.ja.net"
+	}
+	
 	if rfc3490:
 		domain = encode( domain if type(domain) is unicode else decode(domain, "utf8"), "idna" )
 
 	if len(previous) == 0:
 		# Root query
-		target_server = get_root_server(domain)
+		is_exception = False
+		for exception, exc_serv in exceptions.iteritems():
+			if domain.endswith(exception):
+				is_exception = True
+				target_server = exc_serv
+				break
+		if is_exception == False:
+			target_server = get_root_server(domain)
 	else:
 		target_server = server
 	if domain.endswith(".jp") and target_server == "whois.jprs.jp":

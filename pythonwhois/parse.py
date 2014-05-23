@@ -86,16 +86,18 @@ grammar = {
 					 'Registrar Whois:\s?(?P<val>.+)'],
 		'nameservers':		['Name Server:[ ]*(?P<val>[^ ]+)',
 					 'Nameservers:[ ]*(?P<val>[^ ]+)',
-					 '(?<![^ .])(?P<val>[a-z]*d?ns[0-9]+([a-z]{3})?\.([a-z0-9-]+\.)+[a-z0-9]+)',
+					 '(?<=[ .]{2})(?P<val>([a-z0-9-]+\.)+[a-z0-9]+)(\s+([0-9]{1,3}\.){3}[0-9]{1,3})',
 					 'nameserver:\s*(?P<val>.+)',
 					 'nserver:\s*(?P<val>[^[\s]+)',
 					 'Name Server[.]+ (?P<val>[^[\s]+)',
+					 'Hostname:\s*(?P<val>[^\s]+)',
 					 'DNS[0-9]+:\s*(?P<val>.+)',
 					 'ns[0-9]+:\s*(?P<val>.+)',
 					 'NS [0-9]+\s*:\s*(?P<val>.+)',
-					 '(?<![^ .])(?P<val>[a-z0-9-]+\.d?ns[0-9]*\.([a-z0-9-]+\.)+[a-z0-9]+)',
-					 '(?<![^ .])(?P<val>([a-z0-9-]+\.)+[a-z0-9]+)(\s+([0-9]{1,3}\.){3}[0-9]{1,3})',
-					 '(?<![^ .])[^a-z0-9.-](?P<val>d?ns\.([a-z0-9-]+\.)+[a-z0-9]+)',
+					 '\[Name Server\]\s*(?P<val>.+)',
+					 '(?<=[ .]{2})(?P<val>[a-z0-9-]+\.d?ns[0-9]*\.([a-z0-9-]+\.)+[a-z0-9]+)',
+					 '(?<=[ .]{2})(?P<val>([a-z0-9-]+\.)+[a-z0-9]+)(\s+([0-9]{1,3}\.){3}[0-9]{1,3})',
+					 '(?<=[ .]{2})[^a-z0-9.-](?P<val>d?ns\.([a-z0-9-]+\.)+[a-z0-9]+)',
                                          'Nserver:\s*(?P<val>.+)'],
 		'emails':		['(?P<val>[\w.-]+@[\w.-]+\.[\w]{2,6})', # Really need to fix this, much longer TLDs now exist...
 					 '(?P<val>[\w.-]+\sAT\s[\w.-]+\sDOT\s[\w]{2,6})']
@@ -103,9 +105,8 @@ grammar = {
 	"_dateformats": (
 		'(?P<day>[0-9]{1,2})[./ -](?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[./ -](?P<year>[0-9]{4}|[0-9]{2})'
 		'(\s+(?P<hour>[0-9]{1,2})[:.](?P<minute>[0-9]{1,2})[:.](?P<second>[0-9]{1,2}))?',
-		'[a-z]{3}\s(?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[./ -](?P<day>[0-9]{1,2})'
-		'(\s+(?P<hour>[0-9]{1,2})[:.](?P<minute>[0-9]{1,2})[:.](?P<second>[0-9]{1,2}))?'
-		'\s[a-z]{3}\s(?P<year>[0-9]{4}|[0-9]{2})',
+		'[a-z]{3}\s(?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[./ -](?P<day>[0-9]{1,2})(\s+(?P<hour>[0-9]{1,2})[:.](?P<minute>[0-9]{1,2})[:.](?P<second>[0-9]{1,2}))?\s[a-z]{3}\s(?P<year>[0-9]{4}|[0-9]{2})',
+		'[a-zA-Z]+\s(?P<day>[0-9]{1,2})(?:st|nd|rd|th)\s(?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)\s(?P<year>[0-9]{4})',
 		'(?P<year>[0-9]{4})[./-]?(?P<month>[0-9]{2})[./-]?(?P<day>[0-9]{2})(\s|T|/)((?P<hour>[0-9]{1,2})[:.-](?P<minute>[0-9]{1,2})[:.-](?P<second>[0-9]{1,2}))',
 		'(?P<year>[0-9]{4})[./-](?P<month>[0-9]{1,2})[./-](?P<day>[0-9]{1,2})',
 		'(?P<day>[0-9]{1,2})[./ -](?P<month>[0-9]{1,2})[./ -](?P<year>[0-9]{4}|[0-9]{2})',
@@ -171,15 +172,17 @@ def parse_raw_whois(raw_data, normalized=[]):
 								except KeyError as e:
 									data[rule_key] = [val]
 
-		# Whois.com is a bit special... Fabulous.com also seems to use this format.
-		match = re.search("Name [Ss]ervers:([/s/S]+)\n\n", segment)
+		# Whois.com is a bit special... Fabulous.com also seems to use this format. As do some others.
+		match = re.search("^\s?Name\s?[Ss]ervers:\s*\n((?:\s*.+\n)+?\s?)\n", segment, re.MULTILINE)
 		if match is not None:
 			chunk = match.group(1)
-			for match in re.findall("[ ]+(.+)\n", chunk):
-				try:
-					data["nameservers"].append(match.strip())
-				except KeyError as e:
-					data["nameservers"] = [match.strip()]
+			for match in re.findall("[ ]*(.+)\n", chunk):
+				if match.strip() != "":
+					if not re.match("^[a-zA-Z]+:", match):
+						try:
+							data["nameservers"].append(match.strip())
+						except KeyError as e:
+							data["nameservers"] = [match.strip()]
 		# Nominet also needs some special attention
 		match = re.search("    Registrar:\n        (.+)\n", segment)
 		if match is not None:
@@ -187,10 +190,32 @@ def parse_raw_whois(raw_data, normalized=[]):
 		match = re.search("    Registration status:\n        (.+)\n", segment)
 		if match is not None:
 			data["status"] = [match.group(1).strip()]
-		match = re.search("    Name servers:([\s\S]*?\n)\n", segment)
+		match = re.search("    Name servers:\n([\s\S]*?\n)\n", segment)
 		if match is not None:
 			chunk = match.group(1)
 			for match in re.findall("        (.+)\n", chunk):
+				match = match.split()[0]
+				try:
+					data["nameservers"].append(match.strip())
+				except KeyError as e:
+					data["nameservers"] = [match.strip()]
+		# janet (.ac.uk) is kinda like Nominet, but also kinda not
+		match = re.search("Registered By:\n\t(.+)\n", segment)
+		if match is not None:
+			data["registrar"] = [match.group(1).strip()]
+		match = re.search("Entry created:\n\t(.+)\n", segment)
+		if match is not None:
+			data["creation_date"] = [match.group(1).strip()]
+		match = re.search("Renewal date:\n\t(.+)\n", segment)
+		if match is not None:
+			data["expiration_date"] = [match.group(1).strip()]
+		match = re.search("Entry updated:\n\t(.+)\n", segment)
+		if match is not None:
+			data["updated_date"] = [match.group(1).strip()]
+		match = re.search("Servers:([\s\S]*?\n)\n", segment)
+		if match is not None:
+			chunk = match.group(1)
+			for match in re.findall("\t(.+)\n", chunk):
 				match = match.split()[0]
 				try:
 					data["nameservers"].append(match.strip())
@@ -225,6 +250,7 @@ def parse_raw_whois(raw_data, normalized=[]):
 		match = re.search('ren-status:\s*(.+)', segment)
 		if match is not None:
 			data["status"].insert(0, match.group(1).strip())
+		
 
 	data["contacts"] = parse_registrants(raw_data)
 
@@ -248,6 +274,7 @@ def parse_raw_whois(raw_data, normalized=[]):
 		pass # Not present
 
 	try:
+		data['nameservers'] = remove_suffixes(data['nameservers'])
 		data['nameservers'] = remove_duplicates([ns.rstrip(".") for ns in data['nameservers']])
 	except KeyError as e:
 		pass # Not present
@@ -452,6 +479,16 @@ def remove_duplicates(data):
 
 	return cleaned_list
 
+def remove_suffixes(data):
+	# Removes everything before and after the first non-whitespace continuous string.
+	# Used to get rid of IP suffixes for nameservers.
+	cleaned_list = []
+	
+	for entry in data:
+		cleaned_list.append(re.search("([^\s]+)\s*[\s]*", entry).group(1).lstrip())
+		
+	return cleaned_list
+
 def preprocess_regex(regex):
 	return re.sub(r"\\s\*\(\?P<([^>]+)>\.\+\)", r"\s*(?P<\1>\S.*)", regex)
 
@@ -483,6 +520,7 @@ def parse_registrants(data):
 		"Registrant:[ ]*(?P<organization>.+)\n[\s\S]*Eligibility Type:[ ]*(Higher Education Institution|Company|Incorporated Association|Other)\n[\s\S]*Registrant Contact ID:[ ]*(?P<handle>.+)\n[\s\S]*Registrant Contact Name:[ ]*(?P<name>.+)\n", # .au educational, company, 'incorporated association' (non-profit?), other (spotted for linux.conf.au, unsure if also for others)
 		"    Registrant:\n        (?P<name>.+)\n\n    Registrant type:\n        .*\n\n    Registrant's address:\n        The registrant .* opted to have", # Nominet (.uk) with hidden address
 		"    Registrant:\n        (?P<name>.+)\n\n[\s\S]*    Registrant type:\n        .*\n\n    Registrant's address:\n        (?P<street1>.+)\n(?:        (?P<street2>.+)\n)?(?:        (?P<street3>.+)\n)?        (?P<city>.+)\n        (?P<state>.+)\n        (?P<postalcode>.+)\n        (?P<country>.+)\n\n", # Nominet (.uk) with visible address
+		"Domain Owner:\n\t(?P<organization>.+)\n\n[\s\S]*?(?:Registrant Contact:\n\t(?P<name>.+))?\n\nRegistrant(?:'s)? (?:a|A)ddress:(?:\n\t(?P<street1>.+)\n(?:\t(?P<street2>.+)\n)?(?:\t(?P<street3>.+)\n)?\t(?P<city>.+)\n\t(?P<postalcode>.+))?\n\t(?P<country>.+)(?:\n\t(?P<phone>.+) \(Phone\)\n\t(?P<fax>.+) \(FAX\)\n\t(?P<email>.+))?\n\n", # .ac.uk - what a mess...
 		"Registrant contact:\n  (?P<name>.+)\n  (?P<street>.*)\n  (?P<city>.+), (?P<state>.+) (?P<postalcode>.+) (?P<country>.+)\n\n", # Fabulous.com
 		"registrant-name:\s*(?P<name>.+)\nregistrant-type:\s*(?P<type>.+)\nregistrant-address:\s*(?P<street>.+)\nregistrant-postcode:\s*(?P<postalcode>.+)\nregistrant-city:\s*(?P<city>.+)\nregistrant-country:\s*(?P<country>.+)\n(?:registrant-phone:\s*(?P<phone>.+)\n)?(?:registrant-email:\s*(?P<email>.+)\n)?", # Hetzner
 		"Registrant Contact Information :[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication
