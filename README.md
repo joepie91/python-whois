@@ -37,6 +37,10 @@ The manual (including install instructions) can be found in the doc/ directory. 
 	* Will detect and warn about any changes in parsed data compared to previous runs
 	* Guarantees that previously working WHOIS parsing doesn't unintentionally break when changing code
 
+## Important update notes
+
+*2.2.0 and up*: The internal workings of `get_whois_raw` have been changed, to better facilitate parsing of WHOIS data from registries that may return multiple partial matches for a query, such as `whois.verisign-grs.com`. This change means that, by default, `get_whois_raw` will now strip out the part of such a response that does not pertain directly to the requested domain. If your application requires an unmodified raw WHOIS response and is calling `get_whois_raw` directly, you should use the new `never_cut` parameter to keep pythonwhois from doing this post-processing. As this is a potentially breaking behaviour change, the minor version has been bumped.
+
 ## It doesn't work!
 
 * It doesn't work at all?

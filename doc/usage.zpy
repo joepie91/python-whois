@@ -123,7 +123,7 @@ To start using pythonwhois, use `import pythonwhois`.
 	
 	These are the fields that any contact dict may contain. If certain information for a contact was not found, the corresponding key will be absent.
 	
-	! Note that any of these fields may consist of multiple lines, although the `address` field is the only one that is **likely** to consist of multiple lines.
+	! Note that any of these fields **may** consist of multiple lines, although the `address` field is the only one that is **likely** to consist of multiple lines.
 	
 	handle::
 		The NIC handle for the contact.
@@ -160,7 +160,7 @@ To start using pythonwhois, use `import pythonwhois`.
 
 ## When you need more control...
 
-^ pythonwhois.net.get_whois_raw(**domain**[, **server=""**, **rfc3490=True**])
+^ pythonwhois.net.get_whois_raw(**domain**[, **server=""**, **rfc3490=True**, **never_cut=False**])
 
 	Retrieves the raw WHOIS data for the specified domain, and returns it as a list of responses (one element for each WHOIS server queried). This method will keep following redirects, until it ends up at the right server (and all responses it picks up in the meantime, will be included). Raises `pythonwhois.shared.WhoisException` if no root server for the TLD could be found.
 	
@@ -171,7 +171,10 @@ To start using pythonwhois, use `import pythonwhois`.
 		**Optional.** The WHOIS server to query. When not specified, it will default to the appropriate WHOIS server for the TLD.
 
 	rfc3490::
-                **Optional.** If set to `True` a given domain will be encoded through the **toASCII** method as documented in RFC3490 before its submission to the whois service. If the domain isn't given in unicode, the method will handle the decoding by itself.
+		**Optional.** If set to `True`, a given domain will be encoded through the `toASCII` method as documented in {http://www.ietf.org/rfc/rfc3490.txt}(RFC3490) before its submission to the WHOIS service. If the domain isn't supplied in unicode, the method will handle the decoding by itself.
+		
+	never_cut::
+		**Optional.** If set to `True`, pythonwhois will never strip out data from the raw WHOIS responses, **even** if that data relates to a partial match, rather than the requested domain.
 
 
 ^ pythonwhois.net.get_root_server(**domain**)
