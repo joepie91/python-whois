@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='pythonwhois',
-      version='2.2.0',
+      version='2.2.1',
       description='Module for retrieving and parsing the WHOIS data for a domain. Supports most domains. No dependencies.',
       author='Sven Slootweg',
       author_email='pythonwhois@cryto.net',
