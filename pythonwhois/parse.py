@@ -490,7 +490,12 @@ def remove_suffixes(data):
 	return cleaned_list
 
 def preprocess_regex(regex):
-	return re.sub(r"\\s\*\(\?P<([^>]+)>\.\+\)", r"\s*(?P<\1>\S.*)", regex)
+	# Fix for #2; prevents a ridiculous amount of varying size permutations.
+	regex = re.sub(r"\\s\*\(\?P<([^>]+)>\.\+\)", r"\s*(?P<\1>\S.*)", regex)
+	# Experimental fix for #18; removes unnecessary variable-size whitespace
+	# matching, since we're stripping results anyway.
+	regex = re.sub(r"\[ \]\*\(\?P<([^>]+)>\.\*\)", r"(?P<\1>.*)", regex)
+	return regex
 
 def parse_registrants(data):
 	registrant = None
