@@ -80,6 +80,7 @@ else:
 			data_map["email"] = "E-mail address"
 			data_map["phone"] = "Phone number"
 			data_map["fax"] = "Fax number"
+			data_map["creationdate"] = "Created"
 			data_map["changedate"] = "Last changed"
 			
 			for contact in contacts_map:
