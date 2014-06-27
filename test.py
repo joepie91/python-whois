@@ -4,6 +4,9 @@ import sys, argparse, os, pythonwhois, json, datetime, codecs
 import pkgutil
 import encodings
 
+# FIXME: The testing script is currently incapable of testing referenced NIC handles that are
+#        retrieved separately, such as is the case with the JPRS registry for .co.jp. This
+#        really needs to be fixed, to ensure that contact parsing for this doesn't break.
 
 def get_codecs():
 	"""Dynamically get list of codecs in python."""

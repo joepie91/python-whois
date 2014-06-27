@@ -1,11 +1,13 @@
 from __future__ import print_function
 import re, sys, datetime
+from . import net, shared
 
 grammar = {
 	"_data": {
 		'id':			['Domain ID:[ ]*(?P<val>.+)'],
 		'status':		['\[Status\]\s*(?P<val>.+)',
 					 'Status\s*:\s?(?P<val>.+)',
+					 '\[State\]\s*(?P<val>.+)',
 					 '^state:\s*(?P<val>.+)'],
 		'creation_date':	['\[Created on\]\s*(?P<val>.+)',
 					 'Created on[.]*: [a-zA-Z]+, (?P<val>.+)',
@@ -27,6 +29,7 @@ grammar = {
 					 'Domain Create Date\s?[.]*:?\s*?(?P<val>.+)',
 					 'Domain Registration Date\s?[.]*:?\s*?(?P<val>.+)',
 					 'created:\s*(?P<val>.+)',
+					 '\[Registered Date\]\s*(?P<val>.+)',
 					 'created-date:\s*(?P<val>.+)',
 					 'registered:\s*(?P<val>.+)',
 					 'registration:\s*(?P<val>.+)'],
@@ -72,6 +75,7 @@ grammar = {
 					 'Last Update\s?[.]*:\s?(?P<val>.+)',
 					 'Last updated on (?P<val>.+) [a-z]{3,4}',
 					 'Last updated:\s*(?P<val>.+)',
+					 '\[Last Update\]\s*(?P<val>.+) \([A-Z]+\)',
 					 'Last update of whois database:\s?[a-z]{3}, (?P<val>.+) [a-z]{3,4}'],
 		'registrar':		['registrar:\s*(?P<val>.+)',
 					 'Registrar:\s*(?P<val>.+)',
@@ -153,7 +157,7 @@ else:
 		return isinstance(data, str)
 
 
-def parse_raw_whois(raw_data, normalized=[]):
+def parse_raw_whois(raw_data, normalized=[], never_query_handles=True, handle_server=""):
 	data = {}
 
 	raw_data = [segment.replace("\r", "") for segment in raw_data] # Carriage returns are the devil
@@ -257,7 +261,7 @@ def parse_raw_whois(raw_data, normalized=[]):
 			data["registrar"] = [match.group(1).strip()]
 		
 
-	data["contacts"] = parse_registrants(raw_data)
+	data["contacts"] = parse_registrants(raw_data, never_query_handles, handle_server)
 
 	# Parse dates
 	try:
@@ -502,7 +506,7 @@ def preprocess_regex(regex):
 	regex = re.sub(r"\[ \]\*\(\?P<([^>]+)>\.\*\)", r"(?P<\1>.*)", regex)
 	return regex
 
-def parse_registrants(data):
+def parse_registrants(data, never_query_handles=True, handle_server=""):
 	registrant = None
 	tech_contact = None
 	billing_contact = None
@@ -523,6 +527,7 @@ def parse_registrants(data):
 		"Holder of domain name:\n(?P<name>[\S\s]+)\n(?P<street>.+)\n(?P<postalcode>[A-Z0-9-]+)\s+(?P<city>.+)\n(?P<country>.+)\nContractual Language", # nic.ch
 		"\n\n(?:Owner)?\s+: (?P<name>.*)\n(?:\s+: (?P<organization>.*)\n)?\s+: (?P<street>.*)\n\s+: (?P<city>.*)\n\s+: (?P<state>.*)\n\s+: (?P<country>.*)\n", # nic.io
 		"Contact Information:\n\[Name\]\s*(?P<name>.*)\n\[Email\]\s*(?P<email>.*)\n\[Web Page\]\s*(?P<url>.*)\n\[Postal code\]\s*(?P<postalcode>.*)\n\[Postal Address\]\s*(?P<street1>.*)\n(?:\s+(?P<street2>.*)\n)?(?:\s+(?P<street3>.*)\n)?\[Phone\]\s*(?P<phone>.*)\n\[Fax\]\s*(?P<fax>.*)\n", # jprs.jp
+		"g\. \[Organization\]               (?P<organization>.+)\n", # .co.jp registrations at jprs.jp
 		"Registrant ID:(?P<handle>.*)\nRegistrant Name:(?P<name>.*)\n(?:Registrant Organization:(?P<organization>.*)\n)?Registrant Address1:(?P<street1>.*)\n(?:Registrant Address2:(?P<street2>.*)\n)?(?:Registrant Address3:(?P<street3>.*)\n)?Registrant City:(?P<city>.*)\n(?:Registrant State/Province:(?P<state>.*)\n)?Registrant Postal Code:(?P<postalcode>.*)\nRegistrant Country:(?P<country>.*)\nRegistrant Country Code:.*\nRegistrant Phone Number:(?P<phone>.*)\n(?:Registrant Facsimile Number:(?P<facsimile>.*)\n)?Registrant Email:(?P<email>.*)", # .US, .biz (NeuStar)
 		"Registrant\n  Name:             (?P<name>.+)\n(?:  Organization:     (?P<organization>.+)\n)?  ContactID:        (?P<handle>.+)\n(?:  Address:          (?P<street1>.+)\n(?:                    (?P<street2>.+)\n(?:                    (?P<street3>.+)\n)?)?                    (?P<city>.+)\n                    (?P<postalcode>.+)\n                    (?P<state>.+)\n                    (?P<country>.+)\n)?(?:  Created:          (?P<creationdate>.+)\n)?(?:  Last Update:      (?P<changedate>.+)\n)?", # nic.it
 		"  Organisation Name[.]* (?P<name>.*)\n  Organisation Address[.]* (?P<street1>.*)\n  Organisation Address[.]* (?P<street2>.*)\n(?:  Organisation Address[.]* (?P<street3>.*)\n)?  Organisation Address[.]* (?P<city>.*)\n  Organisation Address[.]* (?P<postalcode>.*)\n  Organisation Address[.]* (?P<state>.*)\n  Organisation Address[.]* (?P<country>.*)", # Melbourne IT (what a horrid format...)
@@ -606,17 +611,6 @@ def parse_registrants(data):
 	]
 
 	# Some registries use NIC handle references instead of directly listing contacts...
-
-	nic_contact_regexes = [
-		"personname:\s*(?P<name>.+)\norganization:\s*(?P<organization>.+)\nstreet address:\s*(?P<street>.+)\npostal code:\s*(?P<postalcode>.+)\ncity:\s*(?P<city>.+)\ncountry:\s*(?P<country>.+)\n(?:phone:\s*(?P<phone>.+)\n)?(?:fax-no:\s*(?P<fax>.+)\n)?(?:e-mail:\s*(?P<email>.+)\n)?nic-hdl:\s*(?P<handle>.+)\nchanged:\s*(?P<changedate>.+)", # nic.at
-		"contact-handle:[ ]*(?P<handle>.+)\ncontact:[ ]*(?P<name>.+)\n(?:organisation:[ ]*(?P<organization>.+)\n)?address:[ ]*(?P<street1>.+)\n(?:address:[ ]*(?P<street2>.+)\n)?(?:address:[ ]*(?P<street3>.+)\n)?(?:address:[ ]*(?P<street4>.+)\n)?address:[ ]*(?P<city>.+)\naddress:[ ]*(?P<state>.+)\naddress:[ ]*(?P<postalcode>.+)\naddress:[ ]*(?P<country>.+)\n(?:phone:[ ]*(?P<phone>.+)\n)?(?:fax:[ ]*(?P<fax>.+)\n)?(?:email:[ ]*(?P<email>.+)\n)?", # LCN.com
-		"person:\s*(?P<name>.+)\nnic-hdl:\s*(?P<handle>.+)\n", # .ie
-		"nic-hdl:\s*(?P<handle>.+)\ntype:\s*(?P<type>.+)\ncontact:\s*(?P<name>.+)\n(?:.+\n)*?(?:address:\s*(?P<street1>.+)\naddress:\s*(?P<street2>.+)\naddress:\s*(?P<street3>.+)\naddress:\s*(?P<country>.+)\n)?(?:phone:\s*(?P<phone>.+)\n)?(?:fax-no:\s*(?P<fax>.+)\n)?(?:.+\n)*?(?:e-mail:\s*(?P<email>.+)\n)?(?:.+\n)*?changed:\s*(?P<changedate>[0-9]{2}\/[0-9]{2}\/[0-9]{4}).*\n", # AFNIC madness without country field
-		"nic-hdl:\s*(?P<handle>.+)\ntype:\s*(?P<type>.+)\ncontact:\s*(?P<name>.+)\n(?:.+\n)*?(?:address:\s*(?P<street1>.+)\n)?(?:address:\s*(?P<street2>.+)\n)?(?:address:\s*(?P<street3>.+)\n)?(?:phone:\s*(?P<phone>.+)\n)?(?:fax-no:\s*(?P<fax>.+)\n)?(?:.+\n)*?(?:e-mail:\s*(?P<email>.+)\n)?(?:.+\n)*?changed:\s*(?P<changedate>[0-9]{2}\/[0-9]{2}\/[0-9]{4}).*\n", # AFNIC madness any country -at all-
-		"nic-hdl:\s*(?P<handle>.+)\ntype:\s*(?P<type>.+)\ncontact:\s*(?P<name>.+)\n(?:.+\n)*?(?:address:\s*(?P<street1>.+)\n)?(?:address:\s*(?P<street2>.+)\n)?(?:address:\s*(?P<street3>.+)\n)?(?:address:\s*(?P<street4>.+)\n)?country:\s*(?P<country>.+)\n(?:phone:\s*(?P<phone>.+)\n)?(?:fax-no:\s*(?P<fax>.+)\n)?(?:.+\n)*?(?:e-mail:\s*(?P<email>.+)\n)?(?:.+\n)*?changed:\s*(?P<changedate>[0-9]{2}\/[0-9]{2}\/[0-9]{4}).*\n", # AFNIC madness with country field
-
-	]
-
 	nic_contact_references = {
 		"registrant": [
 			"registrant:\s*(?P<handle>.+)", # nic.at
@@ -627,10 +621,12 @@ def parse_registrants(data):
 		"tech": [
 			"tech-c:\s*(?P<handle>.+)", # nic.at, AFNIC, iis.se
 			"technical-contact:\s*(?P<handle>.+)", # LCN.com
+			"n\. \[Technical Contact\]          (?P<handle>.+)\n", #.co.jp
 		],
 		"admin": [
 			"admin-c:\s*(?P<handle>.+)", # nic.at, AFNIC, iis.se
 			"admin-contact:\s*(?P<handle>.+)", # LCN.com
+			"m\. \[Administrative Contact\]     (?P<handle>.+)\n", # .co.jp
 		],
 		"billing": [
 			"billing-c:\s*(?P<handle>.+)", # iis.se
@@ -677,14 +673,10 @@ def parse_registrants(data):
 				break
 
 	# Find NIC handle contact definitions
-	handle_contacts = []
-	for regex in nic_contact_regexes:
-		for segment in data:
-			matches = re.finditer(regex, segment)
-			for match in matches:
-				handle_contacts.append(match.groupdict())
+	handle_contacts = parse_nic_contact(data)
 
 	# Find NIC handle references and process them
+	missing_handle_contacts = []
 	for category in nic_contact_references:
 		for regex in nic_contact_references[category]:
 			for segment in data:
@@ -694,9 +686,23 @@ def parse_registrants(data):
 					if data_reference["handle"] == "-" or re.match("https?:\/\/", data_reference["handle"]) is not None:
 						pass  # Reference was either blank or a URL; the latter is to deal with false positives for nic.ru
 					else:
+						found = False
 						for contact in handle_contacts:
 							if contact["handle"] == data_reference["handle"]:
+								found = True
 								data_reference.update(contact)
+						if found == False:
+							# The contact definition was not found in the supplied raw WHOIS data. If the
+							# method has been called with never_query_handles=False, we can use the supplied
+							# WHOIS server for looking up the handle information separately.
+							if never_query_handles == False:
+								try:
+									contact = fetch_nic_contact(data_reference["handle"], handle_server)
+									data_reference.update(contact)
+								except shared.WhoisException as e:
+									pass # No data found. TODO: Log error?
+							else:
+								pass # TODO: Log warning?
 						if category == "registrant":
 							registrant = data_reference
 						elif category == "tech":
@@ -706,7 +712,7 @@ def parse_registrants(data):
 						elif category == "admin":
 							admin_contact = data_reference
 					break
-
+					
 	# Post-processing
 	for obj in (registrant, tech_contact, billing_contact, admin_contact):
 		if obj is not None:
@@ -732,6 +738,8 @@ def parse_registrants(data):
 				obj["street"] = "\n".join(street_items)
 			if 'changedate' in obj:
 				obj['changedate'] = parse_dates([obj['changedate']])[0]
+			if 'creationdate' in obj:
+				obj['creationdate'] = parse_dates([obj['creationdate']])[0]
 			if 'street' in obj and "\n" in obj["street"] and 'postalcode' not in obj:
 				# Deal with certain mad WHOIS servers that don't properly delimit address data... (yes, AFNIC, looking at you)
 				lines = [x.strip() for x in obj["street"].splitlines()]
@@ -754,3 +762,33 @@ def parse_registrants(data):
 		"admin": admin_contact,
 		"billing": billing_contact,
 	}
+
+def fetch_nic_contact(handle, lookup_server):
+	response = net.get_whois_raw(handle, lookup_server)
+	response = [segment.replace("\r", "") for segment in response] # Carriage returns are the devil
+	results = parse_nic_contact(response)
+	
+	if len(results) > 0:
+		return results[0]
+	else:
+		raise shared.WhoisException("No contact data found in the response.")
+	
+def parse_nic_contact(data):
+	nic_contact_regexes = [
+		"personname:\s*(?P<name>.+)\norganization:\s*(?P<organization>.+)\nstreet address:\s*(?P<street>.+)\npostal code:\s*(?P<postalcode>.+)\ncity:\s*(?P<city>.+)\ncountry:\s*(?P<country>.+)\n(?:phone:\s*(?P<phone>.+)\n)?(?:fax-no:\s*(?P<fax>.+)\n)?(?:e-mail:\s*(?P<email>.+)\n)?nic-hdl:\s*(?P<handle>.+)\nchanged:\s*(?P<changedate>.+)", # nic.at
+		"contact-handle:[ ]*(?P<handle>.+)\ncontact:[ ]*(?P<name>.+)\n(?:organisation:[ ]*(?P<organization>.+)\n)?address:[ ]*(?P<street1>.+)\n(?:address:[ ]*(?P<street2>.+)\n)?(?:address:[ ]*(?P<street3>.+)\n)?(?:address:[ ]*(?P<street4>.+)\n)?address:[ ]*(?P<city>.+)\naddress:[ ]*(?P<state>.+)\naddress:[ ]*(?P<postalcode>.+)\naddress:[ ]*(?P<country>.+)\n(?:phone:[ ]*(?P<phone>.+)\n)?(?:fax:[ ]*(?P<fax>.+)\n)?(?:email:[ ]*(?P<email>.+)\n)?", # LCN.com
+		"Contact Information:\na\. \[JPNIC Handle\]               (?P<handle>.+)\nc\. \[Last, First\]                (?P<lastname>.+), (?P<firstname>.+)\nd\. \[E-Mail\]                     (?P<email>.+)\ng\. \[Organization\]               (?P<organization>.+)\nl\. \[Division\]                   (?P<division>.+)\nn\. \[Title\]                      (?P<title>.+)\no\. \[TEL\]                        (?P<phone>.+)\np\. \[FAX\]                        (?P<fax>.+)\ny\. \[Reply Mail\]                 .*\n\[Last Update\]                   (?P<changedate>.+) \(JST\)\n", # JPRS .co.jp contact handle lookup
+		"person:\s*(?P<name>.+)\nnic-hdl:\s*(?P<handle>.+)\n", # .ie
+		"nic-hdl:\s*(?P<handle>.+)\ntype:\s*(?P<type>.+)\ncontact:\s*(?P<name>.+)\n(?:.+\n)*?(?:address:\s*(?P<street1>.+)\naddress:\s*(?P<street2>.+)\naddress:\s*(?P<street3>.+)\naddress:\s*(?P<country>.+)\n)?(?:phone:\s*(?P<phone>.+)\n)?(?:fax-no:\s*(?P<fax>.+)\n)?(?:.+\n)*?(?:e-mail:\s*(?P<email>.+)\n)?(?:.+\n)*?changed:\s*(?P<changedate>[0-9]{2}\/[0-9]{2}\/[0-9]{4}).*\n", # AFNIC madness without country field
+		"nic-hdl:\s*(?P<handle>.+)\ntype:\s*(?P<type>.+)\ncontact:\s*(?P<name>.+)\n(?:.+\n)*?(?:address:\s*(?P<street1>.+)\n)?(?:address:\s*(?P<street2>.+)\n)?(?:address:\s*(?P<street3>.+)\n)?(?:phone:\s*(?P<phone>.+)\n)?(?:fax-no:\s*(?P<fax>.+)\n)?(?:.+\n)*?(?:e-mail:\s*(?P<email>.+)\n)?(?:.+\n)*?changed:\s*(?P<changedate>[0-9]{2}\/[0-9]{2}\/[0-9]{4}).*\n", # AFNIC madness any country -at all-
+		"nic-hdl:\s*(?P<handle>.+)\ntype:\s*(?P<type>.+)\ncontact:\s*(?P<name>.+)\n(?:.+\n)*?(?:address:\s*(?P<street1>.+)\n)?(?:address:\s*(?P<street2>.+)\n)?(?:address:\s*(?P<street3>.+)\n)?(?:address:\s*(?P<street4>.+)\n)?country:\s*(?P<country>.+)\n(?:phone:\s*(?P<phone>.+)\n)?(?:fax-no:\s*(?P<fax>.+)\n)?(?:.+\n)*?(?:e-mail:\s*(?P<email>.+)\n)?(?:.+\n)*?changed:\s*(?P<changedate>[0-9]{2}\/[0-9]{2}\/[0-9]{4}).*\n", # AFNIC madness with country field
+	]
+
+	handle_contacts = []
+	for regex in nic_contact_regexes:
+		for segment in data:
+			matches = re.finditer(regex, segment)
+			for match in matches:
+				handle_contacts.append(match.groupdict())
+				
+	return handle_contacts

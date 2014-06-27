@@ -2,7 +2,7 @@ import socket, re
 from codecs import encode, decode
 from . import shared
 
-def get_whois_raw(domain, server="", previous=[], rfc3490=True, never_cut=False):
+def get_whois_raw(domain, server="", previous=[], rfc3490=True, never_cut=False, with_server_list=False, server_list=[]):
 	# Sometimes IANA simply won't give us the right root WHOIS server
 	exceptions = {
 		".ac.uk": "whois.ja.net",
@@ -14,8 +14,9 @@ def get_whois_raw(domain, server="", previous=[], rfc3490=True, never_cut=False)
 	if rfc3490:
 		domain = encode( domain if type(domain) is unicode else decode(domain, "utf8"), "idna" )
 
-	if len(previous) == 0:
+	if len(previous) == 0 and server == "":
 		# Root query
+		server_list = [] # Otherwise it retains the list on subsequent queries, for some reason.
 		is_exception = False
 		for exception, exc_serv in exceptions.iteritems():
 			if domain.endswith(exception):
@@ -26,7 +27,7 @@ def get_whois_raw(domain, server="", previous=[], rfc3490=True, never_cut=False)
 			target_server = get_root_server(domain)
 	else:
 		target_server = server
-	if domain.endswith(".jp") and target_server == "whois.jprs.jp":
+	if target_server == "whois.jprs.jp":
 		request_domain = "%s/e" % domain # Suppress Japanese output
 	elif domain.endswith(".de") and ( target_server == "whois.denic.de" or target_server == "de.whois-servers.net" ):
 		request_domain = "-T dn,ace %s" % domain # regional specific stuff
@@ -52,14 +53,18 @@ def get_whois_raw(domain, server="", previous=[], rfc3490=True, never_cut=False)
 				break
 	if never_cut == False:
 		new_list = [response] + previous
+	server_list.append(target_server)
 	for line in [x.strip() for x in response.splitlines()]:
 		match = re.match("(refer|whois server|referral url|whois server|registrar whois):\s*([^\s]+\.[^\s]+)", line, re.IGNORECASE)
 		if match is not None:
 			referal_server = match.group(2)
-			if referal_server != server:
+			if referal_server != server and "://" not in referal_server: # We want to ignore anything non-WHOIS (eg. HTTP) for now.
 				# Referal to another WHOIS server...
-				return get_whois_raw(domain, referal_server, new_list)
-	return new_list
+				return get_whois_raw(domain, referal_server, new_list, server_list=server_list, with_server_list=with_server_list)
+	if with_server_list:
+		return (new_list, server_list)
+	else:
+		return new_list
 	
 def get_root_server(domain):
 	data = whois_request(domain, "whois.iana.org")

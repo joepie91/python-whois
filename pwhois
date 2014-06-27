@@ -20,15 +20,19 @@ def json_fallback(obj):
 		return obj
 
 if args.file is None:
-	data = pythonwhois.net.get_whois_raw(args.domain[0])
+	data, server_list = pythonwhois.net.get_whois_raw(args.domain[0], with_server_list=True)
 else:
+	server_list = []
 	with open(args.file, "r") as f:
 		data = f.read().split("\n--\n")
 
 if args.raw == True:
 	print "\n--\n".join(data)
 else:
-	parsed = pythonwhois.parse.parse_raw_whois(data, normalized=True)
+	if len(server_list) > 0:
+		parsed = pythonwhois.parse.parse_raw_whois(data, normalized=True, never_query_handles=False, handle_server=server_list[-1])
+	else:
+		parsed = pythonwhois.parse.parse_raw_whois(data, normalized=True)
 	
 	if args.json == True:
 		print json.dumps(parsed, default=json_fallback)
