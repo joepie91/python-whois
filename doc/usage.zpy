@@ -160,7 +160,7 @@ To start using pythonwhois, use `import pythonwhois`.
 
 ## When you need more control...
 
-^ pythonwhois.net.get_whois_raw(**domain**[, **server=""**, **rfc3490=True**, **never_cut=False**])
+^ pythonwhois.net.get_whois_raw(**domain**[, **server=""**, **rfc3490=True**, **never_cut=False**, **with_server_list=False**])
 
 	Retrieves the raw WHOIS data for the specified domain, and returns it as a list of responses (one element for each WHOIS server queried). This method will keep following redirects, until it ends up at the right server (and all responses it picks up in the meantime, will be included). Raises `pythonwhois.shared.WhoisException` if no root server for the TLD could be found.
 	
@@ -175,6 +175,9 @@ To start using pythonwhois, use `import pythonwhois`.
 		
 	never_cut::
 		**Optional.** If set to `True`, pythonwhois will never strip out data from the raw WHOIS responses, **even** if that data relates to a partial match, rather than the requested domain.
+		
+	with_server_list::
+		**Optional.** If set to `True`, `pythonwhois` will return a `(response, server_list)` tuple instead of just `response`, where the `server_list` contains a list of all the WHOIS servers that were queried to collect the raw data. The order of the list is from first (root) server to last server.
 
 
 ^ pythonwhois.net.get_root_server(**domain**)
@@ -184,7 +187,7 @@ To start using pythonwhois, use `import pythonwhois`.
 	domain::
 		The domain whose TLD you want to know the root WHOIS server for.
 	
-^ pythonwhois.parse.parse_raw_whois(**raw_data**[, **normalized**])
+^ pythonwhois.parse.parse_raw_whois(**raw_data**[, **normalized**, **never_query_handles=True**, **handle_server=""**])
 
 	Parses the specified raw WHOIS data. It's useful to call this method manually if you receive your WHOIS data from elsewhere, and don't need the retrieval capabilities of pythonwhois. Returns an object like `pythonwhois.get_whois` does.
 	
@@ -193,4 +196,9 @@ To start using pythonwhois, use `import pythonwhois`.
 	
 	normalized::
 		**Optional.** Like for `pythonwhois.get_whois`. Empty list or omitted to normalize nothing, `True` to normalize all supported fields, a list of keys if you only want certain keys to be normalized.
-
+	
+	never_handle_queries::
+		**Optional.** If this is enabled, `pythonwhois` won't try to resolve handles that require additional queries. Some WHOIS servers only provide NIC handles by default and require additional lookups to retrieve the associated contact information. If you are running an offline application (or have your own load distribution mechanism) and you don't want `pythonwhois` to make queries on your behalf, set this to `True` (the default). When using the `get_whois` method, this is set to `False` behind the scenes, and handles will be automatically resolved.
+		
+	handle_server::
+		**Optional.** When `never_handle_queries` is set to `False`, you should specify the server responsible for handle lookups here. This is usually the last server in a WHOIS chain. `get_whois` will set this for you automatically.
