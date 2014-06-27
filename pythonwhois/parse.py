@@ -542,7 +542,7 @@ def normalize_data(data, normalized):
 		if contact is not None:
 			for key in ("email",):
 				if key in contact and contact[key] is not None and (normalized == True or key in normalized):
-					if isinstance(contact[key], str):
+					if is_string(contact[key]):
 						contact[key] = contact[key].lower()
 					else:
 						contact[key] = [item.lower() for item in contact[key]]

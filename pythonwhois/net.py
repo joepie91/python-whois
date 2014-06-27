@@ -1,4 +1,4 @@
-import socket, re
+import socket, re, sys
 from codecs import encode, decode
 from . import shared
 
@@ -12,13 +12,16 @@ def get_whois_raw(domain, server="", previous=[], rfc3490=True, never_cut=False,
 	}
 	
 	if rfc3490:
-		domain = encode( domain if type(domain) is unicode else decode(domain, "utf8"), "idna" )
+		if sys.version_info < (3, 0):
+			domain = encode( domain if type(domain) is unicode else decode(domain, "utf8"), "idna" )
+		else:
+			domain = encode(domain, "idna").decode("ascii")
 
 	if len(previous) == 0 and server == "":
 		# Root query
 		server_list = [] # Otherwise it retains the list on subsequent queries, for some reason.
 		is_exception = False
-		for exception, exc_serv in exceptions.iteritems():
+		for exception, exc_serv in exceptions.items():
 			if domain.endswith(exception):
 				is_exception = True
 				target_server = exc_serv
@@ -78,11 +81,11 @@ def get_root_server(domain):
 def whois_request(domain, server, port=43):
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	sock.connect((server, port))
-	sock.send("%s\r\n" % domain)
-	buff = ""
+	sock.send(("%s\r\n" % domain).encode("utf-8"))
+	buff = b""
 	while True:
 		data = sock.recv(1024)
 		if len(data) == 0:
 			break
 		buff += data
-	return buff
+	return buff.decode("utf-8")
