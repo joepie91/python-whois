@@ -31,6 +31,7 @@ grammar = {
 					 'created:\s*(?P<val>.+)',
 					 '\[Registered Date\]\s*(?P<val>.+)',
 					 'created-date:\s*(?P<val>.+)',
+					 'Domain Name Commencement Date: (?P<val>.+)',
 					 'registered:\s*(?P<val>.+)',
 					 'registration:\s*(?P<val>.+)'],
 		'expiration_date':	['\[Expires on\]\s*(?P<val>.+)',
@@ -261,6 +262,16 @@ def parse_raw_whois(raw_data, normalized=[], never_query_handles=True, handle_se
 		match = re.search('Registrar\n  Organization:     (.+)\n', segment)
 		if match is not None:
 			data["registrar"] = [match.group(1).strip()]
+		# HKDNR (.hk) provides a weird nameserver format with too much whitespace
+		match = re.search("Name Servers Information:\n\n([\s\S]*?\n)\n", segment)
+		if match is not None:
+			chunk = match.group(1)
+			for match in re.findall("(.+)\n", chunk):
+				match = match.split()[0]
+				try:
+					data["nameservers"].append(match.strip())
+				except KeyError as e:
+					data["nameservers"] = [match.strip()]
 		
 
 	data["contacts"] = parse_registrants(raw_data, never_query_handles, handle_server)
@@ -550,6 +561,7 @@ def parse_registrants(data, never_query_handles=True, handle_server=""):
 		"Domain Holder: (?P<organization>.+)\n(?P<street1>.+?)(?:,+ (?P<street2>.+?)(?:,+ (?P<street3>.+?)(?:,+ (?P<street4>.+?)(?:,+ (?P<street5>.+?)(?:,+ (?P<street6>.+?)(?:,+ (?P<street7>.+?))?)?)?)?)?)?, (?P<city>.+)\n(?P<postalcode>.+)\n(?P<country>[A-Z]+)\n", # .co.th, format 2
 		"Domain Holder: (?P<organization>.+)\n(?P<street1>.+)\n(?:(?P<street2>.+)\n)?(?:(?P<street3>.+)\n)?.+?, (?P<district>.+)\n(?P<city>.+)\n(?P<postalcode>.+)\n(?P<country>[A-Z]+)\n", # .co.th, format 3
 		"Domain Holder: (?P<organization>.+)\n(?P<street1>.+?)(?:,+ (?P<street2>.+?)(?:,+ (?P<street3>.+?)(?:,+ (?P<street4>.+?)(?:,+ (?P<street5>.+?)(?:,+ (?P<street6>.+?)(?:,+ (?P<street7>.+?))?)?)?)?)?)?\n(?P<city>.+),? (?P<state>[A-Z]{2,3})(?: [A-Z0-9]+)?\n(?P<postalcode>.+)\n(?P<country>[A-Z]+)\n", # .co.th, format 4
+		"Registrant Contact Information:\n\nCompany English Name \(It should be the same as the registered/corporation name on your Business Register Certificate or relevant documents\):(?P<organization1>.+)\nCompany Chinese name:(?P<organization2>.+)\nAddress: (?P<street>.+)\nCountry: (?P<country>.+)\nEmail: (?P<email>.+)\n", # HKDNR (.hk)
 		"owner:\s+(?P<name>.+)", # .br
 		"person:\s+(?P<name>.+)", # nic.ru (person)
 		"org:\s+(?P<organization>.+)", # nic.ru (organization)
@@ -585,6 +597,7 @@ def parse_registrants(data, never_query_handles=True, handle_server=""):
 		"Tech Contact: (?P<handle>.+)\n(?P<street1>.+) (?P<city>[^\s]+)\n(?P<postalcode>.+)\n(?P<country>[A-Z]+)\n", # .co.th, format 4
 		"Tech Contact: (?P<handle>.+)\n(?P<organization>.+)\n(?P<street1>.+)\n(?P<district>.+) (?P<city>[^\s]+)\n(?P<postalcode>.+)\n(?P<country>[A-Z]+)\n", # .co.th, format 5
 		"Tech Contact: (?P<handle>.+)\n(?P<organization>.+)\n(?P<street1>.+)\n(?P<street2>.+)\n(?:(?P<street3>.+)\n)?(?P<city>.+)\n(?P<postalcode>.+)\n(?P<country>[A-Z]+)\n", # .co.th, format 6
+		"Technical Contact Information:\n\n(?:Given name: (?P<firstname>.+)\n)?(?:Family name: (?P<lastname>.+)\n)?(?:Company name: (?P<organization>.+)\n)?Address: (?P<street>.+)\nCountry: (?P<country>.+)\nPhone: (?P<phone>.*)\nFax: (?P<fax>.*)\nEmail: (?P<email>.+)\n(?:Account Name: (?P<handle>.+)\n)?", # HKDNR (.hk)
 	]
 
 	admin_contact_regexes = [
@@ -608,6 +621,7 @@ def parse_registrants(data, never_query_handles=True, handle_server=""):
 		"   Administrative contact:\n      (?P<name>.+)\n      (?P<organization>.*)\n      (?P<street>.+)\n      (?P<city>.+) (?P<state>\S+),[ ]+(?P<postalcode>.+)\n      (?P<country>.+)\n      (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)", # .am
 		"Administrative Contact:\n   Name:           (?P<name>.+)\n   City:           (?P<city>.+)\n   State:          (?P<state>.+)\n   Country:        (?P<country>.+)\n", # Akky (.com.mx)
                 "\[Tech-C\]\nType: (?P<type>.+)\nName: (?P<name>.+)\n(Organisation: (?P<organization>.+)\n){0,1}(Address: (?P<street1>.+)\n){1}(Address: (?P<street2>.+)\n){0,1}(Address: (?P<street3>.+)\n){0,1}(Address: (?P<street4>.+)\n){0,1}PostalCode: (?P<postalcode>.+)\nCity: (?P<city>.+)\nCountryCode: (?P<country>[A-Za-z]{2})\nPhone: (?P<phone>.+)\nFax: (?P<fax>.+)\nEmail: (?P<email>.+)\n(Remarks: (?P<remark>.+)\n){0,1}Changed: (?P<changed>.+)", # DeNIC
+		"Administrative Contact Information:\n\n(?:Given name: (?P<firstname>.+)\n)?(?:Family name: (?P<lastname>.+)\n)?(?:Company name: (?P<organization>.+)\n)?Address: (?P<street>.+)\nCountry: (?P<country>.+)\nPhone: (?P<phone>.*)\nFax: (?P<fax>.*)\nEmail: (?P<email>.+)\n(?:Account Name: (?P<handle>.+)\n)?", # HKDNR (.hk)
 	]
 
 	billing_contact_regexes = [
@@ -752,6 +766,18 @@ def parse_registrants(data, never_query_handles=True, handle_server=""):
 						break
 					i += 1
 				obj["street"] = "\n".join(street_items)
+			if "organization1" in obj: # This is to deal with eg. HKDNR, who allow organization names in multiple languages.
+				organization_items = []
+				i = 1
+				while True:
+					try:
+						if obj["organization%d" % i].strip() != "":
+							organization_items.append(obj["organization%d" % i])
+							del obj["organization%d" % i]
+					except KeyError as e:
+						break
+					i += 1
+				obj["organization"] = "\n".join(organization_items)
 			if 'changedate' in obj:
 				obj['changedate'] = parse_dates([obj['changedate']])[0]
 			if 'creationdate' in obj:
