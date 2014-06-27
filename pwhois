@@ -3,7 +3,7 @@
 import argparse, pythonwhois, json, datetime
 try:
 	from collections import OrderedDict
-except ImportError, e:
+except ImportError as e:
 	from ordereddict import OrderedDict
 
 parser = argparse.ArgumentParser(description="Retrieves and parses WHOIS data for a domain name.")
@@ -20,18 +20,22 @@ def json_fallback(obj):
 		return obj
 
 if args.file is None:
-	data = pythonwhois.net.get_whois_raw(args.domain[0])
+	data, server_list = pythonwhois.net.get_whois_raw(args.domain[0], with_server_list=True)
 else:
+	server_list = []
 	with open(args.file, "r") as f:
 		data = f.read().split("\n--\n")
 
 if args.raw == True:
-	print "\n--\n".join(data)
+	print("\n--\n".join([x.encode("utf-8") for x in data]))
 else:
-	parsed = pythonwhois.parse.parse_raw_whois(data, normalized=True)
+	if len(server_list) > 0:
+		parsed = pythonwhois.parse.parse_raw_whois(data, normalized=True, never_query_handles=False, handle_server=server_list[-1])
+	else:
+		parsed = pythonwhois.parse.parse_raw_whois(data, normalized=True)
 	
 	if args.json == True:
-		print json.dumps(parsed, default=json_fallback)
+		print(json.dumps(parsed, default=json_fallback))
 	else:
 		data_map = OrderedDict({})
 		
@@ -46,18 +50,18 @@ else:
 		data_map["emails"] = ("E-mail address", "+")
 		
 		widest_label = 0
-		for key, value in data_map.iteritems():
+		for key, value in data_map.items():
 			if len(value[0]) > widest_label:
 				widest_label = len(value[0])
 				
-		for key, value in data_map.iteritems():
+		for key, value in data_map.items():
 			if key in parsed and parsed[key] is not None:
 				label = value[0] + (" " * (widest_label - len(value[0]))) + " :"
 				if value[1] == 1:
-					print "%s %s" % (label, parsed[key][0])
+					print("%s %s" % (label, parsed[key][0]))
 				elif value[1] == "+":
 					for item in parsed[key]:
-						print "%s %s" % (label, item)
+						print("%s %s" % (label, item))
 						
 		if parsed["contacts"] is not None:
 			# This defines the contacts shown in the output
@@ -80,23 +84,24 @@ else:
 			data_map["email"] = "E-mail address"
 			data_map["phone"] = "Phone number"
 			data_map["fax"] = "Fax number"
+			data_map["creationdate"] = "Created"
 			data_map["changedate"] = "Last changed"
 			
 			for contact in contacts_map:
 				if parsed["contacts"][contact] is not None:
 					contact_data = parsed["contacts"][contact]
 					
-					print "\n" + contacts_map[contact]
+					print("\n" + contacts_map[contact])
 					
-					for key, value in data_map.iteritems():
+					for key, value in data_map.items():
 						if len(value) > widest_label:
 							widest_label = len(value)
 							
-					for key, value in data_map.iteritems():
+					for key, value in data_map.items():
 						if key in contact_data and contact_data[key] is not None:
 							label = "    " + value + (" " * (widest_label - len(value))) + " :"
-							actual_data = str(contact_data[key])
+							actual_data = contact_data[key]
 							if "\n" in actual_data: # Indent multi-line values properly
 								lines = actual_data.split("\n")
 								actual_data = "\n".join([lines[0]] + [(" " * (widest_label + 7)) + line for line in lines[1:]])
-							print "%s %s" % (label, actual_data)
+							print("%s %s" % (label, actual_data))

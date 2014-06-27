@@ -1,0 +1,31 @@
+[ JPRS database provides information on network administration. Its use is    ]
+[ restricted to network administration purposes. For further information,     ]
+[ use 'whois -h whois.jprs.jp help'. To suppress Japanese output, add'/e'     ]
+[ at the end of command, e.g. 'whois -h whois.jprs.jp xxx/e'.                 ]
+[                                                                             ]
+[ Notice -------------------------------------------------------------------- ]
+[ JPRS will change JPRS WHOIS (web-based and port 43 Whois service) about the ]
+[ following two points on January 18, 2015.                                   ]
+[                                                                             ]
+[  1) Change of the format of response about gTLD domain name                 ]
+[  2) Change of the character encoding                                        ]
+[                                                                             ]
+[ For further information, please see the following webpage.                  ]
+[ http://jprs.jp/whatsnew/notice/2014/20140319-whois.html (only in Japanese)  ]
+[ --------------------------------------------------------------------------- ]
+
+Domain Information:
+a. [Domain Name]                NTTPC.CO.JP
+g. [Organization]               NTT PC Communications Incorporated
+l. [Organization Type]          Corporation
+m. [Administrative Contact]     TY4708JP
+n. [Technical Contact]          YA6489JP
+p. [Name Server]                ns1.sphere.ad.jp
+p. [Name Server]                ns2.sphere.ad.jp
+s. [Signing Key]                
+[State]                         Connected (2015/03/31)
+[Registered Date]                
+[Connected Date]                 
+[Last Update]                   2014/04/01 01:10:41 (JST)
+
+

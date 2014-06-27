@@ -1,0 +1,45 @@
+% This is the IRNIC Whois server v1.6.2.
+% Available on web at http://whois.nic.ir/
+% Find the terms and conditions of use on http://www.nic.ir/
+% 
+% This server uses UTF-8 as the encoding for requests and responses.
+
+% NOTE: This output has been filtered.
+
+% Information related to 'nic.ir'
+
+
+domain:		nic.ir
+ascii:		nic.ir
+remarks:	(Domain Holder) Dot-IR (.ir) ccTLD Registry, Institute for Studies in Theoretical Physics and Mathematics (IPM)
+remarks:	(Domain Holder Address) Shahid Bahonar (Niavaran) Sq., Tehran, Tehran, IR
+holder-c:	ir00-irnic
+admin-c:	ir00-irnic
+tech-c:		as51-irnic
+nserver:	ns1.nic.ir
+nserver:	ns.nic.ir
+nserver:	ns5.univie.ac.at
+nserver:	auth51.ns.uu.net
+last-updated:	2010-05-09
+expire-date:	2015-05-26
+source:		IRNIC # Filtered
+
+nic-hdl:	ir00-irnic
+org:		Dot-IR (.ir) ccTLD Registry, Institute for Studies in Theoretical Physics and Mathematics (IPM)
+e-mail:		info@nic.ir
+address:	Shahid Bahonar (Niavaran) Sq., Tehran, Tehran, IR
+phone:		+98 21 2229 0306
+fax-no:		+98 21 2229 5700
+source:		IRNIC # Filtered
+
+nic-hdl:	as51-irnic
+person:		Alireza Saleh
+e-mail:		arsaleh@gmail.com
+source:		IRNIC # Filtered
+
+domain:		nic.ir
+ascii:		nic.ir
+remarks:	This domain is only available for registration under certain conditions
+source:		IRNIC # Filtered
+
+
