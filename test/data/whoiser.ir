@@ -1,0 +1,32 @@
+% This is the IRNIC Whois server v1.6.2.
+% Available on web at http://whois.nic.ir/
+% Find the terms and conditions of use on http://www.nic.ir/
+% 
+% This server uses UTF-8 as the encoding for requests and responses.
+
+% NOTE: This output has been filtered.
+
+% Information related to 'whoiser.ir'
+
+
+domain:		whoiser.ir
+ascii:		whoiser.ir
+remarks:	(Domain Holder) Mohsen Jadidi
+remarks:	(Domain Holder Address) Andishe, Faz 3, Mahale 23 St., Shahed St., Baharan St., No. 12,, Shahraiar, Tehran, IR
+holder-c:	mj205-irnic
+admin-c:	mj205-irnic
+tech-c:		mj205-irnic
+nserver:	ns1.webmasir.com
+nserver:	ns2.webmasir.com
+last-updated:	2014-06-01
+expire-date:	2017-03-03
+source:		IRNIC # Filtered
+
+nic-hdl:	mj205-irnic
+person:		Mohsen Jadidi
+e-mail:		mnjadidi@gmail.com
+address:	Andishe, Faz 3, Mahale 23 St., Shahed St., Baharan St., No. 12,, Shahraiar, Tehran, IR
+phone:		+982623554491
+source:		IRNIC # Filtered
+
+
