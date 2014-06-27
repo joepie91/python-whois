@@ -89,6 +89,7 @@ grammar = {
 					 'Registration Service Provided By:\s?(?P<val>.+)',
 					 'Registrar of Record:\s?(?P<val>.+)',
 					 'Domain Registrar :\s?(?P<val>.+)',
+					 'Registration Service Provider: (?P<val>.+)',
 					 '\tName:\t\s(?P<val>.+)'],
 		'whois_server':		['Whois Server:\s?(?P<val>.+)',
 					 'Registrar Whois:\s?(?P<val>.+)'],
@@ -273,6 +274,16 @@ def parse_raw_whois(raw_data, normalized=[], never_query_handles=True, handle_se
 					data["nameservers"].append(match.strip())
 				except KeyError as e:
 					data["nameservers"] = [match.strip()]
+		# ... and again for TWNIC.
+		match = re.search("   Domain servers in listed order:\n([\s\S]*?\n)\n", segment)
+		if match is not None:
+			chunk = match.group(1)
+			for match in re.findall("      (.+)\n", chunk):
+				match = match.split()[0]
+				try:
+					data["nameservers"].append(match.strip())
+				except KeyError as e:
+					data["nameservers"] = [match.strip()]
 		
 
 	data["contacts"] = parse_registrants(raw_data, never_query_handles, handle_server)
@@ -345,11 +356,15 @@ def normalize_data(data, normalized):
 				data[key] = [item.lower() for item in data[key]]
 
 	for key, threshold in (("registrar", 4), ("status", 3)):
+		if key == "registrar":
+			ignore_nic = True
+		else:
+			ignore_nic = False
 		if key in data and data[key] is not None and (normalized == True or key in normalized):
 			if is_string(data[key]):
-				data[key] = normalize_name(data[key], abbreviation_threshold=threshold, length_threshold=1)
+				data[key] = normalize_name(data[key], abbreviation_threshold=threshold, length_threshold=1, ignore_nic=ignore_nic)
 			else:
-				data[key] = [normalize_name(item, abbreviation_threshold=threshold, length_threshold=1) for item in data[key]]
+				data[key] = [normalize_name(item, abbreviation_threshold=threshold, length_threshold=1, ignore_nic=ignore_nic) for item in data[key]]
 
 	for contact_type, contact in data['contacts'].items():
 		if contact is not None:
@@ -375,43 +390,47 @@ def normalize_data(data, normalized):
 					pass # Not a string
 	return data
 
-def normalize_name(value, abbreviation_threshold=4, length_threshold=8, lowercase_domains=True):
+def normalize_name(value, abbreviation_threshold=4, length_threshold=8, lowercase_domains=True, ignore_nic=False):
 	normalized_lines = []
 	for line in value.split("\n"):
 		line = line.strip(",") # Get rid of useless comma's
 		if (line.isupper() or line.islower()) and len(line) >= length_threshold:
 			# This line is likely not capitalized properly
-			words = line.split()
-			normalized_words = []
-			if len(words) >= 1:
-				# First word
-				if len(words[0]) >= abbreviation_threshold and "." not in words[0]:
-					normalized_words.append(words[0].capitalize())
-				elif lowercase_domains and "." in words[0] and not words[0].endswith(".") and not words[0].startswith("."):
-					normalized_words.append(words[0].lower())
-				else:
-					# Probably an abbreviation or domain, leave it alone
-					normalized_words.append(words[0])
-			if len(words) >= 3:
-				# Words between the first and last
-				for word in words[1:-1]:
-					if len(word) >= abbreviation_threshold and "." not in word:
-						normalized_words.append(word.capitalize())
-					elif lowercase_domains and "." in word and not word.endswith(".") and not word.startswith("."):
-						normalized_words.append(word.lower())
+			if ignore_nic == True and "nic" in line.lower():
+				# This is a registrar name containing 'NIC' - it should probably be all-uppercase.
+				line = line.upper()
+			else:
+				words = line.split()
+				normalized_words = []
+				if len(words) >= 1:
+					# First word
+					if len(words[0]) >= abbreviation_threshold and "." not in words[0]:
+						normalized_words.append(words[0].capitalize())
+					elif lowercase_domains and "." in words[0] and not words[0].endswith(".") and not words[0].startswith("."):
+						normalized_words.append(words[0].lower())
 					else:
 						# Probably an abbreviation or domain, leave it alone
-						normalized_words.append(word)
-			if len(words) >= 2:
-				# Last word
-				if len(words[-1]) >= abbreviation_threshold and "." not in words[-1]:
-					normalized_words.append(words[-1].capitalize())
-				elif lowercase_domains and "." in words[-1] and not words[-1].endswith(".") and not words[-1].startswith("."):
-					normalized_words.append(words[-1].lower())
-				else:
-					# Probably an abbreviation or domain, leave it alone
-					normalized_words.append(words[-1])
-			line = " ".join(normalized_words)
+						normalized_words.append(words[0])
+				if len(words) >= 3:
+					# Words between the first and last
+					for word in words[1:-1]:
+						if len(word) >= abbreviation_threshold and "." not in word:
+							normalized_words.append(word.capitalize())
+						elif lowercase_domains and "." in word and not word.endswith(".") and not word.startswith("."):
+							normalized_words.append(word.lower())
+						else:
+							# Probably an abbreviation or domain, leave it alone
+							normalized_words.append(word)
+				if len(words) >= 2:
+					# Last word
+					if len(words[-1]) >= abbreviation_threshold and "." not in words[-1]:
+						normalized_words.append(words[-1].capitalize())
+					elif lowercase_domains and "." in words[-1] and not words[-1].endswith(".") and not words[-1].startswith("."):
+						normalized_words.append(words[-1].lower())
+					else:
+						# Probably an abbreviation or domain, leave it alone
+						normalized_words.append(words[-1])
+				line = " ".join(normalized_words)
 		normalized_lines.append(line)
 	return "\n".join(normalized_lines)
 
@@ -562,6 +581,8 @@ def parse_registrants(data, never_query_handles=True, handle_server=""):
 		"Domain Holder: (?P<organization>.+)\n(?P<street1>.+?)(?:,+ (?P<street2>.+?)(?:,+ (?P<street3>.+?)(?:,+ (?P<street4>.+?)(?:,+ (?P<street5>.+?)(?:,+ (?P<street6>.+?)(?:,+ (?P<street7>.+?))?)?)?)?)?)?, (?P<city>.+)\n(?P<postalcode>.+)\n(?P<country>[A-Z]+)\n", # .co.th, format 2
 		"Domain Holder: (?P<organization>.+)\n(?P<street1>.+)\n(?:(?P<street2>.+)\n)?(?:(?P<street3>.+)\n)?.+?, (?P<district>.+)\n(?P<city>.+)\n(?P<postalcode>.+)\n(?P<country>[A-Z]+)\n", # .co.th, format 3
 		"Domain Holder: (?P<organization>.+)\n(?P<street1>.+?)(?:,+ (?P<street2>.+?)(?:,+ (?P<street3>.+?)(?:,+ (?P<street4>.+?)(?:,+ (?P<street5>.+?)(?:,+ (?P<street6>.+?)(?:,+ (?P<street7>.+?))?)?)?)?)?)?\n(?P<city>.+),? (?P<state>[A-Z]{2,3})(?: [A-Z0-9]+)?\n(?P<postalcode>.+)\n(?P<country>[A-Z]+)\n", # .co.th, format 4
+		"   Registrant:\n      (?P<organization>.+)\n      (?P<name>.+)  (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)\n      (?P<street>.*)\n      (?P<city>.+), (?P<state>[^,\n]*)\n      (?P<country>.+)\n", # .com.tw (Western registrars)
+		"Registrant:\n(?P<organization1>.+)\n(?P<organization2>.+)\n(?P<street1>.+?)(?:,+(?P<street2>.+?)(?:,+(?P<street3>.+?)(?:,+(?P<street4>.+?)(?:,+(?P<street5>.+?)(?:,+(?P<street6>.+?)(?:,+(?P<street7>.+?))?)?)?)?)?)?,(?P<city>.+),(?P<country>.+)\n\n   Contact:\n      (?P<name>.+)   (?P<email>.+)\n      TEL:  (?P<phone>.+?)(?:(?:#|ext.?)(?P<phone_ext>.+))?\n      FAX:  (?P<fax>.+)(?:(?:#|ext.?)(?P<fax_ext>.+))?\n", # .com.tw (TWNIC/SEEDNET, Taiwanese companies only?)
 		"Registrant Contact Information:\n\nCompany English Name \(It should be the same as the registered/corporation name on your Business Register Certificate or relevant documents\):(?P<organization1>.+)\nCompany Chinese name:(?P<organization2>.+)\nAddress: (?P<street>.+)\nCountry: (?P<country>.+)\nEmail: (?P<email>.+)\n", # HKDNR (.hk)
 		"owner:\s+(?P<name>.+)", # .br
 		"person:\s+(?P<name>.+)", # nic.ru (person)
@@ -598,6 +619,7 @@ def parse_registrants(data, never_query_handles=True, handle_server=""):
 		"Tech Contact: (?P<handle>.+)\n(?P<street1>.+) (?P<city>[^\s]+)\n(?P<postalcode>.+)\n(?P<country>[A-Z]+)\n", # .co.th, format 4
 		"Tech Contact: (?P<handle>.+)\n(?P<organization>.+)\n(?P<street1>.+)\n(?P<district>.+) (?P<city>[^\s]+)\n(?P<postalcode>.+)\n(?P<country>[A-Z]+)\n", # .co.th, format 5
 		"Tech Contact: (?P<handle>.+)\n(?P<organization>.+)\n(?P<street1>.+)\n(?P<street2>.+)\n(?:(?P<street3>.+)\n)?(?P<city>.+)\n(?P<postalcode>.+)\n(?P<country>[A-Z]+)\n", # .co.th, format 6
+		"   Technical Contact:\n      (?P<name>.+)  (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)\n", # .com.tw (Western registrars)
 		"Technical Contact Information:\n\n(?:Given name: (?P<firstname>.+)\n)?(?:Family name: (?P<lastname>.+)\n)?(?:Company name: (?P<organization>.+)\n)?Address: (?P<street>.+)\nCountry: (?P<country>.+)\nPhone: (?P<phone>.*)\nFax: (?P<fax>.*)\nEmail: (?P<email>.+)\n(?:Account Name: (?P<handle>.+)\n)?", # HKDNR (.hk)
 	]
 
@@ -622,6 +644,7 @@ def parse_registrants(data, never_query_handles=True, handle_server=""):
 		"   Administrative contact:\n      (?P<name>.+)\n      (?P<organization>.*)\n      (?P<street>.+)\n      (?P<city>.+) (?P<state>\S+),[ ]+(?P<postalcode>.+)\n      (?P<country>.+)\n      (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)", # .am
 		"Administrative Contact:\n   Name:           (?P<name>.+)\n   City:           (?P<city>.+)\n   State:          (?P<state>.+)\n   Country:        (?P<country>.+)\n", # Akky (.com.mx)
                 "\[Tech-C\]\nType: (?P<type>.+)\nName: (?P<name>.+)\n(Organisation: (?P<organization>.+)\n){0,1}(Address: (?P<street1>.+)\n){1}(Address: (?P<street2>.+)\n){0,1}(Address: (?P<street3>.+)\n){0,1}(Address: (?P<street4>.+)\n){0,1}PostalCode: (?P<postalcode>.+)\nCity: (?P<city>.+)\nCountryCode: (?P<country>[A-Za-z]{2})\nPhone: (?P<phone>.+)\nFax: (?P<fax>.+)\nEmail: (?P<email>.+)\n(Remarks: (?P<remark>.+)\n){0,1}Changed: (?P<changed>.+)", # DeNIC
+		"   Administrative Contact:\n      (?P<name>.+)  (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)\n", # .com.tw (Western registrars)
 		"Administrative Contact Information:\n\n(?:Given name: (?P<firstname>.+)\n)?(?:Family name: (?P<lastname>.+)\n)?(?:Company name: (?P<organization>.+)\n)?Address: (?P<street>.+)\nCountry: (?P<country>.+)\nPhone: (?P<phone>.*)\nFax: (?P<fax>.*)\nEmail: (?P<email>.+)\n(?:Account Name: (?P<handle>.+)\n)?", # HKDNR (.hk)
 	]
 
@@ -799,6 +822,13 @@ def parse_registrants(data, never_query_handles=True, handle_server=""):
 				if 'lastname' in obj:
 					elements.append(obj["lastname"])
 				obj["name"] = " ".join(elements)
+			if 'country' in obj and 'city' in obj and (re.match("^R\.?O\.?C\.?$", obj["country"], re.IGNORECASE) or obj["country"].lower() == "republic of china") and obj["city"].lower() == "taiwan":
+				# There's an edge case where some registrants append ", Republic of China" after "Taiwan", and this is mis-parsed
+				# as Taiwan being the city. This is meant to correct that.
+				obj["country"] = "%s, %s" % (obj["city"], obj["country"])
+				lines = [x.strip() for x in obj["street"].splitlines()]
+				obj["city"] = lines[-1]
+				obj["street"] = "\n".join(lines[:-1])
 
 	return {
 		"registrant": registrant,
