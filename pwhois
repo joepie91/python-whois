@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-import argparse, pythonwhois, json, datetime
+import argparse, pythonwhois, json, datetime, sys
 try:
 	from collections import OrderedDict
 except ImportError as e:
@@ -100,7 +100,10 @@ else:
 					for key, value in data_map.items():
 						if key in contact_data and contact_data[key] is not None:
 							label = "    " + value + (" " * (widest_label - len(value))) + " :"
-							actual_data = contact_data[key]
+							if sys.version_info < (3, 0):
+								actual_data = unicode(contact_data[key])
+							else:
+								actual_data = str(contact_data[key])
 							if "\n" in actual_data: # Indent multi-line values properly
 								lines = actual_data.split("\n")
 								actual_data = "\n".join([lines[0]] + [(" " * (widest_label + 7)) + line for line in lines[1:]])

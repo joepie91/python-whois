@@ -51,6 +51,23 @@ The manual (including install instructions) can be found in the doc/ directory. 
 
 If any of those apply, don't hesitate to file an issue! The goal is 100% coverage, and we need your feedback to reach that goal.
 
+## License
+
+This library may be used under the WTFPL - or, if you take issue with that, consider it to be under the CC0.
+
+## Data sources
+
+This library uses a number of third-party datasets for normalization:
+
+* `airports.dat`: [OpenFlights Airports Database](http://openflights.org/data.html) ([Open Database License 1.0](http://opendatacommons.org/licenses/odbl/1.0/), [Database Contents License 1.0](http://opendatacommons.org/licenses/dbcl/1.0/))
+* `countries.dat`: [Country List](https://github.com/umpirsky/country-list) (MIT license)
+* `countries3.dat`: [ISO countries list](https://gist.github.com/eparreno/205900) (license unspecified)
+* `states_au.dat`: Part of `pythonwhois` (WTFPL/CC0)
+* `states_us.dat`: [State Table](http://statetable.com/) (license unspecified, free reuse encouraged)
+* `states_ca.dat`: [State Table](http://statetable.com/) (license unspecified, free reuse encouraged)
+
+Be aware that the OpenFlights database in particular has potential licensing consequences; if you do not wish to be bound by these potential consequences, you may simply delete the `airports.dat` file from your distribution. `pythonwhois` will assume there is no database available, and will not perform airport code conversion (but still function correctly otherwise). This also applies to other included datasets.
+
 ## Contributing
 
 Feel free to fork and submit pull requests (to the `develop` branch)! If you change any parsing or normalization logic, ensure to run the full test suite before opening a pull request. Instructions for that are below.
