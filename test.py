@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-import sys, argparse, os, pythonwhois, json, datetime, codecs
+import sys, argparse, os, pythonwhois, json, datetime, codecs, time
 import pkgutil
 import encodings
 
@@ -94,6 +94,8 @@ else:
 targets.sort()
 
 if args.mode[0] == "run":
+	times_default = []
+	times_normalized = []
 	errors = False
 	suites = []
 	for target in targets:
@@ -134,7 +136,9 @@ if args.mode[0] == "run":
 	total = len(suites) * 2
 	for target, data, target_default, target_normalized in suites:
 		for normalization in (True, []):
+			start_time = time.time()
 			parsed = pythonwhois.parse.parse_raw_whois(data, normalized=normalization)
+			time_taken = (time.time() - start_time) * 1000 # in ms
 			parsed = json.loads(encoded_json_dumps(parsed)) # Stupid Unicode hack
 			
 			if normalization == True:
@@ -155,6 +159,10 @@ if args.mode[0] == "run":
 				sys.stdout.write(OK)
 				sys.stdout.write(progress_prefix + "%s passed in %s mode.\n" % (target, mode))
 				sys.stderr.write(ENDC)
+				if normalization == True:
+					times_normalized.append(time_taken)
+				else:
+					times_default.append(time_taken)
 				total_passed += 1
 			else:
 				sys.stderr.write(FAIL)
@@ -168,6 +176,18 @@ if args.mode[0] == "run":
 				total_errors += len(errors)
 				total_failed += 1
 			done += 1
+		
+	if len(times_default) > 0:
+		average_default = int(sum(times_default) / float(len(times_default)))
+		min_default = min(times_default)
+		max_default = max(times_default)
+		sys.stdout.write("Timing in default mode: %dms avg, %dms min, %dms max\n" % (average_default, min_default, max_default))
+		
+	if len(times_normalized) > 0:
+		average_normalized = int(sum(times_normalized) / float(len(times_normalized)))
+		min_normalized = min(times_normalized)
+		max_normalized = max(times_normalized)
+		sys.stdout.write("Timing in normalized mode: %dms avg, %dms min, %dms max\n" % (average_normalized, min_normalized, max_normalized))
 		
 	if total_failed == 0:
 		sys.stdout.write(OK)

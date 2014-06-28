@@ -29,6 +29,12 @@ The manual (including install instructions) can be found in the doc/ directory. 
 	* Nameservers
 * Optional WHOIS data normalization
 	* Attempts to intelligently reformat WHOIS data for better (human) readability
+	* Converts various abbreviation types to full locality names
+		* Airport codes
+		* Country names (2- and 3-letter ISO codes)
+		* US states and territories
+		* Canadian states and territories
+		* Australian states
 * `pwhois`, a simple WHOIS tool using pythonwhois
 	* Easily readable output format
 	* Can also output raw WHOIS data
@@ -38,6 +44,8 @@ The manual (including install instructions) can be found in the doc/ directory. 
 	* Guarantees that previously working WHOIS parsing doesn't unintentionally break when changing code
 
 ## Important update notes
+
+*2.4.0 and up*: A lot of changes were made to the normalization, and the performance under Python 2.x was significantly improved. The average parsing time under Python 2.7 has dropped by 94% (!), and on my system averages out at 18ms. Performance under Python 3.x is [unchanged](https://github.com/joepie91/python-whois/issues/27). `pythonwhois` will now expand a lot of abbreviations in normalized mode, such as airport codes, ISO country codes, and US/CA/AU state abbreviations. The consequence of this is that the library is now bigger (as it ships a list of these abbreviations). Also note that there *may* be licensing consequences, in particular regarding the airport code database. More information about that can be found below.
 
 *2.3.0 and up*: Python 3 support was fixed. Creation date parsing for contacts was fixed; correct timestamps will now be returned, rather than unformatted ones - if your application relies on the broken variant, you'll need to change your code. Some additional parameters were added to the `net` and `parse` methods to facilitate NIC handle lookups; the defaults are backwards-compatible, and these changes should not have any consequences for your code. Thai WHOIS parsing was implemented, but is a little spotty - data may occasionally be incorrectly split up. Please submit a bug report if you run across any issues.
 
@@ -50,6 +58,23 @@ The manual (including install instructions) can be found in the doc/ directory. 
 * There's an inaccuracy in parsing the data for a domain, even just a small one?
 
 If any of those apply, don't hesitate to file an issue! The goal is 100% coverage, and we need your feedback to reach that goal.
+
+## License
+
+This library may be used under the WTFPL - or, if you take issue with that, consider it to be under the CC0.
+
+## Data sources
+
+This library uses a number of third-party datasets for normalization:
+
+* `airports.dat`: [OpenFlights Airports Database](http://openflights.org/data.html) ([Open Database License 1.0](http://opendatacommons.org/licenses/odbl/1.0/), [Database Contents License 1.0](http://opendatacommons.org/licenses/dbcl/1.0/))
+* `countries.dat`: [Country List](https://github.com/umpirsky/country-list) (MIT license)
+* `countries3.dat`: [ISO countries list](https://gist.github.com/eparreno/205900) (license unspecified)
+* `states_au.dat`: Part of `pythonwhois` (WTFPL/CC0)
+* `states_us.dat`: [State Table](http://statetable.com/) (license unspecified, free reuse encouraged)
+* `states_ca.dat`: [State Table](http://statetable.com/) (license unspecified, free reuse encouraged)
+
+Be aware that the OpenFlights database in particular has potential licensing consequences; if you do not wish to be bound by these potential consequences, you may simply delete the `airports.dat` file from your distribution. `pythonwhois` will assume there is no database available, and will not perform airport code conversion (but still function correctly otherwise). This also applies to other included datasets.
 
 ## Contributing
 

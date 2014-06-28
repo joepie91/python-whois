@@ -1,7 +1,56 @@
 from __future__ import print_function
-import re, sys, datetime
+import re, sys, datetime, csv, pkgutil
 from . import net, shared
 
+try: 
+	from io import StringIO
+except ImportError:
+	from cStringIO import StringIO
+
+def pkgdata(name):
+	data = pkgutil.get_data("pythonwhois", name)
+	if sys.version_info < (3, 0):
+		return data
+	else:
+		return data.decode("utf-8")
+
+def read_dataset(filename, destination, abbrev_key, name_key, is_dict=False):
+	try:
+		if is_dict:
+			reader = csv.DictReader(pkgdata(filename).splitlines())
+		else:
+			reader = csv.reader(pkgdata(filename).splitlines())
+
+		for line in reader:
+			destination[line[abbrev_key]] = line[name_key]
+	except IOError as e:
+		pass
+	
+airports = {}
+countries = {}
+states_au = {}
+states_us = {}
+states_ca = {}
+	
+try:
+	reader = csv.reader(pkgdata("airports.dat").splitlines())
+
+	for line in reader:
+		airports[line[4]] = line[2]
+		airports[line[5]] = line[2]
+except IOError as e:
+	# The distributor likely removed airports.dat for licensing reasons. We'll just leave an empty dict.
+	pass
+
+read_dataset("countries.dat", countries, "iso", "name", is_dict=True)
+read_dataset("countries3.dat", countries, "iso3", "name", is_dict=True)
+read_dataset("states_au.dat", states_au, 0, 1)
+read_dataset("states_us.dat", states_us, "abbreviation", "name", is_dict=True)
+read_dataset("states_ca.dat", states_ca, "abbreviation", "name", is_dict=True)
+
+def precompile_regexes(source, flags=0):
+	return [re.compile(regex, flags) for regex in source]
+	
 grammar = {
 	"_data": {
 		'id':			['Domain ID:[ ]*(?P<val>.+)'],
@@ -324,6 +373,49 @@ nic_contact_regexes = [
 	"nic-hdl:\s*(?P<handle>.+)\ntype:\s*(?P<type>.+)\ncontact:\s*(?P<name>.+)\n(?:.+\n)*?(?:address:\s*(?P<street1>.+)\n)?(?:address:\s*(?P<street2>.+)\n)?(?:address:\s*(?P<street3>.+)\n)?(?:address:\s*(?P<street4>.+)\n)?country:\s*(?P<country>.+)\n(?:phone:\s*(?P<phone>.+)\n)?(?:fax-no:\s*(?P<fax>.+)\n)?(?:.+\n)*?(?:e-mail:\s*(?P<email>.+)\n)?(?:.+\n)*?changed:\s*(?P<changedate>[0-9]{2}\/[0-9]{2}\/[0-9]{4}).*\n", # AFNIC madness with country field
 ]
 
+organization_regexes = (
+	r"\sltd\.?($|\s)",
+	r"\sco\.?($|\s)",
+	r"\scorp\.?($|\s)",
+	r"\sinc\.?($|\s)",
+	r"\ss\.?p\.?a\.?($|\s)",
+	r"\ss\.?(c\.?)?r\.?l\.?($|\s)",
+	r"\ss\.?a\.?s\.?($|\s)",
+	r"\sa\.?g\.?($|\s)",
+	r"\sn\.?v\.?($|\s)",
+	r"\sb\.?v\.?($|\s)",
+	r"\sp\.?t\.?y\.?($|\s)",
+	r"\sp\.?l\.?c\.?($|\s)",
+	r"\sv\.?o\.?f\.?($|\s)",
+	r"\sb\.?v\.?b\.?a\.?($|\s)",
+	r"\sg\.?m\.?b\.?h\.?($|\s)",
+	r"\ss\.?a\.?r\.?l\.?($|\s)",
+)
+
+grammar["_data"]["id"] = precompile_regexes(grammar["_data"]["id"], re.IGNORECASE)
+grammar["_data"]["status"] = precompile_regexes(grammar["_data"]["status"], re.IGNORECASE)
+grammar["_data"]["creation_date"] = precompile_regexes(grammar["_data"]["creation_date"], re.IGNORECASE)
+grammar["_data"]["expiration_date"] = precompile_regexes(grammar["_data"]["expiration_date"], re.IGNORECASE)
+grammar["_data"]["updated_date"] = precompile_regexes(grammar["_data"]["updated_date"], re.IGNORECASE)
+grammar["_data"]["registrar"] = precompile_regexes(grammar["_data"]["registrar"], re.IGNORECASE)
+grammar["_data"]["whois_server"] = precompile_regexes(grammar["_data"]["whois_server"], re.IGNORECASE)
+grammar["_data"]["nameservers"] = precompile_regexes(grammar["_data"]["nameservers"], re.IGNORECASE)
+grammar["_data"]["emails"] = precompile_regexes(grammar["_data"]["emails"], re.IGNORECASE)
+
+grammar["_dateformats"] = precompile_regexes(grammar["_dateformats"], re.IGNORECASE)
+
+registrant_regexes = precompile_regexes(registrant_regexes)
+tech_contact_regexes = precompile_regexes(tech_contact_regexes)
+billing_contact_regexes = precompile_regexes(billing_contact_regexes)
+admin_contact_regexes = precompile_regexes(admin_contact_regexes)
+nic_contact_regexes = precompile_regexes(nic_contact_regexes)
+organization_regexes = precompile_regexes(organization_regexes, re.IGNORECASE)
+
+nic_contact_references["registrant"] = precompile_regexes(nic_contact_references["registrant"])
+nic_contact_references["tech"] = precompile_regexes(nic_contact_references["tech"])
+nic_contact_references["admin"] = precompile_regexes(nic_contact_references["admin"])
+nic_contact_references["billing"] = precompile_regexes(nic_contact_references["billing"])
+
 if sys.version_info < (3, 0):
 	def is_string(data):
 		"""Test for string with support for python 2."""
@@ -344,7 +436,7 @@ def parse_raw_whois(raw_data, normalized=[], never_query_handles=True, handle_se
 			if (rule_key in data) == False:
 				for line in segment.splitlines():
 					for regex in rule_regexes:
-						result = re.search(regex, line, re.IGNORECASE)
+						result = re.search(regex, line)
 
 						if result is not None:
 							val = result.group("val").strip()
@@ -540,6 +632,15 @@ def normalize_data(data, normalized):
 
 	for contact_type, contact in data['contacts'].items():
 		if contact is not None:
+			if 'country' in contact and contact['country'] in countries:
+				contact['country'] = countries[contact['country']]
+			if 'city' in contact and contact['city'] in airports:
+				contact['city'] = airports[contact['city']]
+			if 'country' in contact and 'state' in contact:
+				for country, source in (("united states", states_us), ("australia", states_au), ("canada", states_ca)):
+					if country in contact["country"].lower() and contact["state"] in source:
+						contact["state"] = source[contact["state"]]
+			
 			for key in ("email",):
 				if key in contact and contact[key] is not None and (normalized == True or key in normalized):
 					if is_string(contact[key]):
@@ -554,10 +655,38 @@ def normalize_data(data, normalized):
 			for key in ("city", "organization", "state", "country"):
 				if key in contact and contact[key] is not None and (normalized == True or key in normalized):
 					contact[key] = normalize_name(contact[key], abbreviation_threshold=3, length_threshold=3)
-
+			
+			if "name" in contact and "organization" not in contact:
+				lines = [x.strip() for x in contact["name"].splitlines()]
+				new_lines = []
+				for i, line in enumerate(lines):
+					for regex in organization_regexes:
+						if re.search(regex, line):
+							new_lines.append(line)
+							del lines[i]
+							break
+				if len(lines) > 0:
+					contact["name"] = "\n".join(lines)
+				else:
+					del contact["name"]
+					
+				if len(new_lines) > 0:
+					contact["organization"] = "\n".join(new_lines)
+						
+			if "street" in contact and "organization" not in contact:
+				lines = [x.strip() for x in contact["street"].splitlines()]
+				if len(lines) > 1:
+					for regex in organization_regexes:
+						if re.search(regex, lines[0]):
+							contact["organization"] = lines[0]
+							contact["street"] = "\n".join(lines[1:])
+							break
+			
 			for key in list(contact.keys()):
 				try:
 					contact[key] = contact[key].strip(", ")
+					if contact[key] == "-" or contact[key].lower() == "n/a":
+						del contact[key]
 				except AttributeError as e:
 					pass # Not a string
 	return data
@@ -612,7 +741,7 @@ def parse_dates(dates):
 
 	for date in dates:
 		for rule in grammar['_dateformats']:
-			result = re.match(rule, date, re.IGNORECASE)
+			result = re.match(rule, date)
 
 			if result is not None:
 				try:
