@@ -29,6 +29,12 @@ The manual (including install instructions) can be found in the doc/ directory. 
 	* Nameservers
 * Optional WHOIS data normalization
 	* Attempts to intelligently reformat WHOIS data for better (human) readability
+	* Converts various abbreviation types to full locality names
+		* Airport codes
+		* Country names (2- and 3-letter ISO codes)
+		* US states and territories
+		* Canadian states and territories
+		* Australian states
 * `pwhois`, a simple WHOIS tool using pythonwhois
 	* Easily readable output format
 	* Can also output raw WHOIS data
