@@ -101,7 +101,12 @@ else:
 						if key in contact_data and contact_data[key] is not None:
 							label = "    " + value + (" " * (widest_label - len(value))) + " :"
 							if sys.version_info < (3, 0):
-								actual_data = unicode(contact_data[key])
+								if type(contact_data[key]) == str:
+									actual_data = contact_data[key].decode("utf-8")
+								elif type(contact_data[key]) == datetime.datetime:
+									actual_data = unicode(contact_data[key])
+								else:
+									actual_data = contact_data[key]
 							else:
 								actual_data = str(contact_data[key])
 							if "\n" in actual_data: # Indent multi-line values properly

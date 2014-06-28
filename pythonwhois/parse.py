@@ -48,6 +48,9 @@ read_dataset("states_au.dat", states_au, 0, 1)
 read_dataset("states_us.dat", states_us, "abbreviation", "name", is_dict=True)
 read_dataset("states_ca.dat", states_ca, "abbreviation", "name", is_dict=True)
 
+def precompile_regexes(source, flags=0):
+	return [re.compile(regex, flags) for regex in source]
+	
 grammar = {
 	"_data": {
 		'id':			['Domain ID:[ ]*(?P<val>.+)'],
@@ -389,6 +392,30 @@ organization_regexes = (
 	r"\ss\.?a\.?r\.?l\.?($|\s)",
 )
 
+grammar["_data"]["id"] = precompile_regexes(grammar["_data"]["id"], re.IGNORECASE)
+grammar["_data"]["status"] = precompile_regexes(grammar["_data"]["status"], re.IGNORECASE)
+grammar["_data"]["creation_date"] = precompile_regexes(grammar["_data"]["creation_date"], re.IGNORECASE)
+grammar["_data"]["expiration_date"] = precompile_regexes(grammar["_data"]["expiration_date"], re.IGNORECASE)
+grammar["_data"]["updated_date"] = precompile_regexes(grammar["_data"]["updated_date"], re.IGNORECASE)
+grammar["_data"]["registrar"] = precompile_regexes(grammar["_data"]["registrar"], re.IGNORECASE)
+grammar["_data"]["whois_server"] = precompile_regexes(grammar["_data"]["whois_server"], re.IGNORECASE)
+grammar["_data"]["nameservers"] = precompile_regexes(grammar["_data"]["nameservers"], re.IGNORECASE)
+grammar["_data"]["emails"] = precompile_regexes(grammar["_data"]["emails"], re.IGNORECASE)
+
+grammar["_dateformats"] = precompile_regexes(grammar["_dateformats"], re.IGNORECASE)
+
+registrant_regexes = precompile_regexes(registrant_regexes)
+tech_contact_regexes = precompile_regexes(tech_contact_regexes)
+billing_contact_regexes = precompile_regexes(billing_contact_regexes)
+admin_contact_regexes = precompile_regexes(admin_contact_regexes)
+nic_contact_regexes = precompile_regexes(nic_contact_regexes)
+organization_regexes = precompile_regexes(organization_regexes, re.IGNORECASE)
+
+nic_contact_references["registrant"] = precompile_regexes(nic_contact_references["registrant"])
+nic_contact_references["tech"] = precompile_regexes(nic_contact_references["tech"])
+nic_contact_references["admin"] = precompile_regexes(nic_contact_references["admin"])
+nic_contact_references["billing"] = precompile_regexes(nic_contact_references["billing"])
+
 if sys.version_info < (3, 0):
 	def is_string(data):
 		"""Test for string with support for python 2."""
@@ -409,7 +436,7 @@ def parse_raw_whois(raw_data, normalized=[], never_query_handles=True, handle_se
 			if (rule_key in data) == False:
 				for line in segment.splitlines():
 					for regex in rule_regexes:
-						result = re.search(regex, line, re.IGNORECASE)
+						result = re.search(regex, line)
 
 						if result is not None:
 							val = result.group("val").strip()
@@ -634,7 +661,7 @@ def normalize_data(data, normalized):
 				new_lines = []
 				for i, line in enumerate(lines):
 					for regex in organization_regexes:
-						if re.search(regex, line, re.IGNORECASE):
+						if re.search(regex, line):
 							new_lines.append(line)
 							del lines[i]
 							break
@@ -650,7 +677,7 @@ def normalize_data(data, normalized):
 				lines = [x.strip() for x in contact["street"].splitlines()]
 				if len(lines) > 1:
 					for regex in organization_regexes:
-						if re.search(regex, lines[0], re.IGNORECASE):
+						if re.search(regex, lines[0]):
 							contact["organization"] = lines[0]
 							contact["street"] = "\n".join(lines[1:])
 							break
@@ -714,7 +741,7 @@ def parse_dates(dates):
 
 	for date in dates:
 		for rule in grammar['_dateformats']:
-			result = re.match(rule, date, re.IGNORECASE)
+			result = re.match(rule, date)
 
 			if result is not None:
 				try:
