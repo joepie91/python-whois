@@ -2,7 +2,9 @@ import socket, re, sys
 from codecs import encode, decode
 from . import shared
 
-def get_whois_raw(domain, server="", previous=[], rfc3490=True, never_cut=False, with_server_list=False, server_list=[]):
+def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=False, with_server_list=False, server_list=None):
+	previous = previous or []
+	server_list = server_list or []
 	# Sometimes IANA simply won't give us the right root WHOIS server
 	exceptions = {
 		".ac.uk": "whois.ja.net",
@@ -20,7 +22,6 @@ def get_whois_raw(domain, server="", previous=[], rfc3490=True, never_cut=False,
 
 	if len(previous) == 0 and server == "":
 		# Root query
-		server_list = [] # Otherwise it retains the list on subsequent queries, for some reason.
 		is_exception = False
 		for exception, exc_serv in exceptions.items():
 			if domain.endswith(exception):
