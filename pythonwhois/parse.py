@@ -426,7 +426,8 @@ else:
 		return isinstance(data, str)
 
 
-def parse_raw_whois(raw_data, normalized=[], never_query_handles=True, handle_server=""):
+def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_server=""):
+	normalized = normalized or []
 	data = {}
 
 	raw_data = [segment.replace("\r", "") for segment in raw_data] # Carriage returns are the devil
