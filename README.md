@@ -43,6 +43,12 @@ The manual (including install instructions) can be found in the doc/ directory. 
 	* Will detect and warn about any changes in parsed data compared to previous runs
 	* Guarantees that previously working WHOIS parsing doesn't unintentionally break when changing code
 
+## IP range WHOIS
+
+`pythonwhois` does not yet support WHOIS lookups on IP ranges (including single IPs), although this will be added at some point in the future. In the meantime, consider using [`ipwhois`](https://github.com/secynic/ipwhois) - it offers functionality and an API similar to `pythonwhois`, but for IPs. It also supports delegated RWhois.
+
+Do note that `ipwhois` does not offer a normalization feature, and does not (yet) come with a command-line tool. Additionally, `ipwhois` is maintained by Philip Hane and not by me; please make sure to file bugs relating to it in the `ipwhois` repository, not in that of `pythonwhois`.
+
 ## Important update notes
 
 *2.4.0 and up*: A lot of changes were made to the normalization, and the performance under Python 2.x was significantly improved. The average parsing time under Python 2.7 has dropped by 94% (!), and on my system averages out at 18ms. Performance under Python 3.x is [unchanged](https://github.com/joepie91/python-whois/issues/27). `pythonwhois` will now expand a lot of abbreviations in normalized mode, such as airport codes, ISO country codes, and US/CA/AU state abbreviations. The consequence of this is that the library is now bigger (as it ships a list of these abbreviations). Also note that there *may* be licensing consequences, in particular regarding the airport code database. More information about that can be found below.
