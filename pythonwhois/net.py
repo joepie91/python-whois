@@ -82,13 +82,25 @@ def get_root_server(domain):
 	raise shared.WhoisException("No root WHOIS server found for domain.")
 	
 def whois_request(domain, server, port=43):
+	import select
+	recv_timeout = 5
+	connect_timeout = 5
+
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	sock.settimeout(connect_timeout)
 	sock.connect((server, port))
+	sock.settimeout(None)
+
 	sock.send(("%s\r\n" % domain).encode("utf-8"))
+	sock.setblocking(0)
 	buff = b""
 	while True:
-		data = sock.recv(1024)
-		if len(data) == 0:
-			break
-		buff += data
+		ready = select.select([sock], [], [], recv_timeout)
+		if ready[0]:
+			data = sock.recv(1024)
+			if len(data) == 0:
+				break
+			buff += data
+		else:
+			raise Exception('recv timeout:%s' %  server)
 	return buff.decode("utf-8")
