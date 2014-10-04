@@ -145,9 +145,10 @@ grammar = {
 		'nameservers':		['Name Server:[ ]*(?P<val>[^ ]+)',
 					 'Nameservers:[ ]*(?P<val>[^ ]+)',
 					 '(?<=[ .]{2})(?P<val>([a-z0-9-]+\.)+[a-z0-9]+)(\s+([0-9]{1,3}\.){3}[0-9]{1,3})',
-					 'nameserver:\s*(?P<val>.+)',
+                                         'nameserver:\s*(?P<val>.+)',
 					 'nserver:\s*(?P<val>[^[\s]+)',
 					 'Name Server[.]+ (?P<val>[^[\s]+)',
+					 'Name Server \d:\s+(?P<val>[^[\s]+)',
 					 'Hostname:\s*(?P<val>[^\s]+)',
 					 'DNS[0-9]+:\s*(?P<val>.+)',
 					 '   DNS:\s*(?P<val>.+)',
@@ -171,6 +172,7 @@ grammar = {
 		'(?P<day>[0-9]{1,2})[./ -](?P<month>[0-9]{1,2})[./ -](?P<year>[0-9]{4}|[0-9]{2})',
 		'(?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (?P<day>[0-9]{1,2}),? (?P<year>[0-9]{4})',
 		'(?P<day>[0-9]{1,2})-(?P<month>January|February|March|April|May|June|July|August|September|October|November|December)-(?P<year>[0-9]{4})',
+                '[A-Z][a-z]{2}\s(?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s(?P<day>[0-9]{1,2})\s(?P<year>[0-9]{4})'
 	),
 	"_months": {
 		'jan': 1,
@@ -251,6 +253,7 @@ registrant_regexes = [
 	"owner:\s+(?P<name>.+)", # .br
 	"person:\s+(?P<name>.+)", # nic.ru (person)
 	"org:\s+(?P<organization>.+)", # nic.ru (organization)
+        "Registrant Name:\s+(?P<name>.+)",
 ]
 
 tech_contact_regexes = [
@@ -312,6 +315,7 @@ admin_contact_regexes = [
 	"   Administrative Contact:\n      (?P<name>.+)  (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)\n", # .com.tw (Western registrars)
 	"Administrative Contact Information:\n\n(?:Given name: (?P<firstname>.+)\n)?(?:Family name: (?P<lastname>.+)\n)?(?:Company name: (?P<organization>.+)\n)?Address: (?P<street>.+)\nCountry: (?P<country>.+)\nPhone: (?P<phone>.*)\nFax: (?P<fax>.*)\nEmail: (?P<email>.+)\n(?:Account Name: (?P<handle>.+)\n)?", # HKDNR (.hk)
 	"ADMIN ID:(?P<handle>.+)\nADMIN Name:(?P<name>.*)\n(?:ADMIN Organization:(?P<organization>.*)\n)?ADMIN Street1:(?P<street1>.+?)\n(?:ADMIN Street2:(?P<street2>.+?)\n(?:ADMIN Street3:(?P<street3>.+?)\n)?)?ADMIN City:(?P<city>.+)\nADMIN State:(?P<state>.*)\nADMIN Postal Code:(?P<postalcode>.+)\nADMIN Country:(?P<country>[A-Z]+)\nADMIN Phone:(?P<phone>.*?)\nADMIN Fax:(?P<fax>.*)\nADMIN Email:(?P<email>.+)\n", # Realtime Register
+	"Administrative Contact:\s+(?P<organization>.+)\nEmail address:\s+(?P<email>.+)\nAddress:\s+(?P<street1>.+)\nAddress:\s+(?P<postalcode>\d+)\s+(?P<city>.+)\nCountry:\s+(?P<country>.+)\nTelephone:\s+(?P<phone>.+)",
 ]
 
 billing_contact_regexes = [
@@ -513,7 +517,7 @@ def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_
 		# SIDN isn't very standard either. And EURid uses a similar format.
 		match = re.search("Registrar:\n\s+(?:Name:\s*)?(\S.*)", segment)
 		if match is not None:
-			data["registrar"].insert(0, match.group(1).strip())
+			data["registrar"] = [match.group(1).strip()]
 		match = re.search("(?:Domain nameservers|Name servers):([\s\S]*?\n)\n", segment)
 		if match is not None:
 			chunk = match.group(1)
