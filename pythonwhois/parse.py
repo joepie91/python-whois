@@ -451,7 +451,7 @@ def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_
 									data[rule_key] = [val]
 
 		# Whois.com is a bit special... Fabulous.com also seems to use this format. As do some others.
-		match = re.search("^\s?Name\s?[Ss]ervers:?\s*\n((?:\s*.+\n)+?\s?)\n", segment, re.MULTILINE)
+		match = re.search("^\s?Name\s?[Ss]ervers:?\s*\n((?:\s*.+\n)+?\s?)(?:\n|$)", segment, re.MULTILINE)
 		if match is not None:
 			chunk = match.group(1)
 			for match in re.findall("[ ]*(.+)\n", chunk):
