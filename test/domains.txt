@@ -44,3 +44,6 @@ keybase.io
 whois.us
 freebnc.net
 test.de
+rem.ax
+scantr.ax
+wit.ai
