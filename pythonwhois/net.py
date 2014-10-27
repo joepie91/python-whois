@@ -24,6 +24,7 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
 		".trade": "whois.nic.trade",
 		".webcam": "whois.nic.webcam",
 		".xn--rhqv96g": "whois.nic.xn--rhqv96g",
+		".ca":"whois.cira.ca",
 		# The following is a bit hacky, but IANA won't return the right answer for example.com because it's a direct registration.
 		"example.com": "whois.verisign-grs.com"
 	}
