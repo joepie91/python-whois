@@ -1,0 +1,70 @@
+% New Zealand Domain Name Registry Limited
+% Users confirm on submission their agreement to all published Terms
+%
+version: 5.00
+query_datetime: 2014-11-03T21:52:53+13:00
+domain_name: dnc.org.nz
+query_status: 200 Active
+domain_dateregistered: 2002-04-23T00:00:00+12:00
+domain_datebilleduntil: 2014-11-23T00:00:00+13:00
+domain_datelastmodified: 2014-10-23T23:39:14+13:00
+domain_delegaterequested: yes
+domain_signed: no
+%
+registrar_name: Domain Name Commissioner
+registrar_address1: PO Box 11881
+registrar_city: Wellington
+registrar_country: NZ (NEW ZEALAND)
+registrar_phone: +64 4 472-1600
+registrar_fax: +64 4 495-2115
+registrar_email: info@dnc.org.nz
+%
+registrant_contact_name: Internet New Zealand Incorporated
+registrant_contact_address1: PO Box 11-881
+registrant_contact_city: Wellington
+registrant_contact_postalcode: 6001
+registrant_contact_country: NZ (NEW ZEALAND)
+registrant_contact_phone: +64 4 472 1600
+registrant_contact_fax: +64 4 495 2115
+registrant_contact_email: info@dnc.org.nz
+%
+admin_contact_name: Executive Director
+admin_contact_address1: InternetNZ
+admin_contact_address2: PO Box 11-881
+admin_contact_city: Wellington
+admin_contact_postalcode: 6001
+admin_contact_country: NZ (NEW ZEALAND)
+admin_contact_phone: +64 4 472 1600
+admin_contact_fax: +64 4 495 2115
+admin_contact_email: info@dnc.org.nz
+%
+technical_contact_name: Technical Manager
+technical_contact_address1: InternetNZ
+technical_contact_address2: PO Box 11-881
+technical_contact_city: Wellington
+technical_contact_postalcode: 6001
+technical_contact_country: NZ (NEW ZEALAND)
+technical_contact_phone: +64 4 472 1600
+technical_contact_fax: +64 4 495 2115
+technical_contact_email: soa@internetnz.net.nz
+%
+ns_name_01: ns1.internetnz.net.nz
+ns_name_02: ns3.catalyst.net.nz
+ns_name_03: ns1.serion.co.nz
+%
+% Users are advised that the following activities are strictly forbidden.
+%
+% Using multiple WHOIS queries, or using the output of multiple WHOIS
+% queries in conjunction with any other facility or service, to enable
+% or effect a download of part or all of the .nz Register.
+%
+% Using any information contained in the WHOIS query output to attempt a
+% targeted contact campaign with any person, or any organisation, using any
+% medium.
+%
+% A breach of these conditions will be treated as a breach of the .nz Policies
+% and Procedures.  Sanctions in line with those specified in the policies and
+% procedures at www.dnc.org.nz may result from any breach.
+%
+% Copyright InternetNZ
+

@@ -56,6 +56,7 @@ grammar = {
 		'id':			['Domain ID:[ ]*(?P<val>.+)'],
 		'status':		['\[Status\]\s*(?P<val>.+)',
 					 'Status\s*:\s?(?P<val>.+)',
+					 'query_status: (?P<val>.+)',
 					 '\[State\]\s*(?P<val>.+)',
 					 '^state:\s*(?P<val>.+)'],
 		'creation_date':	['\[Created on\]\s*(?P<val>.+)',
@@ -82,6 +83,7 @@ grammar = {
 					 'created-date:\s*(?P<val>.+)',
 					 'Domain Name Commencement Date: (?P<val>.+)',
 					 'registered:\s*(?P<val>.+)',
+					 'domain_dateregistered:\s*(?P<val>.+)',
 					 'registration:\s*(?P<val>.+)'],
 		'expiration_date':	['\[Expires on\]\s*(?P<val>.+)',
 					 'Registrar Registration Expiration Date:[ ]*(?P<val>.+)-[0-9]{4}',
@@ -105,6 +107,7 @@ grammar = {
 					 'expiration_date:\s*(?P<val>.+)',
 					 'expire-date:\s*(?P<val>.+)',
 					 'renewal:\s*(?P<val>.+)',
+					 'domain_datebilleduntil:\s*(?P<val>.+)',
 					 'expire:\s*(?P<val>.+)'],
 		'updated_date':		['\[Last Updated\]\s*(?P<val>.+)',
 					 'Record modified on[.]*: (?P<val>.+) [a-zA-Z]+',
@@ -127,6 +130,7 @@ grammar = {
 					 'Last updated on (?P<val>.+) [a-z]{3,4}',
 					 'Last updated:\s*(?P<val>.+)',
 					 'last-updated:\s*(?P<val>.+)',
+					 'domain_datelastmodified:\s*(?P<val>.+)',
 					 '\[Last Update\]\s*(?P<val>.+) \([A-Z]+\)',
 					 'Last update of whois database:\s?[a-z]{3}, (?P<val>.+) [a-z]{3,4}'],
 		'registrar':		['registrar:\s*(?P<val>.+)',
@@ -138,6 +142,7 @@ grammar = {
 					 'Registration Service Provided By:\s?(?P<val>.+)',
 					 'Registrar of Record:\s?(?P<val>.+)',
 					 'Domain Registrar :\s?(?P<val>.+)',
+					 'registrar_name:\s*(?P<val>.+)',
 					 'Registration Service Provider: (?P<val>.+)',
 					 '\tName:\t\s(?P<val>.+)'],
 		'whois_server':		['Whois Server:\s?(?P<val>.+)',
@@ -154,6 +159,7 @@ grammar = {
 					 'ns[0-9]+:\s*(?P<val>.+)',
 					 'NS [0-9]+\s*:\s*(?P<val>.+)',
 					 '\[Name Server\]\s*(?P<val>.+)',
+					 'ns_name_[\d]{2}: (?P<val>.+)',
 					 '(?<=[ .]{2})(?P<val>[a-z0-9-]+\.d?ns[0-9]*\.([a-z0-9-]+\.)+[a-z0-9]+)',
 					 '(?<=[ .]{2})(?P<val>([a-z0-9-]+\.)+[a-z0-9]+)(\s+([0-9]{1,3}\.){3}[0-9]{1,3})',
 					 '(?<=[ .]{2})[^a-z0-9.-](?P<val>d?ns\.([a-z0-9-]+\.)+[a-z0-9]+)',
@@ -251,6 +257,7 @@ registrant_regexes = [
 	"owner:\s+(?P<name>.+)", # .br
 	"person:\s+(?P<name>.+)", # nic.ru (person)
 	"org:\s+(?P<organization>.+)", # nic.ru (organization)
+	"registrant_contact_name: (?P<name>.*)\n(?:registrant_contact_address1: (?P<street1>.*)\n)?(?:registrant_contact_address2: (?P<street2>.*)\n)?(?:registrant_contact_address3: (?P<street3>.*)\n)?(?:registrant_contact_city: (?P<city>.*)\n)?(?:registrant_contact_postalcode: (?P<postalcode>.*)\n)?(?:registrant_contact_country: (?P<country>.*)\n)?(?:registrant_contact_phone: (?P<phone>.*)\n)?(?:registrant_contact_fax: (?P<fax>.*)\n)?(?:registrant_contact_email: (?P<email>.*)\n)?", # .nz
 ]
 
 tech_contact_regexes = [
@@ -286,6 +293,7 @@ tech_contact_regexes = [
 	"   Technical Contact:\n      (?P<name>.+)  (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)\n", # .com.tw (Western registrars)
 	"Technical Contact Information:\n\n(?:Given name: (?P<firstname>.+)\n)?(?:Family name: (?P<lastname>.+)\n)?(?:Company name: (?P<organization>.+)\n)?Address: (?P<street>.+)\nCountry: (?P<country>.+)\nPhone: (?P<phone>.*)\nFax: (?P<fax>.*)\nEmail: (?P<email>.+)\n(?:Account Name: (?P<handle>.+)\n)?", # HKDNR (.hk)
 	"TECH ID:(?P<handle>.+)\nTECH Name:(?P<name>.*)\n(?:TECH Organization:(?P<organization>.*)\n)?TECH Street1:(?P<street1>.+?)\n(?:TECH Street2:(?P<street2>.+?)\n(?:TECH Street3:(?P<street3>.+?)\n)?)?TECH City:(?P<city>.+)\nTECH State:(?P<state>.*)\nTECH Postal Code:(?P<postalcode>.+)\nTECH Country:(?P<country>[A-Z]+)\nTECH Phone:(?P<phone>.*?)\nTECH Fax:(?P<fax>.*)\nTECH Email:(?P<email>.+)\n", # Realtime Register
+	"technical_contact_name: (?P<name>.*)\n(?:technical_contact_address1: (?P<street1>.*)\n)?(?:technical_contact_address2: (?P<street2>.*)\n)?(?:technical_contact_address3: (?P<street3>.*)\n)?(?:technical_contact_city: (?P<city>.*)\n)?(?:technical_contact_postalcode: (?P<postalcode>.*)\n)?(?:technical_contact_country: (?P<country>.*)\n)?(?:technical_contact_phone: (?P<phone>.*)\n)?(?:technical_contact_fax: (?P<fax>.*)\n)?(?:technical_contact_email: (?P<email>.*)\n)?", # .nz
 ]
 
 admin_contact_regexes = [
@@ -312,6 +320,7 @@ admin_contact_regexes = [
 	"   Administrative Contact:\n      (?P<name>.+)  (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)\n", # .com.tw (Western registrars)
 	"Administrative Contact Information:\n\n(?:Given name: (?P<firstname>.+)\n)?(?:Family name: (?P<lastname>.+)\n)?(?:Company name: (?P<organization>.+)\n)?Address: (?P<street>.+)\nCountry: (?P<country>.+)\nPhone: (?P<phone>.*)\nFax: (?P<fax>.*)\nEmail: (?P<email>.+)\n(?:Account Name: (?P<handle>.+)\n)?", # HKDNR (.hk)
 	"ADMIN ID:(?P<handle>.+)\nADMIN Name:(?P<name>.*)\n(?:ADMIN Organization:(?P<organization>.*)\n)?ADMIN Street1:(?P<street1>.+?)\n(?:ADMIN Street2:(?P<street2>.+?)\n(?:ADMIN Street3:(?P<street3>.+?)\n)?)?ADMIN City:(?P<city>.+)\nADMIN State:(?P<state>.*)\nADMIN Postal Code:(?P<postalcode>.+)\nADMIN Country:(?P<country>[A-Z]+)\nADMIN Phone:(?P<phone>.*?)\nADMIN Fax:(?P<fax>.*)\nADMIN Email:(?P<email>.+)\n", # Realtime Register
+	"admin_contact_name: (?P<name>.*)\n(?:admin_contact_address1: (?P<street1>.*)\n)?(?:admin_contact_address2: (?P<street2>.*)\n)?(?:admin_contact_address3: (?P<street3>.*)\n)?(?:admin_contact_city: (?P<city>.*)\n)?(?:admin_contact_postalcode: (?P<postalcode>.*)\n)?(?:admin_contact_country: (?P<country>.*)\n)?(?:admin_contact_phone: (?P<phone>.*)\n)?(?:admin_contact_fax: (?P<fax>.*)\n)?(?:admin_contact_email: (?P<email>.*)\n)?", # .nz
 ]
 
 billing_contact_regexes = [
