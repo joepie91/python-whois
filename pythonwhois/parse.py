@@ -251,6 +251,7 @@ registrant_regexes = [
 	"owner:\s+(?P<name>.+)", # .br
 	"person:\s+(?P<name>.+)", # nic.ru (person)
 	"org:\s+(?P<organization>.+)", # nic.ru (organization)
+	"Registrant:\n\s*Name:\s*(?P<name>.+)\n\s*", # .ca registrant name
 ]
 
 tech_contact_regexes = [
@@ -312,6 +313,7 @@ admin_contact_regexes = [
 	"   Administrative Contact:\n      (?P<name>.+)  (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)\n", # .com.tw (Western registrars)
 	"Administrative Contact Information:\n\n(?:Given name: (?P<firstname>.+)\n)?(?:Family name: (?P<lastname>.+)\n)?(?:Company name: (?P<organization>.+)\n)?Address: (?P<street>.+)\nCountry: (?P<country>.+)\nPhone: (?P<phone>.*)\nFax: (?P<fax>.*)\nEmail: (?P<email>.+)\n(?:Account Name: (?P<handle>.+)\n)?", # HKDNR (.hk)
 	"ADMIN ID:(?P<handle>.+)\nADMIN Name:(?P<name>.*)\n(?:ADMIN Organization:(?P<organization>.*)\n)?ADMIN Street1:(?P<street1>.+?)\n(?:ADMIN Street2:(?P<street2>.+?)\n(?:ADMIN Street3:(?P<street3>.+?)\n)?)?ADMIN City:(?P<city>.+)\nADMIN State:(?P<state>.*)\nADMIN Postal Code:(?P<postalcode>.+)\nADMIN Country:(?P<country>[A-Z]+)\nADMIN Phone:(?P<phone>.*?)\nADMIN Fax:(?P<fax>.*)\nADMIN Email:(?P<email>.+)\n", # Realtime Register
+	"\nAdministrative contact:\n\s*Name:\s*(?P<name>.+)\n\s*Postal address:.+\n\s*(?P<city>.*).*\s(?P<state>(?:AB|BC|MB|NB|NL|NS|NT|NU|ON|PE|SK|QC|YK)).+\s(?P<country>.+).*\n\s*Phone:\s*(?P<phone>.+)\n.+\n\s*Email:\s*(?P<email>.+)", #.ca registrar
 ]
 
 billing_contact_regexes = [
@@ -533,6 +535,10 @@ def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_
 		match = re.search('Registrar\n  Organization:     (.+)\n', segment)
 		if match is not None:
 			data["registrar"] = [match.group(1).strip()]
+		# .ca fix
+		match = re.search("Registrar:\n\s*Name:\s*(.+)\n", segment)
+                if match is not None:
+                        data["registrar"] = [match.group(1).strip()]
 		# HKDNR (.hk) provides a weird nameserver format with too much whitespace
 		match = re.search("Name Servers Information:\n\n([\s\S]*?\n)\n", segment)
 		if match is not None:
@@ -553,7 +559,6 @@ def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_
 					data["nameservers"].append(match.strip())
 				except KeyError as e:
 					data["nameservers"] = [match.strip()]
-		
 
 	data["contacts"] = parse_registrants(raw_data, never_query_handles, handle_server)
 
