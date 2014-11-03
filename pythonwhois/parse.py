@@ -251,6 +251,7 @@ registrant_regexes = [
 	"owner:\s+(?P<name>.+)", # .br
 	"person:\s+(?P<name>.+)", # nic.ru (person)
 	"org:\s+(?P<organization>.+)", # nic.ru (organization)
+	"Registrant:\n\s*Name:\s*(?P<name>.+)\n\s*", # .ca registrant name
 ]
 
 tech_contact_regexes = [
