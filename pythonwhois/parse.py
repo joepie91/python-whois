@@ -535,6 +535,10 @@ def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_
 		match = re.search('Registrar\n  Organization:     (.+)\n', segment)
 		if match is not None:
 			data["registrar"] = [match.group(1).strip()]
+		# .ca fix
+		match = re.search("Registrar:\n\s*Name:\s*(.+)\n", segment)
+                if match is not None:
+                        data["registrar"] = [match.group(1).strip()]
 		# HKDNR (.hk) provides a weird nameserver format with too much whitespace
 		match = re.search("Name Servers Information:\n\n([\s\S]*?\n)\n", segment)
 		if match is not None:
@@ -555,10 +559,6 @@ def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_
 					data["nameservers"].append(match.strip())
 				except KeyError as e:
 					data["nameservers"] = [match.strip()]
-		# .ca fix
-		match = re.search("Registrar:\n\s*Name:\s*(.+)\n", segment)
-                if match is not None:
-                        data["registrar"] = [match.group(1).strip()]
 
 	data["contacts"] = parse_registrants(raw_data, never_query_handles, handle_server)
 
