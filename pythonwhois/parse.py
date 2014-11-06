@@ -105,7 +105,8 @@ grammar = {
 					 'expiration_date:\s*(?P<val>.+)',
 					 'expire-date:\s*(?P<val>.+)',
 					 'renewal:\s*(?P<val>.+)',
-					 'expire:\s*(?P<val>.+)'],
+					 'expire:\s*(?P<val>.+)',
+					 'anniversary:\s*(?P<val>.+)'],
 		'updated_date':		['\[Last Updated\]\s*(?P<val>.+)',
 					 'Record modified on[.]*: (?P<val>.+) [a-zA-Z]+',
 					 'Record last updated on[.]*: [a-zA-Z]+, (?P<val>.+)',
@@ -170,6 +171,7 @@ grammar = {
 		'(?P<day>[0-9]{1,2})[./ -](?P<month>[0-9]{1,2})[./ -](?P<year>[0-9]{4}|[0-9]{2})',
 		'(?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (?P<day>[0-9]{1,2}),? (?P<year>[0-9]{4})',
 		'(?P<day>[0-9]{1,2})-(?P<month>January|February|March|April|May|June|July|August|September|October|November|December)-(?P<year>[0-9]{4})',
+		'(?P<day>[0-9]{1,2})[./-](?P<month>[0-9]{1,2})',
 	),
 	"_months": {
 		'jan': 1,
@@ -750,14 +752,7 @@ def parse_dates(dates):
 			if result is not None:
 				try:
 					# These are always numeric. If they fail, there is no valid date present.
-					year = int(result.group("year"))
 					day = int(result.group("day"))
-
-					# Detect and correct shorthand year notation
-					if year < 60:
-						year += 2000
-					elif year < 100:
-						year += 1900
 
 					# This will require some more guesswork - some WHOIS servers present the name of the month
 					try:
@@ -769,6 +764,21 @@ def parse_dates(dates):
 						except KeyError as e:
 							# Unknown month name, default to 0
 							month = 0
+
+					# .fr has not year (registered for one year)
+					try:
+						year = int(result.group("year"))
+					except IndexError:
+						now = datetime.date.today()
+						year = now.year
+						if now.month < month:
+							year += 1
+
+					# Detect and correct shorthand year notation
+					if year < 60:
+						year += 2000
+					elif year < 100:
+						year += 1900
 
 					try:
 						hour = int(result.group("hour"))
