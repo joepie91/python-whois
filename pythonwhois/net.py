@@ -81,8 +81,9 @@ def get_root_server(domain):
 		return match.group(1)
 	raise shared.WhoisException("No root WHOIS server found for domain.")
 	
-def whois_request(domain, server, port=43):
+def whois_request(domain, server, port=43, timeout=10):
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	sock.settimeout(timeout)
 	sock.connect((server, port))
 	sock.send(("%s\r\n" % domain).encode("utf-8"))
 	buff = b""
