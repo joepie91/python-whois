@@ -12,7 +12,8 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
 		".buzz": "whois.nic.buzz",
 		".moe": "whois.nic.moe",
 		# The following is a bit hacky, but IANA won't return the right answer for example.com because it's a direct registration.
-		"example.com": "whois.verisign-grs.com"
+		"example.com": "whois.verisign-grs.com",
+		"example.net": "whois.verisign-grs.com"
 	}
 	
 	if rfc3490:
