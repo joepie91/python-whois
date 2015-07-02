@@ -2,6 +2,21 @@ import socket, re, sys
 from codecs import encode, decode
 from . import shared
 
+
+WHOIS_REQUEST_FORMAT_EXCEPTIONS = {
+    "ccwhois.verisign-grs.com": "domain %s\r\n",
+    "whois.verisign-grs.com": "domain = %s\r\n",
+    "whois.denic.de": "-C UTF-8 -T dn,ace %s\r\n",
+    "de.whois-servers.net": "-C UTF-8 -T dn,ace %s\r\n",
+    "whois.dk-hostmaster.dk": "--show-handles %s\r\n",
+    "jobswhois.verisign-grs.com": "domain %s\r\n",
+    "whois.jprs.jp": "%s /e\r\n",
+    "whois.nic.name": "domain = %s\r\n",
+    "tvwhois.verisign-grs.com": "domain %s\r\n",
+    "whois.internic.net": "domain %s\r\n",
+}
+
+
 def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=False, with_server_list=False, server_list=None):
 	previous = previous or []
 	server_list = server_list or []
@@ -46,15 +61,9 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
 			target_server = get_root_server(domain)
 	else:
 		target_server = server
-	if target_server == "whois.jprs.jp":
-		request_domain = "%s/e" % domain # Suppress Japanese output
-	elif domain.endswith(".de") and ( target_server == "whois.denic.de" or target_server == "de.whois-servers.net" ):
-		request_domain = "-T dn,ace %s" % domain # regional specific stuff
-	elif target_server == "whois.verisign-grs.com":
-		request_domain = "=%s" % domain # Avoid partial matches
-	else:
-		request_domain = domain
-	response = whois_request(request_domain, target_server)
+
+    response = whois_request(domain, target_server)
+
 	if never_cut:
 		# If the caller has requested to 'never cut' responses, he will get the original response from the server (this is
 		# useful for callers that are only interested in the raw data). Otherwise, if the target is verisign-grs, we will
@@ -95,9 +104,10 @@ def get_root_server(domain):
 	raise shared.WhoisException("No root WHOIS server found for domain.")
 
 def whois_request(domain, server, port=43):
+    format = WHOIS_REQUEST_FORMAT_EXCEPTIONS.get(server, "%s\r\n")
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	sock.connect((server, port))
-	sock.send(("%s\r\n" % domain).encode("utf-8"))
+    sock.send((format % domain).encode("utf-8"))
 	buff = b""
 	while True:
 		data = sock.recv(1024)
