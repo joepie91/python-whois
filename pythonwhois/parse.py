@@ -513,13 +513,20 @@ def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_
 		# SIDN isn't very standard either. And EURid uses a similar format.
 		match = re.search("Registrar:\n\s+(?:Name:\s*)?(\S.*)", segment)
 		if match is not None:
-			data["registrar"].insert(0, match.group(1).strip())
+			try:
+				data["registrar"].insert(0, match.group(1).strip())
+			except KeyError as e:
+				data["registrar"] = [match.group(1).strip()]
 		match = re.search("(?:Domain nameservers|Name servers):([\s\S]*?\n)\n", segment)
 		if match is not None:
 			chunk = match.group(1)
 			for match in re.findall("\s+?(.+)\n", chunk):
-				match = match.split()[0]
-				# Prevent nameserver aliases from being picked up.
+				try:
+				    	match = match.split()[0]
+					#prevents a crash in the case that chunk contains a blank string entry
+				except IndexError:
+					match = "[]" 
+					#Prevent nameserver aliases from being picked up.
 				if not match.startswith("[") and not match.endswith("]"):
 					try:
 						data["nameservers"].append(match.strip())
@@ -803,7 +810,7 @@ def parse_dates(dates):
 					second = 0
 					print(e.message) # FIXME: This should have proper logging of some sort...?
 		try:
-			if year > 0:
+			if year > 0 and (year == 2000 and month > 0):
 				try:
 					parsed_dates.append(datetime.datetime(year, month, day, hour, minute, second))
 				except ValueError as e:
