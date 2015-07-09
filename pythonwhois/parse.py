@@ -806,7 +806,7 @@ def parse_dates(dates):
 					second = 0
 					print(e.message) # FIXME: This should have proper logging of some sort...?
 		try:
-			if year > 0:
+			if year > 0 and (year == 2000 and month > 0):
 				try:
 					parsed_dates.append(datetime.datetime(year, month, day, hour, minute, second))
 				except ValueError as e:

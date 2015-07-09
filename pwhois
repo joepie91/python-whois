@@ -35,7 +35,7 @@ else:
 		parsed = pythonwhois.parse.parse_raw_whois(data, normalized=True)
 	
 	if args.json == True:
-		print(json.dumps(parsed, default=json_fallback))
+                print(json.dumps(parsed, default=json_fallback))
 	else:
 		data_map = OrderedDict({})
 		
