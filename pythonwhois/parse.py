@@ -437,7 +437,7 @@ def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_
 	raw_data = [segment.replace("\r", "") for segment in raw_data] # Carriage returns are the devil
 
 	for segment in raw_data:
-		for rule_key, rule_regexes in grammar['_data'].items():
+                for rule_key, rule_regexes in grammar['_data'].items():
 			if (rule_key in data) == False:
 				for line in segment.splitlines():
 					for regex in rule_regexes:
@@ -455,10 +455,10 @@ def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_
 		match = re.search("^\s?Name\s?[Ss]ervers:?\s*\n((?:\s*.+\n)+?\s?)\n", segment, re.MULTILINE)
 		if match is not None:
 			chunk = match.group(1)
-			for match in re.findall("[ ]*(.+)\n", chunk):
+                        for match in re.findall("[ ]*(.+)\n", chunk):
 				if match.strip() != "":
 					if not re.match("^[a-zA-Z]+:", match):
-						try:
+                                                try:
 							data["nameservers"].append(match.strip())
 						except KeyError as e:
 							data["nameservers"] = [match.strip()]
@@ -519,10 +519,14 @@ def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_
                                 data["registrar"] = [match.group(1).strip()]
 		match = re.search("(?:Domain nameservers|Name servers):([\s\S]*?\n)\n", segment)
 		if match is not None:
-			chunk = match.group(1)
+                        chunk = match.group(1)
 			for match in re.findall("\s+?(.+)\n", chunk):
-				match = match.split()[0]
-				# Prevent nameserver aliases from being picked up.
+                                try:
+                                        match = match.split()[0]
+                                #prevents a crash in the case that chunk contains a blank string entry
+                                except IndexError:
+                                        match = "[]" 
+                                # Prevent nameserver aliases from being picked up.
 				if not match.startswith("[") and not match.endswith("]"):
 					try:
 						data["nameservers"].append(match.strip())
