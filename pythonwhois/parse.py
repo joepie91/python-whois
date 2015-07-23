@@ -611,7 +611,7 @@ def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_
 
 	data["raw"] = raw_data
 
-	if normalized != []:
+	if normalized:
 		data = normalize_data(data, normalized)
 
 	return data
