@@ -317,7 +317,7 @@ tech_contact_regexes = [
 	"   Technical Contact:\n      (?P<name>.+)  (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)\n", # .com.tw (Western registrars)
 	"Technical Contact Information:\n\n(?:Given name: (?P<firstname>.+)\n)?(?:Family name: (?P<lastname>.+)\n)?(?:Company name: (?P<organization>.+)\n)?Address: (?P<street>.+)\nCountry: (?P<country>.+)\nPhone: (?P<phone>.*)\nFax: (?P<fax>.*)\nEmail: (?P<email>.+)\n(?:Account Name: (?P<handle>.+)\n)?", # HKDNR (.hk)
 	"TECH ID:(?P<handle>.+)\nTECH Name:(?P<name>.*)\n(?:TECH Organization:(?P<organization>.*)\n)?TECH Street1:(?P<street1>.+?)\n(?:TECH Street2:(?P<street2>.+?)\n(?:TECH Street3:(?P<street3>.+?)\n)?)?TECH City:(?P<city>.+)\nTECH State:(?P<state>.*)\nTECH Postal Code:(?P<postalcode>.+)\nTECH Country:(?P<country>[A-Z]+)\nTECH Phone:(?P<phone>.*?)\nTECH Fax:(?P<fax>.*)\nTECH Email:(?P<email>.+)\n", # Realtime Register
-	"Technical Contact\n NIC Handle \(if known\)\.+:(?P<handle>.*)\n \(I\)ndividual \(R\)ole\.+:.*\n Name \(Last, First\)\.+:(?P<name>.*)\n Organization Name\.+:(?P<organization>.*)\n Street Address\.+:(?P<street1>.*)\n City\.+: (?P<city>.*)\n State\.+: (?P<state>.*)\n Postal Code\.+:(?P<postalcode>.*)\n Country\.+:(?P<country>.*)\n Phone Number\.+:(?P<phone>.*)\n Fax Number\.+:(?P<fax>.*)\n E-Mailbox\.+:(?P<email>.*)", # .ai
+	"Technical Contact\n NIC Handle \(if known\)\.+:(?P<handle>.*)\n \(I\)ndividual \(R\)ole\.+:(?P<role>.*)\n Name \(Last, First\)\.+:(?P<name>.*)\n Organization Name\.+:(?P<organization>.*)\n Street Address\.+:(?P<street1>.*)\n City\.+: (?P<city>.*)\n State\.+: (?P<state>.*)\n Postal Code\.+:(?P<postalcode>.*)\n Country\.+:(?P<country>.*)\n Phone Number\.+:(?P<phone>.*)\n Fax Number\.+:(?P<fax>.*)\n E-Mailbox\.+:(?P<email>.*)", # .ai
 ]
 
 admin_contact_regexes = [
@@ -344,7 +344,7 @@ admin_contact_regexes = [
 	"   Administrative Contact:\n      (?P<name>.+)  (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)\n", # .com.tw (Western registrars)
 	"Administrative Contact Information:\n\n(?:Given name: (?P<firstname>.+)\n)?(?:Family name: (?P<lastname>.+)\n)?(?:Company name: (?P<organization>.+)\n)?Address: (?P<street>.+)\nCountry: (?P<country>.+)\nPhone: (?P<phone>.*)\nFax: (?P<fax>.*)\nEmail: (?P<email>.+)\n(?:Account Name: (?P<handle>.+)\n)?", # HKDNR (.hk)
 	"ADMIN ID:(?P<handle>.+)\nADMIN Name:(?P<name>.*)\n(?:ADMIN Organization:(?P<organization>.*)\n)?ADMIN Street1:(?P<street1>.+?)\n(?:ADMIN Street2:(?P<street2>.+?)\n(?:ADMIN Street3:(?P<street3>.+?)\n)?)?ADMIN City:(?P<city>.+)\nADMIN State:(?P<state>.*)\nADMIN Postal Code:(?P<postalcode>.+)\nADMIN Country:(?P<country>[A-Z]+)\nADMIN Phone:(?P<phone>.*?)\nADMIN Fax:(?P<fax>.*)\nADMIN Email:(?P<email>.+)\n", # Realtime Register
-	"Administrative Contact\n NIC Handle \(if known\)\.+:(?P<handle>.*)\n \(I\)ndividual \(R\)ole\.+:.*\n Name \(Last, First\)\.+:(?P<name>.*)\n Organization Name\.+:(?P<organization>.*)\n Street Address\.+:(?P<street1>.*)\n City\.+: (?P<city>.*)\n State\.+: (?P<state>.*)\n Postal Code\.+:(?P<postalcode>.*)\n Country\.+:(?P<country>.*)\n Phone Number\.+:(?P<phone>.*)\n Fax Number\.+:(?P<fax>.*)\n E-Mailbox\.+:(?P<email>.*)", # .ai
+	"Administrative Contact\n NIC Handle \(if known\)\.+:(?P<handle>.*)\n \(I\)ndividual \(R\)ole\.+:(?P<role>.*)\n Name \(Last, First\)\.+:(?P<name>.*)\n Organization Name\.+:(?P<organization>.*)\n Street Address\.+:(?P<street1>.*)\n City\.+: (?P<city>.*)\n State\.+: (?P<state>.*)\n Postal Code\.+:(?P<postalcode>.*)\n Country\.+:(?P<country>.*)\n Phone Number\.+:(?P<phone>.*)\n Fax Number\.+:(?P<fax>.*)\n E-Mailbox\.+:(?P<email>.*)", # .ai
 ]
 
 billing_contact_regexes = [
@@ -362,7 +362,7 @@ billing_contact_regexes = [
 	"Billing Contact Information :[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication
 	"Billing Contact:\n   Name:           (?P<name>.+)\n   City:           (?P<city>.+)\n   State:          (?P<state>.+)\n   Country:        (?P<country>.+)\n", # Akky (.com.mx)
 	"BILLING ID:(?P<handle>.+)\nBILLING Name:(?P<name>.*)\n(?:BILLING Organization:(?P<organization>.*)\n)?BILLING Street1:(?P<street1>.+?)\n(?:BILLING Street2:(?P<street2>.+?)\n(?:BILLING Street3:(?P<street3>.+?)\n)?)?BILLING City:(?P<city>.+)\nBILLING State:(?P<state>.*)\nBILLING Postal Code:(?P<postalcode>.+)\nBILLING Country:(?P<country>[A-Z]+)\nBILLING Phone:(?P<phone>.*?)\nBILLING Fax:(?P<fax>.*)\nBILLING Email:(?P<email>.+)\n", # Realtime Register
-	"Billing Contact\n NIC Handle \(if known\)\.+:(?P<handle>.*)\n \(I\)ndividual \(R\)ole\.+:.*\n Name \(Last, First\)\.+:(?P<name>.*)\n Organization Name\.+:(?P<organization>.*)\n Street Address\.+:(?P<street1>.*)\n City\.+: (?P<city>.*)\n State\.+: (?P<state>.*)\n Postal Code\.+:(?P<postalcode>.*)\n Country\.+:(?P<country>.*)\n Phone Number\.+:(?P<phone>.*)\n Fax Number\.+:(?P<fax>.*)\n E-Mailbox\.+:(?P<email>.*)", # .ai
+	"Billing Contact\n NIC Handle \(if known\)\.+:(?P<handle>.*)\n \(I\)ndividual \(R\)ole\.+:(?P<role>.*)\n Name \(Last, First\)\.+:(?P<name>.*)\n Organization Name\.+:(?P<organization>.*)\n Street Address\.+:(?P<street1>.*)\n City\.+: (?P<city>.*)\n State\.+: (?P<state>.*)\n Postal Code\.+:(?P<postalcode>.*)\n Country\.+:(?P<country>.*)\n Phone Number\.+:(?P<phone>.*)\n Fax Number\.+:(?P<fax>.*)\n E-Mailbox\.+:(?P<email>.*)", # .ai
 ]
 
 # Some registries use NIC handle references instead of directly listing contacts...
@@ -433,17 +433,19 @@ abbreviated_organization_regexes = (
 )
 
 organization_regexes = (
-	r"(?:^|\s|,)limited\.?($|\s)",
-	r"(?:^|\s|,)holdings\.?($|\s)",
-	r"(?:^|\s|,)(?:in)?corporat(?:ed?|ion)\.?($|\s)",
-	r"(?:^|\s|,)company\.?($|\s)",
-	r"(?:^|\s|,)operations\.?($|\s)",
-	r"(?:^|\s|,)association\.?($|\s)",
-	r"(?:^|\s|,)council\.?($|\s)",
-	r"(?:^|\s|,)university\.?($|\s)",
-	r"(?:^|\s|,)college\.?($|\s)",
-	r"(?:^|\s|,)services?\.?($|\s)",
-	r"(?:^|\s|,)cabinet\.?($|\s)",
+	r"(?:^|\s|,)limited\.?($|\s|,)",
+	r"(?:^|\s|,)holdings\.?($|\s|,)",
+	r"(?:^|\s|,)(?:in)?corporat(?:ed?|ion)\.?($|\s|,)",
+	r"(?:^|\s|,)company\.?($|\s|,)",
+	r"(?:^|\s|,)operations\.?($|\s|,)",
+	r"(?:^|\s|,)association\.?($|\s|,)",
+	r"(?:^|\s|,)council\.?($|\s|,)",
+	r"(?:^|\s|,)university\.?($|\s|,)",
+	r"(?:^|\s|,)college\.?($|\s|,)",
+	r"(?:^|\s|,)services?\.?($|\s|,)",
+	r"(?:^|\s|,)cabinet\.?($|\s|,)",
+	r"(?:^|\s|,)billing\.?($|\s|,)",
+	r"(?:^|\s|,)administration\.?($|\s|,)",
 )
 
 known_abbreviations = allow_trailing_comma_dict({
@@ -458,6 +460,10 @@ known_abbreviations = allow_trailing_comma_dict({
 	"SARL": r"^sarl$",
 	"d/b/a": r"^(?:d\/b\/a|dba)$",
 })
+
+role_regexes = (
+	r"(?:^|\s|,)administrator\.?($|\s|,)",
+)
 
 country_regexes = [r"(?:\s|,)" + dotify(country_code.upper()) + r"($|\s)" for country_code in countries.keys()]
 
@@ -475,6 +481,7 @@ billing_contact_regexes = precompile_regexes(billing_contact_regexes)
 admin_contact_regexes = precompile_regexes(admin_contact_regexes)
 nic_contact_regexes = precompile_regexes(nic_contact_regexes)
 
+role_regexes = precompile_regexes(role_regexes, re.IGNORECASE)
 organization_regexes = precompile_regexes(organization_regexes, re.IGNORECASE)
 abbreviated_organization_regexes = precompile_regexes(abbreviated_organization_regexes, re.IGNORECASE)
 country_regexes = precompile_regexes(country_regexes)
@@ -750,6 +757,11 @@ def normalize_data(data, normalized):
 					is_organization = is_organization_name(line) or is_fuzzy_duplicate(line, organization_lines)
 				
 				if is_organization:
+					if "," in line:
+						name_words = re.split(name_separators, line)
+						if is_full_incorporation_form(name_words[0]):
+							line = reverse_name_comma(line)
+					
 					new_organization_lines.append(line)
 					del name_lines[i]
 				
@@ -775,6 +787,8 @@ def normalize_data(data, normalized):
 			elif 'organization' in contact:
 				del contact["organization"]
 				
+			new_roles = []
+				
 			if 'name' in contact:
 				# Check whether the name is reversed; first name last, last name first.
 				names = contact['name'].splitlines()
@@ -782,9 +796,7 @@ def normalize_data(data, normalized):
 				
 				for name in names:
 					if "," in name:
-						name_segments = [segment.strip() for segment in name.split(",")]
-						first_segment = name_segments.pop()
-						name = first_segment + " " + ', '.join(name_segments)
+						name = reverse_name_comma(name)
 					else:
 						# Split the name into normalized (ie. alpha-only) 'words' for comparison. We only care about ASCII, as our first-name
 						# list currently only contains English names.
@@ -792,14 +804,49 @@ def normalize_data(data, normalized):
 
 						if len(name_words) > 1 and is_first_name(name_words[-1]) and not is_first_name(name_words[0]):
 							# The last 'word' was in the common first names, but the first one was not. Likely swapped around.
-							name_segments = re.split(name_separators, name)
-							name_segments.insert(0, name_segments.pop())
-							name = ' '.join(name_segments)
+							name = reverse_name(name)
 							
-					unswapped_names.append(name)
+					if is_role(name):
+						new_roles.append(name)
+					else:
+						unswapped_names.append(name)
 					
-				contact['name'] = "\n".join(unswapped_names)
-
+				if len(unswapped_names) > 0:
+					contact['name'] = "\n".join(unswapped_names)
+				else:
+					del contact['name']
+				
+			if 'organization' in contact:
+				organizations = contact['organization'].splitlines()
+				new_organizations = []
+				
+				for organization in organizations:
+					if is_role(organization):
+						new_roles.append(organization)
+					else:
+						new_organizations.append(organization)
+						
+				if len(new_organizations) > 0:
+					contact['organization'] = "\n".join(new_organizations)
+				else:
+					del contact['organization']
+					
+			if 'street' in contact:
+				streets = contact['street'].splitlines()
+				
+				if is_role(streets[0]):
+					new_roles.append(streets[0])
+					streets = streets[1:]
+					
+				contact['street'] = "\n".join(streets)
+				
+			if 'role' in contact:
+				existing_roles = contact['role'].splitlines()
+			else:
+				existing_roles = []
+				
+			if len(new_roles) > 0:
+				contact['role'] = "\n".join(new_roles + existing_roles)
 
 			if "street" in contact:
 				lines = [x.strip() for x in contact["street"].splitlines()]
@@ -833,7 +880,7 @@ def normalize_data(data, normalized):
 				if key in contact and contact[key] is not None and (normalized == True or key in normalized):
 					contact[key] = normalize_name(contact[key], abbreviation_threshold=3)
 
-			for key in ("city", "organization", "state", "country"):
+			for key in ("role", "city", "organization", "state", "country"):
 				if key in contact and contact[key] is not None and (normalized == True or key in normalized):
 					contact[key] = normalize_name(contact[key], abbreviation_threshold=3, length_threshold=3, check_known_incorrect=True)
 
@@ -945,7 +992,10 @@ def is_full_incorporation_form(word):
 	return match_regexes(word, organization_regexes)
 	
 def is_abbreviated_incorporation_form(word):
-	return match_regexes(word, abbreviated_organization_regexes) 
+	return match_regexes(word, abbreviated_organization_regexes)
+
+def is_role(line):
+	return match_regexes(line, role_regexes) 
 	
 def is_country(word):
 	return match_regexes(word, country_regexes)
@@ -985,6 +1035,16 @@ def match_regexes_dict(string, regexes):
 	
 def capitalize_words(line):
 	return ' '.join([word.capitalize() for word in line.split(" ")])
+
+def reverse_name(name):
+	name_segments = re.split(name_separators, name)
+	name_segments.insert(0, name_segments.pop())
+	return ' '.join(name_segments)
+
+def reverse_name_comma(name):
+	name_segments = [segment.strip() for segment in name.split(",")]
+	first_segment = name_segments.pop()
+	return first_segment + " " + ', '.join(name_segments)
 
 def normalize_word(word, abbreviation_threshold=4, lowercase_domains=True):
 	if is_known_abbreviation(word):

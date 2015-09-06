@@ -75,6 +75,7 @@ else:
 			data_map = OrderedDict({})
 			data_map["handle"] ="NIC handle"
 			data_map["name"] ="Name"
+			data_map["role"] ="Role"
 			data_map["organization"] = "Organization"
 			data_map["street"] = "Street address"
 			data_map["postalcode"] = "Postal code"
