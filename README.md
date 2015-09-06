@@ -79,6 +79,7 @@ This library uses a number of third-party datasets for normalization:
 * `states_au.dat`: Part of `pythonwhois` (WTFPL/CC0)
 * `states_us.dat`: [State Table](http://statetable.com/) (license unspecified, free reuse encouraged)
 * `states_ca.dat`: [State Table](http://statetable.com/) (license unspecified, free reuse encouraged)
+* `common_first_names.dat`: [Social Security Administration](http://www.ssa.gov/OACT/babynames/), via [hadley/data-baby-names](https://github.com/hadley/data-baby-names) (license unspecified, provided by US government)
 
 Be aware that the OpenFlights database in particular has potential licensing consequences; if you do not wish to be bound by these potential consequences, you may simply delete the `airports.dat` file from your distribution. `pythonwhois` will assume there is no database available, and will not perform airport code conversion (but still function correctly otherwise). This also applies to other included datasets.
 

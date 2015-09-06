@@ -4,6 +4,9 @@ import sys, argparse, os, pythonwhois, json, datetime, codecs, time
 import pkgutil
 import encodings
 
+unicode_stdout = codecs.getwriter(sys.stdout.encoding)(sys.stdout)
+unicode_stderr = codecs.getwriter(sys.stderr.encoding)(sys.stderr)
+
 # FIXME: The testing script is currently incapable of testing referenced NIC handles that are
 #        retrieved separately, such as is the case with the JPRS registry for .co.jp. This
 #        really needs to be fixed, to ensure that contact parsing for this doesn't break.
@@ -170,7 +173,7 @@ if args.mode[0] == "run":
 				sys.stderr.write("Mode: %s\n" % mode)
 				sys.stderr.write("=======================================\n")
 				for error in errors:
-					sys.stderr.write(error + "\n")
+					unicode_stderr.write(error + "\n")
 				sys.stderr.write("=======================================\n")
 				sys.stderr.write(ENDC)
 				total_errors += len(errors)
