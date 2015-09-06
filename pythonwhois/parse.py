@@ -856,6 +856,10 @@ def normalize_data(data, normalized):
 					
 					if contact[key] == "-" or contact[key].lower() == "n/a" or contact[key].lower() == "null":
 						del contact[key]
+		
+		if contact is not None and len(contact) == 0:
+			# We don't have any actual data.
+			data['contacts'][contact_type] = None
 	return data
 
 def deduplicate(value, fuzzy=False):
