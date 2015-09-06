@@ -28,13 +28,17 @@ The manual (including install instructions) can be found in the doc/ directory. 
 	* Full registrant information (!)
 	* Nameservers
 * Optional WHOIS data normalization
-	* Attempts to intelligently reformat WHOIS data for better (human) readability
+	* Attempts to intelligently reformat WHOIS data for better accuracy and (human) readability
 	* Converts various abbreviation types to full locality names
 		* Airport codes
 		* Country names (2- and 3-letter ISO codes)
 		* US states and territories
 		* Canadian states and territories
 		* Australian states
+	* Identifies both organization and person names, and moves or reformats them where necessary
+	* Identifies names where the first and last name are swapped around, and fixes them
+	* Deduplicates names, even *across fields*, and even when they're not 100% identical
+	* Recognizes common (legal) abbreviations, and ensures that they are in the correct case
 * `pwhois`, a simple WHOIS tool using pythonwhois
 	* Easily readable output format
 	* Can also output raw WHOIS data
