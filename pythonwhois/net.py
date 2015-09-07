@@ -73,13 +73,17 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
 	if never_cut == False:
 		new_list = [response] + previous
 	server_list.append(target_server)
-	for line in [x.strip() for x in response.splitlines()]:
-		match = re.match("(refer|whois server|referral url|whois server|registrar whois):\s*([^\s]+\.[^\s]+)", line, re.IGNORECASE)
-		if match is not None:
-			referal_server = match.group(2)
-			if referal_server != server and "://" not in referal_server: # We want to ignore anything non-WHOIS (eg. HTTP) for now.
-				# Referal to another WHOIS server...
-				return get_whois_raw(domain, referal_server, new_list, server_list=server_list, with_server_list=with_server_list)
+	
+	# Ignore redirects from registries who publish the registrar data themselves
+	if target_server not in ('whois.nic.xyz',):
+		for line in [x.strip() for x in response.splitlines()]:
+			match = re.match("(refer|whois server|referral url|whois server|registrar whois):\s*([^\s]+\.[^\s]+)", line, re.IGNORECASE)
+			if match is not None:
+				referal_server = match.group(2)
+				if referal_server != server and "://" not in referal_server: # We want to ignore anything non-WHOIS (eg. HTTP) for now.
+					# Referal to another WHOIS server...
+					return get_whois_raw(domain, referal_server, new_list, server_list=server_list, with_server_list=with_server_list)
+				
 	if with_server_list:
 		return (new_list, server_list)
 	else:
