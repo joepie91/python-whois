@@ -1,6 +1,7 @@
 import socket, re, sys
 from codecs import encode, decode
 from . import shared
+import cchardet
 
 def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=False, with_server_list=False, server_list=None):
 	previous = previous or []
@@ -108,4 +109,5 @@ def whois_request(domain, server, port=43):
 		if len(data) == 0:
 			break
 		buff += data
-	return buff.decode("utf-8", "replace")
+	encoding = cchardet.detect(buff)['encoding']
+	return buff.decode(encoding)
