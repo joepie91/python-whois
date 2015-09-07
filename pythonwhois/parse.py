@@ -1046,8 +1046,10 @@ def reverse_name_comma(name):
 	first_segment = name_segments.pop()
 	return first_segment + " " + ', '.join(name_segments)
 
-def normalize_word(word, abbreviation_threshold=4, lowercase_domains=True):
-	if is_known_abbreviation(word):
+def normalize_word(word, abbreviation_threshold=4, lowercase_domains=True, never_abbreviations=[]):
+	if word.lower() in never_abbreviations:
+		return word.capitalize()
+	elif is_known_abbreviation(word):
 		return get_known_abbreviation(word)
 	elif not is_abbreviation(word, abbreviation_threshold):
 		return word.capitalize()
@@ -1075,7 +1077,7 @@ def normalize_name(value, abbreviation_threshold=4, length_threshold=8, lowercas
 				if len(words) >= 3:
 					# Words between the first and last
 					for word in words[1:-1]:
-						normalized_words.append(normalize_word(word, abbreviation_threshold=abbreviation_threshold, lowercase_domains=lowercase_domains))
+						normalized_words.append(normalize_word(word, abbreviation_threshold=abbreviation_threshold, lowercase_domains=lowercase_domains, never_abbreviations=('as',)))
 				if len(words) >= 2:
 					# Last word
 					normalized_words.append(normalize_word(words[-1], abbreviation_threshold=abbreviation_threshold, lowercase_domains=lowercase_domains))
