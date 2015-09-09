@@ -25,7 +25,8 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
 		".webcam": "whois.nic.webcam",
 		".xn--rhqv96g": "whois.nic.xn--rhqv96g",
 		# The following is a bit hacky, but IANA won't return the right answer for example.com because it's a direct registration.
-		"example.com": "whois.verisign-grs.com"
+		"example.com": "whois.verisign-grs.com",
+		"example.net": "whois.verisign-grs.com"
 	}
 
 	if rfc3490:
