@@ -5,7 +5,10 @@ import subprocess
 import sys
 from codecs import encode, decode
 
+from pythonwhois.whois_server_cache import WhoisServerCache
 from . import shared
+
+server_cache = WhoisServerCache()
 
 
 def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=False, with_server_list=False,
@@ -50,7 +53,13 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
                 target_server = exc_serv
                 break
         if is_exception == False:
-            target_server = get_root_server(domain)
+            tld = get_tld(domain)
+            cached_server = server_cache.getServer(tld)
+            if cached_server is not None:
+                target_server = cached_server
+            else:
+                target_server = get_root_server(domain)
+                server_cache.putServer(tld, target_server)
     else:
         target_server = server
     if target_server == "whois.jprs.jp":
@@ -104,9 +113,11 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
 def server_is_alive(server):
     response = subprocess.call(["ping", "-c 1", "-w2", server], stdout=open(os.devnull, "w"),
                                stderr=subprocess.STDOUT)
-    if response != 0:
-        return False
-    return True
+    return response == 0
+
+
+def get_tld(domain):
+    return domain.split(".")[-1]
 
 
 def get_root_server(domain):

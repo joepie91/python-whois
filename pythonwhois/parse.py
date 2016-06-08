@@ -1219,6 +1219,7 @@ def is_known_abbreviation(word):
 
 
 def has_country(line, country):
+    print(line)
     return country in line.lower()
 
 
