@@ -1,23 +1,18 @@
 import ast
 import os
 
-from os.path import expanduser
 
-home = expanduser("~")
-
-cache_file_name = home + "/.whois-oracle/whois_server.cache"
-
-
-def read_cache():
-    if os.path.exists(os.path.dirname(cache_file_name)):
-        return ast.literal_eval(open(cache_file_name).read())
+def read_cache(file_path):
+    if os.path.isfile(file_path):
+        return ast.literal_eval(open(file_path).read())
     else:
-        os.makedirs(os.path.dirname(cache_file_name))
+        if os.path.dirname(file_path):
+            os.makedirs(os.path.dirname(file_path))
         return {}
 
 
-def write_cache(cache):
-    cache_file = open(cache_file_name, 'w')
+def write_cache(cache, file_path):
+    cache_file = open(file_path, 'w')
     cache_file.write(str(cache))
 
 
@@ -28,7 +23,9 @@ class WhoisServerCache:
     """
 
     def __init__(self):
-        self.cache = read_cache()
+        self.cache = {}
+        self.persistent = False
+        self.file_path = None
 
     def get_server(self, tld):
         """
@@ -40,14 +37,24 @@ class WhoisServerCache:
 
     def put_server(self, tld, whois_server):
         """
-        Store a new WHOIS server in the cache. The cache is then also
-        written to disk again. Because the WHOIS servers don't change that often,
-        it simply writes to a file.
+        Store a new WHOIS server in the cache. If the cache is persistent,
+        it is also written to disk again. Because the WHOIS servers
+        don't change that often, it simply writes to a file.
         :param tld: The TLD to store a WHOIS server for
         :param whois_server: The WHOIS server to store
         """
         self.cache[tld] = whois_server
-        write_cache(self.cache)
+        if self.persistent:
+            write_cache(self.cache, self.file_path)
+
+    def set_persistent_location(self, file_path):
+        """
+        Store the cache in a persistent location
+        :param file_path: The path to store the cache
+        """
+        self.file_path = file_path
+        self.cache = read_cache(file_path)
+        self.persistent = True
 
 
 server_cache = WhoisServerCache()
