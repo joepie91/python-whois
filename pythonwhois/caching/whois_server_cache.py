@@ -1,7 +1,7 @@
 import ast
 import os
 
-cache_file_name = "pythonwhois/caching/whois_server_cache.dat"
+cache_file_name = "pythonwhois/caching/whois_server.cache"
 
 
 def read_cache():

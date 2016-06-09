@@ -1,16 +1,14 @@
 from setuptools import setup
 
-setup(name='pythonwhois',
-      version='2.4.3',
+setup(name='whois-oracle',
+      version='1.0',
       description='Module for retrieving and parsing the WHOIS data for a domain. Supports most domains. No dependencies.',
-      author='Sven Slootweg',
-      author_email='pythonwhois@cryto.net',
-      url='http://cryto.net/pythonwhois',
-      packages=['pythonwhois'],
-      package_dir={"pythonwhois":"pythonwhois"},
-      package_data={"pythonwhois":["*.dat"]},
+      author='Sander ten Hoor, original by Sven Slootweg',
+      url='https://github.com/MasterFenrir/whois-oracle',
+      packages=['pythonwhois', 'pythonwhois.caching'],
+      package_data={"pythonwhois": ["*.dat"]},
       install_requires=['argparse'],
       provides=['pythonwhois'],
-      scripts=["pwhois"],
+      scripts=["whois-oracle"],
       license="WTFPL"
-     )
+      )
