@@ -1,14 +1,19 @@
 import ast
 import os
 
-cache_file_name = "pythonwhois/caching/whois_server.cache"
+from os.path import expanduser
+
+home = expanduser("~")
+
+cache_file_name = home + "/.whois-oracle/whois_server.cache"
 
 
 def read_cache():
-    if os.path.isfile(cache_file_name):
+    if os.path.exists(os.path.dirname(cache_file_name)):
         return ast.literal_eval(open(cache_file_name).read())
-
-    return {}
+    else:
+        os.makedirs(os.path.dirname(cache_file_name))
+        return {}
 
 
 def write_cache(cache):
