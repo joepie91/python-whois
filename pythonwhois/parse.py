@@ -698,7 +698,7 @@ else:
 
 
 def filter_characters(string, delete_characters):
-    return ''.join([char for char in string if char not in delete_characters])
+    return ''.join([char for char in string.encode('utf-8') if char not in delete_characters])
 
 
 def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_server=""):
@@ -1219,8 +1219,7 @@ def is_known_abbreviation(word):
 
 
 def has_country(line, country):
-    print(line)
-    return country in line.lower()
+    return country in line.encode('utf-8').lower()
 
 
 def has_incorrect_known_abbreviation(line):

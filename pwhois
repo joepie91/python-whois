@@ -42,10 +42,10 @@ if args.raw == True:
     print("\n--\n".join([x.encode("utf-8") for x in data]))
 else:
     if len(server_list) > 0:
-        parsed = pythonwhois.parse.parse_raw_whois(data, normalized=False, never_query_handles=False,
+        parsed = pythonwhois.parse.parse_raw_whois(data, normalized=True, never_query_handles=False,
                                                    handle_server=server_list[-1])
     else:
-        parsed = pythonwhois.parse.parse_raw_whois(data, normalized=False)
+        parsed = pythonwhois.parse.parse_raw_whois(data, normalized=True)
     if args.json == True:
         print(json.dumps(parsed, default=json_fallback))
     else:
