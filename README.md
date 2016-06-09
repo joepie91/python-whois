@@ -28,13 +28,17 @@ The manual (including install instructions) can be found in the doc/ directory. 
 	* Full registrant information (!)
 	* Nameservers
 * Optional WHOIS data normalization
-	* Attempts to intelligently reformat WHOIS data for better (human) readability
+	* Attempts to intelligently reformat WHOIS data for better accuracy and (human) readability
 	* Converts various abbreviation types to full locality names
 		* Airport codes
 		* Country names (2- and 3-letter ISO codes)
 		* US states and territories
 		* Canadian states and territories
 		* Australian states
+	* Identifies both organization and person names, and moves or reformats them where necessary
+	* Identifies names where the first and last name are swapped around, and fixes them
+	* Deduplicates names, even *across fields*, and even when they're not 100% identical
+	* Recognizes common (legal) abbreviations, and ensures that they are in the correct case
 * `pwhois`, a simple WHOIS tool using pythonwhois
 	* Easily readable output format
 	* Can also output raw WHOIS data
@@ -79,6 +83,7 @@ This library uses a number of third-party datasets for normalization:
 * `states_au.dat`: Part of `pythonwhois` (WTFPL/CC0)
 * `states_us.dat`: [State Table](http://statetable.com/) (license unspecified, free reuse encouraged)
 * `states_ca.dat`: [State Table](http://statetable.com/) (license unspecified, free reuse encouraged)
+* `common_first_names.dat`: [Social Security Administration](http://www.ssa.gov/OACT/babynames/), via [hadley/data-baby-names](https://github.com/hadley/data-baby-names) (license unspecified, provided by US government)
 
 Be aware that the OpenFlights database in particular has potential licensing consequences; if you do not wish to be bound by these potential consequences, you may simply delete the `airports.dat` file from your distribution. `pythonwhois` will assume there is no database available, and will not perform airport code conversion (but still function correctly otherwise). This also applies to other included datasets.
 
