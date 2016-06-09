@@ -1,7 +1,7 @@
-whois-oracle, forked from pythonwhois
-=====================================
+The WHOIS Oracle, forked from pythonwhois
+=========================================
 
-Because it is all knowing!
+Because it is all knowing! 
 A WHOIS retrieval and parsing library for Python, forked from pythonwhois
 and updated by me.
 
