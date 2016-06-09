@@ -5,10 +5,8 @@ import subprocess
 import sys
 from codecs import encode, decode
 
-from pythonwhois.whois_server_cache import WhoisServerCache
+from pythonwhois.caching.whois_server_cache import server_cache
 from . import shared
-
-server_cache = WhoisServerCache()
 
 
 def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=False, with_server_list=False,
@@ -54,12 +52,12 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
                 break
         if is_exception == False:
             tld = get_tld(domain)
-            cached_server = server_cache.getServer(tld)
+            cached_server = server_cache.get_server(tld)
             if cached_server is not None:
                 target_server = cached_server
             else:
                 target_server = get_root_server(domain)
-                server_cache.putServer(tld, target_server)
+                server_cache.put_server(tld, target_server)
     else:
         target_server = server
     if target_server == "whois.jprs.jp":
@@ -131,13 +129,16 @@ def get_root_server(domain):
 
 
 def whois_request(domain, server, port=43):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((server, port))
-    sock.send(("%s\r\n" % domain).encode("utf-8"))
-    buff = b""
-    while True:
-        data = sock.recv(1024)
-        if len(data) == 0:
-            break
-        buff += data
-    return buff.decode("utf-8", "replace")
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((server, port))
+        sock.send(("%s\r\n" % domain).encode("utf-8"))
+        buff = b""
+        while True:
+            data = sock.recv(1024)
+            if len(data) == 0:
+                break
+            buff += data
+        return buff.decode("utf-8", "replace")
+    except Exception:
+        return ""
