@@ -1,3 +1,4 @@
+import ConfigParser
 import thread
 import threading
 import time
@@ -58,8 +59,13 @@ class CoolDown:
             self.servers_on_cool_down[whois_server].use()
             print "\n"
             for key, value in self.servers_on_cool_down.iteritems():
-                print str(key) + " Made requests: " + str(value.request_count) + " Cooldown: " + str(
-                    value.current_cool_down)
+                print key
+                print "\tMade requests: " + str(value.request_count)
+                print "\tCurrent cool down: " + str(value.current_cool_down)
+                print "\tCool down length: " + str(value.cool_down_length)
+                print "\tRequests per minute: " + str(value.max_requests_minute)
+                print "\tRequests per hour: " + str(value.max_requests_hour)
+                print "\tRequests per day: " + str(value.max_requests_day)
 
     def decrement_cool_downs(self):
         """
@@ -68,6 +74,32 @@ class CoolDown:
         with self.lock:
             for server, cool_down in self.servers_on_cool_down.iteritems():
                 self.servers_on_cool_down[server].decrement_cooldown(cool_down_period)
+
+    def set_cool_down_config(self, path_to_file):
+        """
+        Tell the CoolDown instance of a configuration file, describing specific settings
+        for certain WHOIS servers. This configuration will
+        then be read and inserted into the cool down dictionary.
+        :param path_to_file: The path to the configuration file
+        """
+        config = ConfigParser.ConfigParser()
+        config.read(path_to_file)
+        for domain in config.sections():
+            cool_down_length = self.get_from_config(config, domain, "cool_down_length", default_cool_down_length)
+            max_requests_minute = self.get_from_config(config, domain, "max_requests_minute")
+            max_requests_hour = self.get_from_config(config, domain, "max_requests_hour")
+            max_requests_day = self.get_from_config(config, domain, "max_requests_day")
+            with self.lock:
+                self.servers_on_cool_down[domain] = CoolDownTracker(cool_down_length,
+                                                                    max_requests_minute,
+                                                                    max_requests_hour,
+                                                                    max_requests_day)
+
+    def get_from_config(self, config, section, key, default=None):
+        if config.has_option(section, key):
+            return config.getfloat(section, key)
+        else:
+            return default
 
 
 class CoolDownTracker:
