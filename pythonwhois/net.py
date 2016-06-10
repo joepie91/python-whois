@@ -10,7 +10,6 @@ from pythonwhois.ratelimit.cool_down import CoolDown
 from . import shared
 
 cool_down_tracker = CoolDown()
-cool_down_tracker.start()
 
 
 def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=False, with_server_list=False,

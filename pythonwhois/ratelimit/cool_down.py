@@ -30,11 +30,6 @@ class CoolDown:
         """
         self.lock = threading.Lock()
         self.servers_on_cool_down = {}
-
-    def start(self):
-        """
-        Start a thread decrementing all the cool down values.
-        """
         thread.start_new_thread(decrement_thread, (self,))
 
     def can_use_server(self, whois_server):
