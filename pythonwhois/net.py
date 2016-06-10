@@ -6,7 +6,10 @@ import sys
 from codecs import encode, decode
 
 from pythonwhois.caching.whois_server_cache import server_cache
+from pythonwhois.ratelimit.cool_down import CoolDown
 from . import shared
+
+cool_down_tracker = CoolDown()
 
 
 def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=False, with_server_list=False,
@@ -68,7 +71,13 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
         request_domain = "=%s" % domain  # Avoid partial matches
     else:
         request_domain = domain
-    response = whois_request(request_domain, target_server)
+
+    if cool_down_tracker.can_use_server(target_server):
+        cool_down_tracker.use_server(target_server)
+        response = whois_request(request_domain, target_server)
+    else:
+        response = ""
+
     if never_cut:
         # If the caller has requested to 'never cut' responses, he will get the original response from the server (this is
         # useful for callers that are only interested in the raw data). Otherwise, if the target is verisign-grs, we will

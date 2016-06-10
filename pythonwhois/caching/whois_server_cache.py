@@ -44,7 +44,7 @@ class WhoisServerCache:
         :param whois_server: The WHOIS server to store
         """
         self.cache[tld] = whois_server
-        if self.persistent:
+        if self.file_path is not None:
             write_cache(self.cache, self.file_path)
 
     def set_persistent_location(self, file_path):
@@ -54,7 +54,6 @@ class WhoisServerCache:
         """
         self.file_path = file_path
         self.cache = read_cache(file_path)
-        self.persistent = True
 
 
 server_cache = WhoisServerCache()
