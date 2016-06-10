@@ -57,15 +57,6 @@ class CoolDown:
             if whois_server not in self.servers_on_cool_down:
                 self.servers_on_cool_down[whois_server] = CoolDownTracker(default_cool_down_length)
             self.servers_on_cool_down[whois_server].use()
-            print "\n"
-            for key, value in self.servers_on_cool_down.iteritems():
-                print key
-                print "\tMade requests: " + str(value.request_count)
-                print "\tCurrent cool down: " + str(value.current_cool_down)
-                print "\tCool down length: " + str(value.cool_down_length)
-                print "\tRequests per minute: " + str(value.max_requests_minute)
-                print "\tRequests per hour: " + str(value.max_requests_hour)
-                print "\tRequests per day: " + str(value.max_requests_day)
 
     def decrement_cool_downs(self):
         """
@@ -96,6 +87,14 @@ class CoolDown:
                                                                     max_requests_day)
 
     def get_from_config(self, config, section, key, default=None):
+        """
+        Get a value from the config if it exists, otherwise return the default value
+        :param config: The configuration to get the value from
+        :param section: The section to get the value from
+        :param key: The key that may or may not exist
+        :param default: The default value to return, which is None by default
+        :return: The value if it exists, else default
+        """
         if config.has_option(section, key):
             return config.getfloat(section, key)
         else:
