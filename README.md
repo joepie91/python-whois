@@ -13,6 +13,34 @@ None! All you need is the Python standard library.
 
 The manual (including install instructions) can be found in the doc/ directory. A HTML version is also viewable [here](http://cryto.net/pythonwhois).
 
+## Cache configuration
+Using pythonwhois.set_persistent_cache a cache can be set. If a cache is set,
+whois-oracle will look there for WHOIS servers for TLD's. For domains with thin
+WHOIS servers, only the 'head' WHOIS server is cached, not the referral servers.
+Otherwise it would
+be impossible to get the correct information because the information for the domain
+might not be on that WHOIS server at all.
+
+## Cool down configuration
+This feature is not useful for single lookups, but for bulk this comes in really handy.
+Every WHOIS server gets a certain time before it will be asked again, to prevent spamming
+and possibly refused connections. This can be configured by passing a configuration file
+to pythonwhois.set_cool_down_config. This file can contain the following to elements, but doesn't have to.
+`[general]`  
+`cool_down_period : 0.5`  
+`default_cool_down_length : 1`  
+This is the general part. Only one of them should exist. whois-oracle checks
+for both these properties, but they are not both necessary.
+
+`[whois.eu]`  
+`cool_down_length : 10`  
+`max_requests_minute : 5`  
+`max_requests_hour : 20`  
+`max_requests_day : 50`  
+This is how sections for specific WHOIS servers are defined. The section
+name is the name of the server and the section can contain the listed properties.
+None of them are required. Multiple WHOIS servers can be added to the configuration file.
+
 ## Goals
 
 * 100% coverage of WHOIS formats.
@@ -54,14 +82,6 @@ The manual (including install instructions) can be found in the doc/ directory. 
 `pythonwhois` does not yet support WHOIS lookups on IP ranges (including single IPs), although this will be added at some point in the future. In the meantime, consider using [`ipwhois`](https://github.com/secynic/ipwhois) - it offers functionality and an API similar to `pythonwhois`, but for IPs. It also supports delegated RWhois.
 
 Do note that `ipwhois` does not offer a normalization feature, and does not (yet) come with a command-line tool. Additionally, `ipwhois` is maintained by Philip Hane and not by me; please make sure to file bugs relating to it in the `ipwhois` repository, not in that of `pythonwhois`.
-
-## Important update notes
-
-*2.4.0 and up*: A lot of changes were made to the normalization, and the performance under Python 2.x was significantly improved. The average parsing time under Python 2.7 has dropped by 94% (!), and on my system averages out at 18ms. Performance under Python 3.x is [unchanged](https://github.com/joepie91/python-whois/issues/27). `pythonwhois` will now expand a lot of abbreviations in normalized mode, such as airport codes, ISO country codes, and US/CA/AU state abbreviations. The consequence of this is that the library is now bigger (as it ships a list of these abbreviations). Also note that there *may* be licensing consequences, in particular regarding the airport code database. More information about that can be found below.
-
-*2.3.0 and up*: Python 3 support was fixed. Creation date parsing for contacts was fixed; correct timestamps will now be returned, rather than unformatted ones - if your application relies on the broken variant, you'll need to change your code. Some additional parameters were added to the `net` and `parse` methods to facilitate NIC handle lookups; the defaults are backwards-compatible, and these changes should not have any consequences for your code. Thai WHOIS parsing was implemented, but is a little spotty - data may occasionally be incorrectly split up. Please submit a bug report if you run across any issues.
-
-*2.2.0 and up*: The internal workings of `get_whois_raw` have been changed, to better facilitate parsing of WHOIS data from registries that may return multiple partial matches for a query, such as `whois.verisign-grs.com`. This change means that, by default, `get_whois_raw` will now strip out the part of such a response that does not pertain directly to the requested domain. If your application requires an unmodified raw WHOIS response and is calling `get_whois_raw` directly, you should use the new `never_cut` parameter to keep pythonwhois from doing this post-processing. As this is a potentially breaking behaviour change, the minor version has been bumped.
 
 ## It doesn't work!
 
