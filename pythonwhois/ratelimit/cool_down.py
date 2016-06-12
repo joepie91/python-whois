@@ -32,12 +32,14 @@ def get_from_config(config, section, key, default=None):
 
 class CoolDown:
     """
-    Handle the cooldown period for asking a WHOIS server again
+    Handle the cool down period for asking a WHOIS server again
     """
 
     def __init__(self):
         """
-        Creates a dictionary for storing cool downs.
+        Creates a dictionary for storing cool downs and starts
+        a new thread to decrement them every time after a set period
+        of time has passed, which is 0.5 seconds by default.
         """
         self.lock = threading.Lock()
         self.servers_on_cool_down = {}
@@ -72,7 +74,7 @@ class CoolDown:
         """
         with self.lock:
             for server, cool_down in self.servers_on_cool_down.iteritems():
-                self.servers_on_cool_down[server].decrement_cooldown(self.cool_down_period)
+                self.servers_on_cool_down[server].decrement_cool_down(self.cool_down_period)
 
     def set_cool_down_config(self, path_to_file):
         """
@@ -148,7 +150,7 @@ class CoolDownTracker:
         else:
             self.current_cool_down = self.cool_down_length
 
-    def decrement_cooldown(self, decrement):
+    def decrement_cool_down(self, decrement):
         """
         Decrement the current cooldown with the given value, implying
         that a given time has passed.
