@@ -26,12 +26,12 @@ class CoolDownTracker:
         It will set the cool down, based on the amount of requests that already have been made
         """
         self.request_count += 1
-        if self.max_requests_reached(self.max_requests_minute):
-            self.current_cool_down = 60
+        if self.max_requests_reached(self.max_requests_day):
+            self.current_cool_down = 86400
         elif self.max_requests_reached(self.max_requests_hour):
             self.current_cool_down = 3600
-        elif self.max_requests_reached(self.max_requests_day):
-            self.current_cool_down = 86400
+        elif self.max_requests_reached(self.max_requests_minute):
+            self.current_cool_down = 60
         else:
             self.current_cool_down = self.cool_down_length
 
