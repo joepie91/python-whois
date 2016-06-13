@@ -20,7 +20,7 @@ class CoolDownTracker:
         self.request_count = 0
         self.current_cool_down = 0
 
-    def use(self):
+    def use_and_reset_cool_down(self):
         """
         Tell the tracker that the corresponding server is going to be used.
         It will set the cool down, based on the amount of requests that already have been made

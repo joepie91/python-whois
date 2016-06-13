@@ -68,7 +68,7 @@ class CoolDown:
         with self.lock:
             if whois_server not in self.servers_on_cool_down:
                 self.servers_on_cool_down[whois_server] = CoolDownTracker(self.default_cool_down_length)
-            self.servers_on_cool_down[whois_server].use()
+            self.servers_on_cool_down[whois_server].use_and_reset_cool_down()
 
     def decrement_cool_downs(self):
         """
