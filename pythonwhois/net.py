@@ -75,8 +75,7 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
     else:
         request_domain = domain
 
-    if target_server and cool_down_tracker.can_use_server(target_server):
-        cool_down_tracker.use_server(target_server)
+    if target_server and cool_down_tracker.try_to_use_server(target_server):
         response = whois_request(request_domain, target_server)
     else:
         response = ""

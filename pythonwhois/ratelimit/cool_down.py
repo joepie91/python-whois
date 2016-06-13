@@ -1,20 +1,7 @@
 import ConfigParser
-import thread
-import threading
-import time
+import datetime
 
 from pythonwhois.ratelimit.cool_down_tracker import CoolDownTracker
-
-
-def decrement_thread(cool_down_object):
-    """
-    After sleeping for cool_down_time, decrement
-    all cool downs with cool_down_time
-    :param cool_down_object: An instance of CoolDown
-    """
-    while True:
-        time.sleep(cool_down_object.cool_down_period)
-        cool_down_object.decrement_cool_downs()
 
 
 def get_float_from_config(config, section, key, default=None):
@@ -39,15 +26,11 @@ class CoolDown:
 
     def __init__(self):
         """
-        Creates a dictionary for storing cool downs and starts
-        a new thread to decrement them every time after a set period
-        of time has passed, which is 0.5 seconds by default.
+        Creates a dictionary for storing cool downs.
         """
-        self.lock = threading.Lock()
         self.servers_on_cool_down = {}
         self.default_cool_down_length = 1.0
-        self.cool_down_period = 0.5
-        thread.start_new_thread(decrement_thread, (self,))
+        self.last_request_time = datetime.datetime.now()
 
     def can_use_server(self, whois_server):
         """
@@ -55,28 +38,44 @@ class CoolDown:
         :param whois_server: The WHOIS server to check
         :return: True if the server can be used, False if not
         """
-        with self.lock:
-            cooldown = self.servers_on_cool_down.get(whois_server)
-        return cooldown is None or cooldown.current_cool_down <= 0
+        cool_down = self.servers_on_cool_down.get(whois_server)
+        return cool_down is None or cool_down.current_cool_down <= 0
 
-    def use_server(self, whois_server):
+    def try_to_use_server(self, whois_server):
         """
-        Tell the CoolDown instance that a WHOIS server is going to be used.
-        The cool down will then be reset
+        Try to use a WHOIS server. On True, it was a success and the cool down has been reset.
+        On False, the server was not available yet
         :param whois_server: The WHOIS server that is going to be used
+        :return True if the server was successfully marked as used and the cool down has been reset,
+        False if the server was not yet available
         """
-        with self.lock:
-            if whois_server not in self.servers_on_cool_down:
-                self.servers_on_cool_down[whois_server] = CoolDownTracker(self.default_cool_down_length)
-            self.servers_on_cool_down[whois_server].use_and_reset_cool_down()
+        self.decrement_cool_downs()
+        if not self.can_use_server(whois_server):
+            return False
+
+        if whois_server not in self.servers_on_cool_down:
+            self.servers_on_cool_down[whois_server] = CoolDownTracker(self.default_cool_down_length)
+        self.servers_on_cool_down[whois_server].use_and_reset_cool_down()
+        return True
 
     def decrement_cool_downs(self):
         """
         Decrement all the cool downs with cool_down_time
         """
-        with self.lock:
-            for server, cool_down in self.servers_on_cool_down.iteritems():
-                self.servers_on_cool_down[server].decrement_cool_down(self.cool_down_period)
+        time_diff = self.get_time_difference()
+        for server, cool_down in self.servers_on_cool_down.iteritems():
+            self.servers_on_cool_down[server].decrement_cool_down(time_diff)
+
+    def get_time_difference(self):
+        """
+        Get the difference in time between te last time this was called
+        and now.
+        :return: The difference in seconds
+        """
+        now = datetime.datetime.now()
+        diff = now - self.last_request_time
+        self.last_request_time = now
+        return diff.total_seconds()
 
     def set_cool_down_config(self, path_to_file):
         """
@@ -106,11 +105,10 @@ class CoolDown:
             max_requests_minute = get_float_from_config(config, whois_server, "max_requests_minute")
             max_requests_hour = get_float_from_config(config, whois_server, "max_requests_hour")
             max_requests_day = get_float_from_config(config, whois_server, "max_requests_day")
-            with self.lock:
-                self.servers_on_cool_down[whois_server] = CoolDownTracker(cool_down_length,
-                                                                          max_requests_minute,
-                                                                          max_requests_hour,
-                                                                          max_requests_day)
+            self.servers_on_cool_down[whois_server] = CoolDownTracker(cool_down_length,
+                                                                      max_requests_minute,
+                                                                      max_requests_hour,
+                                                                      max_requests_day)
 
     def consume_defaults_from_config(self, config):
         """
@@ -122,7 +120,5 @@ class CoolDown:
         if config.has_section("general"):
             self.default_cool_down_length = get_float_from_config(config, "general", "default_cool_down_length",
                                                                   self.default_cool_down_length)
-            self.cool_down_period = get_float_from_config(config, "general", "cool_down_period", self.cool_down_period)
-            config.remove_section("general")
 
         return config

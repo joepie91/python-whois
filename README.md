@@ -27,10 +27,8 @@ Every WHOIS server gets a certain time before it will be asked again, to prevent
 and possibly refused connections. This can be configured by passing a configuration file
 to pythonwhois.set_cool_down_config. This file can contain the following to elements, but doesn't have to.
 `[general]`  
-`cool_down_period : 0.5`  
 `default_cool_down_length : 1`  
-This is the general part. Only one of them should exist. whois-oracle checks
-for both these properties, but they are both not necessary.
+This is the general part. Currently, only one variable can be defined. It is optional to do so.
 
 `[whois.eu]`  
 `cool_down_length : 10`  
