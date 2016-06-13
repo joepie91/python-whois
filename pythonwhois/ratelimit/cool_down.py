@@ -3,19 +3,21 @@ import thread
 import threading
 import time
 
+from pythonwhois.ratelimit.cool_down_tracker import CoolDownTracker
+
 
 def decrement_thread(cool_down_object):
     """
     After sleeping for cool_down_time, decrement
     all cool downs with cool_down_time
-    :param cool_down_object:
+    :param cool_down_object: An instance of CoolDown
     """
     while True:
         time.sleep(cool_down_object.cool_down_period)
         cool_down_object.decrement_cool_downs()
 
 
-def get_from_config(config, section, key, default=None):
+def get_float_from_config(config, section, key, default=None):
     """
     Get a value from the config if it exists, otherwise return the default value
     :param config: The configuration to get the value from
@@ -79,25 +81,38 @@ class CoolDown:
     def set_cool_down_config(self, path_to_file):
         """
         Tell the CoolDown instance of a configuration file, describing specific settings
-        for certain WHOIS servers. This configuration will
-        then be read and inserted into the cool down dictionary.
+        for certain WHOIS servers. This configuration will then be read and inserted into
+        the cool down dictionary.
+        If the configuration contains a general section, this will be consumed and removed from the config instance
+        (not the file). This is done to keep all the configuration in one file, but to be able to easily loop
+        over all the WHOIS server sections.
         :param path_to_file: The path to the configuration file
         """
         config = ConfigParser.ConfigParser()
         config.read(path_to_file)
-        config = self.get_and_remove_defaults_from_config(config)
-        for domain in config.sections():
-            cool_down_length = get_from_config(config, domain, "cool_down_length", self.default_cool_down_length)
-            max_requests_minute = get_from_config(config, domain, "max_requests_minute")
-            max_requests_hour = get_from_config(config, domain, "max_requests_hour")
-            max_requests_day = get_from_config(config, domain, "max_requests_day")
-            with self.lock:
-                self.servers_on_cool_down[domain] = CoolDownTracker(cool_down_length,
-                                                                    max_requests_minute,
-                                                                    max_requests_hour,
-                                                                    max_requests_day)
+        config = self.consume_defaults_from_config(config)
+        self.apply_cool_down_config(config)
 
-    def get_and_remove_defaults_from_config(self, config):
+    def apply_cool_down_config(self, config):
+        """
+        Read all the WHOIS server sections from the configuration and build
+        CoolDownTracker objects for them containing the read information.
+        These CoolDownTracker instances are then placed in servers_on_cool_down.
+        :param config: A configuration file with only WHOIS server sections
+        """
+        for whois_server in config.sections():
+            cool_down_length = get_float_from_config(config, whois_server, "cool_down_length",
+                                                     self.default_cool_down_length)
+            max_requests_minute = get_float_from_config(config, whois_server, "max_requests_minute")
+            max_requests_hour = get_float_from_config(config, whois_server, "max_requests_hour")
+            max_requests_day = get_float_from_config(config, whois_server, "max_requests_day")
+            with self.lock:
+                self.servers_on_cool_down[whois_server] = CoolDownTracker(cool_down_length,
+                                                                          max_requests_minute,
+                                                                          max_requests_hour,
+                                                                          max_requests_day)
+
+    def consume_defaults_from_config(self, config):
         """
         Gets the general settings from the config. Then removes them
         and returns the modified config.
@@ -105,63 +120,9 @@ class CoolDown:
         :return: The modified config, without the 'general' section
         """
         if config.has_section("general"):
-            self.default_cool_down_length = get_from_config(config, "general", "default_cool_down_length",
-                                                            self.default_cool_down_length)
-            self.cool_down_period = get_from_config(config, "general", "cool_down_period", self.cool_down_period)
+            self.default_cool_down_length = get_float_from_config(config, "general", "default_cool_down_length",
+                                                                  self.default_cool_down_length)
+            self.cool_down_period = get_float_from_config(config, "general", "cool_down_period", self.cool_down_period)
             config.remove_section("general")
 
         return config
-
-
-class CoolDownTracker:
-    """
-    Keep track of cool down settings for a specific WHOIS server
-    """
-
-    def __init__(self, cool_down_length, max_requests_minute=None, max_requests_hour=None, max_requests_day=None):
-        """
-        Create a tracker. It can accept three maximums. When a maximum is reached, it will wait a set amount of time
-        before trying again, which is a minute, hour and day respectively.
-        :param cool_down_length: The default length of the cool down
-        :param max_requests_minute: The maximum number of requests per minute.
-        :param max_requests_hour: The maximum number of requests per hour
-        :param max_requests_day: The maximum number of request per day
-        """
-        self.cool_down_length = cool_down_length
-        self.max_requests_minute = max_requests_minute
-        self.max_requests_hour = max_requests_hour
-        self.max_requests_day = max_requests_day
-
-        self.request_count = 0
-        self.current_cool_down = 0
-
-    def use(self):
-        """
-        Tell the tracker that the corresponding server is going to be used.
-        It will set the cool down, based on the amount of requests that already have been made
-        """
-        self.request_count += 1
-        if self.max_requests_reached(self.max_requests_minute):
-            self.current_cool_down = 60
-        elif self.max_requests_reached(self.max_requests_hour):
-            self.current_cool_down = 3600
-        elif self.max_requests_reached(self.max_requests_day):
-            self.current_cool_down = 86400
-        else:
-            self.current_cool_down = self.cool_down_length
-
-    def decrement_cool_down(self, decrement):
-        """
-        Decrement the current cooldown with the given value, implying
-        that a given time has passed.
-        :param decrement: The value to decrement the current cool down value with
-        """
-        self.current_cool_down -= decrement
-
-    def max_requests_reached(self, limit):
-        """
-        Check whether the maximum has been reached for a given limit.
-        :param limit: The limit that should be checked for
-        :return: True if the limit has been reached, false if not
-        """
-        return limit is not None and self.request_count % limit == 0

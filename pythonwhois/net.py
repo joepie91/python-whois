@@ -59,8 +59,11 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
             if cached_server is not None:
                 target_server = cached_server
             else:
-                target_server = get_root_server(domain)
-                server_cache.put_server(tld, target_server)
+                try:
+                    target_server = get_root_server(domain)
+                    server_cache.put_server(tld, target_server)
+                except Exception:
+                    target_server = ""
     else:
         target_server = server
     if target_server == "whois.jprs.jp":
@@ -72,7 +75,7 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
     else:
         request_domain = domain
 
-    if cool_down_tracker.can_use_server(target_server):
+    if target_server and cool_down_tracker.can_use_server(target_server):
         cool_down_tracker.use_server(target_server)
         response = whois_request(request_domain, target_server)
     else:
