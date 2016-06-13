@@ -30,7 +30,7 @@ to pythonwhois.set_cool_down_config. This file can contain the following to elem
 `cool_down_period : 0.5`  
 `default_cool_down_length : 1`  
 This is the general part. Only one of them should exist. whois-oracle checks
-for both these properties, but they are not both necessary.
+for both these properties, but they are both not necessary.
 
 `[whois.eu]`  
 `cool_down_length : 10`  
