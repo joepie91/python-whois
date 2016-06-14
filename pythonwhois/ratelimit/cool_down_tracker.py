@@ -20,7 +20,7 @@ class CoolDownTracker:
         self.request_count = 0
         self.current_cool_down = 0
 
-    def use_and_reset_cool_down(self):
+    def use_whois_server(self):
         """
         Tell the tracker that the corresponding server is going to be used.
         It will set the cool down, based on the amount of requests that already have been made
@@ -35,13 +35,13 @@ class CoolDownTracker:
         else:
             self.current_cool_down = self.cool_down_length
 
-    def decrement_cool_down(self, decrement):
+    def decrement_cool_down(self, seconds):
         """
         Decrement the current cooldown with the given value, implying
         that a given time has passed.
-        :param decrement: The value to decrement the current cool down value with
+        :param seconds: The seconds to decrement the current cool down value with
         """
-        self.current_cool_down -= decrement
+        self.current_cool_down -= seconds
 
     def max_requests_reached(self, limit):
         """

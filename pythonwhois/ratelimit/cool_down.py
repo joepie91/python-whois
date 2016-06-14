@@ -1,22 +1,7 @@
-import ConfigParser
 import datetime
 
+from pythonwhois.ratelimit.cool_down_config import CoolDownConfig
 from pythonwhois.ratelimit.cool_down_tracker import CoolDownTracker
-
-
-def get_float_from_config(config, section, key, default=None):
-    """
-    Get a value from the config if it exists, otherwise return the default value
-    :param config: The configuration to get the value from
-    :param section: The section to get the value from
-    :param key: The key that may or may not exist
-    :param default: The default value to return, which is None by default
-    :return: The value if it exists, else default
-    """
-    if config.has_option(section, key):
-        return config.getfloat(section, key)
-    else:
-        return default
 
 
 class CoolDown:
@@ -55,7 +40,7 @@ class CoolDown:
 
         if whois_server not in self.servers_on_cool_down:
             self.servers_on_cool_down[whois_server] = CoolDownTracker(self.default_cool_down_length)
-        self.servers_on_cool_down[whois_server].use_and_reset_cool_down()
+        self.servers_on_cool_down[whois_server].use_whois_server()
         return True
 
     def decrement_cool_downs(self):
@@ -82,43 +67,8 @@ class CoolDown:
         Tell the CoolDown instance of a configuration file, describing specific settings
         for certain WHOIS servers. This configuration will then be read and inserted into
         the cool down dictionary.
-        If the configuration contains a general section, this will be consumed and removed from the config instance
-        (not the file). This is done to keep all the configuration in one file, but to be able to easily loop
-        over all the WHOIS server sections.
         :param path_to_file: The path to the configuration file
         """
-        config = ConfigParser.ConfigParser()
-        config.read(path_to_file)
-        config = self.consume_defaults_from_config(config)
-        self.apply_cool_down_config(config)
-
-    def apply_cool_down_config(self, config):
-        """
-        Read all the WHOIS server sections from the configuration and build
-        CoolDownTracker objects for them containing the read information.
-        These CoolDownTracker instances are then placed in servers_on_cool_down.
-        :param config: A configuration file with only WHOIS server sections
-        """
-        for whois_server in config.sections():
-            cool_down_length = get_float_from_config(config, whois_server, "cool_down_length",
-                                                     self.default_cool_down_length)
-            max_requests_minute = get_float_from_config(config, whois_server, "max_requests_minute")
-            max_requests_hour = get_float_from_config(config, whois_server, "max_requests_hour")
-            max_requests_day = get_float_from_config(config, whois_server, "max_requests_day")
-            self.servers_on_cool_down[whois_server] = CoolDownTracker(cool_down_length,
-                                                                      max_requests_minute,
-                                                                      max_requests_hour,
-                                                                      max_requests_day)
-
-    def consume_defaults_from_config(self, config):
-        """
-        Gets the general settings from the config. Then removes them
-        and returns the modified config.
-        :param config: The config to obtain the default values from
-        :return: The modified config, without the 'general' section
-        """
-        if config.has_section("general"):
-            self.default_cool_down_length = get_float_from_config(config, "general", "default_cool_down_length",
-                                                                  self.default_cool_down_length)
-
-        return config
+        cool_down_config = CoolDownConfig(path_to_file, self.default_cool_down_length)
+        for whois_server in cool_down_config.get_sections():
+            self.servers_on_cool_down[whois_server] = cool_down_config.get_cool_down_tracker_for_server(whois_server)
