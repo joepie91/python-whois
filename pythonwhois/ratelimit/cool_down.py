@@ -48,8 +48,8 @@ class CoolDown:
         Decrement all the cool downs with cool_down_time
         """
         time_diff = self.get_time_difference()
-        for server, cool_down in self.servers_on_cool_down.iteritems():
-            self.servers_on_cool_down[server].decrement_cool_down(time_diff)
+        for server, cool_down_tracker in self.servers_on_cool_down.iteritems():
+            cool_down_tracker.decrement_cool_down(time_diff)
 
     def get_time_difference(self):
         """
