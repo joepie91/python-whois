@@ -7,6 +7,9 @@ from codecs import encode, decode
 
 from pythonwhois.caching.whois_server_cache import server_cache
 from pythonwhois.ratelimit.cool_down import CoolDown
+from pythonwhois.response.whois_response import WhoisResponse
+
+incomplete_result_message = "THE_WHOIS_ORACLE_INCOMPLETE_RESULT"
 
 cool_down_tracker = CoolDown()
 
@@ -47,7 +50,8 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
 
     target_server = get_target_server(domain, previous, server)
     query = prepare_query(target_server, domain)
-    response = query_server(target_server, query)
+    whois_response = query_server(target_server, query)
+    response = whois_response.response
 
     if never_cut:
         # If the caller has requested to 'never cut' responses, he will get the original response from the server (this is
@@ -64,8 +68,15 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
             if re.search("Domain Name: %s\n" % domain.upper(), record):
                 response = record
                 break
-    if never_cut == False:
+    if not never_cut:
         new_list = [response] + previous
+
+    if whois_response.server_is_dead:
+        return build_return_value(with_server_list, new_list, server_list)
+    elif whois_response.request_failure or whois_response.cool_down_failure:
+        new_list = [incomplete_result_message] + previous
+        return build_return_value(with_server_list, new_list, server_list)
+
     server_list.append(target_server)
 
     # Ignore redirects from registries who publish the registrar data themselves
@@ -82,10 +93,25 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
                     return get_whois_raw(domain, referal_server, new_list, server_list=server_list,
                                          with_server_list=with_server_list)
 
+    return build_return_value(with_server_list, new_list, server_list)
+
+
+def build_return_value(with_server_list, responses, server_list):
+    """
+    Create a return value
+    :param with_server_list: Whether the server list should be returned as well
+    :param responses: The list of responses
+    :param server_list: The server list
+    :return: A list of responses without the empty ones, plus possibly a server list
+    """
+    non_empty_responses = filter((lambda text: text is not ''), responses)
+    if len(non_empty_responses) == 0:
+        non_empty_responses = ['']
+
     if with_server_list:
-        return (new_list, server_list)
+        return non_empty_responses, server_list
     else:
-        return new_list
+        return non_empty_responses
 
 
 def query_server(whois_server, query):
@@ -99,7 +125,7 @@ def query_server(whois_server, query):
     if whois_server and cool_down_tracker.try_to_use_server(whois_server):
         return whois_request(query, whois_server)
     else:
-        return ""
+        return WhoisResponse(cool_down_failure=True)
 
 
 def prepare_query(whois_server, domain):
@@ -169,7 +195,7 @@ def get_tld(domain):
 
 
 def get_root_server(domain):
-    data = whois_request(domain, "whois.iana.org")
+    data = whois_request(domain, "whois.iana.org").response or ""
     for line in [x.strip() for x in data.splitlines()]:
         match = re.match("refer:\s*([^\s]+)", line)
         if match is None:
@@ -181,6 +207,7 @@ def get_root_server(domain):
 def whois_request(domain, server, port=43):
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(10)
         sock.connect((server, port))
         sock.send(("%s\r\n" % domain).encode("utf-8"))
         buff = b""
@@ -189,6 +216,7 @@ def whois_request(domain, server, port=43):
             if len(data) == 0:
                 break
             buff += data
-        return buff.decode("utf-8", "replace")
+        return WhoisResponse(buff.decode("utf-8", "replace"))
     except Exception:
-        return ""
+        server_is_dead = not server_is_alive(server)
+        return WhoisResponse(request_failure=True, server_is_dead=server_is_dead)
