@@ -7,7 +7,7 @@ from codecs import encode, decode
 
 from pythonwhois.caching.whois_server_cache import server_cache
 from pythonwhois.ratelimit.cool_down import CoolDown
-from pythonwhois.response.whois_response import RawWhoisResponse
+from pythonwhois.response.raw_whois_response import RawWhoisResponse
 
 incomplete_result_message = "THE_WHOIS_ORACLE_INCOMPLETE_RESULT"
 
@@ -75,7 +75,7 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
         # That's probably as far as we can go, the road ends here
         return build_return_value(with_server_list, new_list, server_list)
     elif whois_response.request_failure:
-        # Mark this result as incomplete, so we can try again later
+        # Mark this result as incomplete, so we can try again later but still use the data if we have any
         new_list = [incomplete_result_message] + previous
         cool_down_tracker.warn_limit_exceeded(target_server)
         return build_return_value(with_server_list, new_list, server_list)
@@ -213,17 +213,18 @@ def get_root_server(domain):
     return ""
 
 
-def whois_request(domain, server, port=43):
+def whois_request(domain, server, port=43, timeout=10):
     """
-    Request WHOIS information. Has a timeout of 10 seconds
+    Request WHOIS information.
     :param domain: The domain to request WHOIS information for
     :param server: The WHOIS server to use
     :param port: The port to use, 43 by default
+    :param timeout: The length of the time out, 10 seconds by default
     :return: A WHOIS response containing either the result, or containing information about the failure
     """
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(10)
+        sock.settimeout(timeout)
         sock.connect((server, port))
         sock.send(("%s\r\n" % domain).encode("utf-8"))
         buff = b""
