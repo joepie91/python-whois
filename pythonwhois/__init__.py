@@ -8,3 +8,19 @@ def get_whois(domain, normalized=[]):
     # actually hold the handle contact details, but another WHOIS server in the chain does.
     return parse.parse_raw_whois(raw_data, normalized=normalized, never_query_handles=False,
                                  handle_server=server_list[-1])
+
+
+def set_persistent_cache(path_to_cache):
+    """
+    Set a persistent cache. If the file does not yet exist, it is created.
+    :param path_to_cache: The place where the cache is stored or needs to be created
+    """
+    net.server_cache.set_persistent_location(path_to_cache)
+
+
+def set_cool_down_config(path_to_config):
+    """
+    Set a cool down configuration file, describing specific settings for certain WHOIS servers.
+    :param path_to_config: The path to the configuration file, this needs to exist
+    """
+    net.cool_down_tracker.set_cool_down_config(path_to_config)

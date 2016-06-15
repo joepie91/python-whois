@@ -7,37 +7,37 @@ from codecs import encode, decode
 
 from pythonwhois.caching.whois_server_cache import server_cache
 from pythonwhois.ratelimit.cool_down import CoolDown
-from . import shared
 
 cool_down_tracker = CoolDown()
+
+# Sometimes IANA simply won't give us the right root WHOIS server
+exceptions = {
+    ".ac.uk": "whois.ja.net",
+    ".ps": "whois.pnina.ps",
+    ".buzz": "whois.nic.buzz",
+    ".moe": "whois.nic.moe",
+    ".arpa": "whois.iana.org",
+    ".bid": "whois.nic.bid",
+    ".int": "whois.iana.org",
+    ".kred": "whois.nic.kred",
+    ".nagoya": "whois.gmoregistry.net",
+    ".nyc": "whois.nic.nyc",
+    ".okinawa": "whois.gmoregistry.net",
+    ".qpon": "whois.nic.qpon",
+    ".sohu": "whois.gtld.knet.cn",
+    ".tokyo": "whois.nic.tokyo",
+    ".trade": "whois.nic.trade",
+    ".webcam": "whois.nic.webcam",
+    ".xn--rhqv96g": "whois.nic.xn--rhqv96g",
+    # The following is a bit hacky, but IANA won't return the right answer for example.com because it's a direct registration.
+    "example.com": "whois.verisign-grs.com"
+}
 
 
 def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=False, with_server_list=False,
                   server_list=None):
     previous = previous or []
     server_list = server_list or []
-    # Sometimes IANA simply won't give us the right root WHOIS server
-    exceptions = {
-        ".ac.uk": "whois.ja.net",
-        ".ps": "whois.pnina.ps",
-        ".buzz": "whois.nic.buzz",
-        ".moe": "whois.nic.moe",
-        ".arpa": "whois.iana.org",
-        ".bid": "whois.nic.bid",
-        ".int": "whois.iana.org",
-        ".kred": "whois.nic.kred",
-        ".nagoya": "whois.gmoregistry.net",
-        ".nyc": "whois.nic.nyc",
-        ".okinawa": "whois.gmoregistry.net",
-        ".qpon": "whois.nic.qpon",
-        ".sohu": "whois.gtld.knet.cn",
-        ".tokyo": "whois.nic.tokyo",
-        ".trade": "whois.nic.trade",
-        ".webcam": "whois.nic.webcam",
-        ".xn--rhqv96g": "whois.nic.xn--rhqv96g",
-        # The following is a bit hacky, but IANA won't return the right answer for example.com because it's a direct registration.
-        "example.com": "whois.verisign-grs.com"
-    }
 
     if rfc3490:
         if sys.version_info < (3, 0):
@@ -45,38 +45,9 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
         else:
             domain = encode(domain, "idna").decode("ascii")
 
-    if len(previous) == 0 and server == "":
-        # Root query
-        is_exception = False
-        for exception, exc_serv in exceptions.items():
-            if domain.endswith(exception):
-                is_exception = True
-                target_server = exc_serv
-                break
-        if is_exception == False:
-            tld = get_tld(domain)
-            cached_server = server_cache.get_server(tld)
-            if cached_server is not None:
-                target_server = cached_server
-            else:
-                target_server = get_root_server(domain)
-                server_cache.put_server(tld, target_server)
-    else:
-        target_server = server
-    if target_server == "whois.jprs.jp":
-        request_domain = "%s/e" % domain  # Suppress Japanese output
-    elif domain.endswith(".de") and (target_server == "whois.denic.de" or target_server == "de.whois-servers.net"):
-        request_domain = "-T dn,ace %s" % domain  # regional specific stuff
-    elif target_server == "whois.verisign-grs.com":
-        request_domain = "=%s" % domain  # Avoid partial matches
-    else:
-        request_domain = domain
-
-    if cool_down_tracker.can_use_server(target_server):
-        cool_down_tracker.use_server(target_server)
-        response = whois_request(request_domain, target_server)
-    else:
-        response = ""
+    target_server = get_target_server(domain, previous, server)
+    query = prepare_query(target_server, domain)
+    response = query_server(target_server, query)
 
     if never_cut:
         # If the caller has requested to 'never cut' responses, he will get the original response from the server (this is
@@ -117,6 +88,76 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
         return new_list
 
 
+def query_server(whois_server, query):
+    """
+    Send out the query, if the server is available. if the server is still in cool down,
+    return an empty string
+    :param whois_server: The WHOIS server to query
+    :param query: The query to send
+    :return: The result, or an empty string if the server is unavailable
+    """
+    if whois_server and cool_down_tracker.try_to_use_server(whois_server):
+        return whois_request(query, whois_server)
+    else:
+        return ""
+
+
+def prepare_query(whois_server, domain):
+    """
+    Some WHOIS servers have a different way of querying.
+    This methods returns an appropriate query for the WHOIS server
+    :param domain: The domain to query
+    :return: The fitting query
+    """
+    if whois_server == "whois.jprs.jp":
+        return "%s/e" % domain  # Suppress Japanese output
+    elif domain.endswith(".de") and (whois_server == "whois.denic.de" or whois_server == "de.whois-servers.net"):
+        return "-T dn,ace %s" % domain  # regional specific stuff
+    elif whois_server == "whois.verisign-grs.com":
+        return "=%s" % domain  # Avoid partial matches
+    else:
+        return domain
+
+
+def get_target_server(domain, previous_results, given_server):
+    """
+    Get the target server based on the current situation.
+    :param domain: The domain to get the server for
+    :param previous_results: The previously acquired results, as a result of referrals
+    :param given_server:
+    :return:
+    """
+    if len(previous_results) == 0 and given_server == "":
+        # Root query
+        for exception, exc_serv in exceptions.items():
+            if domain.endswith(exception):
+                target_server = exc_serv
+                return target_server
+
+        target_server = get_non_exception_server(domain)
+        return target_server
+    else:
+        return given_server
+
+
+def get_non_exception_server(domain):
+    """
+    Get a server that does not belong to the list of exceptions,
+    either by asking IANA or by looking in the cache
+    :param domain: The domain to get the WHOIS server for
+    :return: The WHOIS server to use
+    """
+    tld = get_tld(domain)
+    cached_server = server_cache.get_server(tld)
+    if cached_server is not None:
+        target_server = cached_server
+    else:
+        target_server = get_root_server(domain)
+        server_cache.put_server(tld, target_server)
+
+    return target_server
+
+
 def server_is_alive(server):
     response = subprocess.call(["ping", "-c 1", "-w2", server], stdout=open(os.devnull, "w"),
                                stderr=subprocess.STDOUT)
@@ -134,7 +175,7 @@ def get_root_server(domain):
         if match is None:
             continue
         return match.group(1)
-    raise shared.WhoisException("No root WHOIS server found for domain.")
+    return ""
 
 
 def whois_request(domain, server, port=43):
