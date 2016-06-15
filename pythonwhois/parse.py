@@ -702,6 +702,8 @@ def filter_characters(string, delete_characters):
 
 
 def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_server=""):
+    if len(raw_data) == 0:
+        return {}
     normalized = normalized or []
     data = {}
 

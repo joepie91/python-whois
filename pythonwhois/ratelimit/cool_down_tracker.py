@@ -26,6 +26,12 @@ class CoolDownTracker:
         It will set the cool down, based on the amount of requests that already have been made
         """
         self.request_count += 1
+        self.start_cool_down()
+
+    def start_cool_down(self):
+        """
+        Start a new cool_down
+        """
         if self.max_requests_reached(self.max_requests_day):
             self.current_cool_down = 86400
         elif self.max_requests_reached(self.max_requests_hour):
@@ -50,3 +56,11 @@ class CoolDownTracker:
         :return: True if the limit has been reached, false if not
         """
         return limit is not None and self.request_count % limit == 0
+
+    def double_cool_down(self):
+        """
+        Double the cool down length, as in, the cool down length that is always used,
+        not the current cool down that is going on.
+        """
+        self.cool_down_length *= 2
+        self.start_cool_down()

@@ -7,7 +7,7 @@ from codecs import encode, decode
 
 from pythonwhois.caching.whois_server_cache import server_cache
 from pythonwhois.ratelimit.cool_down import CoolDown
-from pythonwhois.response.whois_response import WhoisResponse
+from pythonwhois.response.whois_response import RawWhoisResponse
 
 incomplete_result_message = "THE_WHOIS_ORACLE_INCOMPLETE_RESULT"
 
@@ -72,8 +72,14 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
         new_list = [response] + previous
 
     if whois_response.server_is_dead:
+        # That's probably as far as we can go, the road ends here
         return build_return_value(with_server_list, new_list, server_list)
-    elif whois_response.request_failure or whois_response.cool_down_failure:
+    elif whois_response.request_failure:
+        # Mark this result as incomplete, so we can try again later
+        new_list = [incomplete_result_message] + previous
+        cool_down_tracker.warn_limit_exceeded(target_server)
+        return build_return_value(with_server_list, new_list, server_list)
+    elif whois_response.cool_down_failure:
         new_list = [incomplete_result_message] + previous
         return build_return_value(with_server_list, new_list, server_list)
 
@@ -104,9 +110,7 @@ def build_return_value(with_server_list, responses, server_list):
     :param server_list: The server list
     :return: A list of responses without the empty ones, plus possibly a server list
     """
-    non_empty_responses = filter((lambda text: text is not ''), responses)
-    if len(non_empty_responses) == 0:
-        non_empty_responses = ['']
+    non_empty_responses = filter((lambda text: text is not '' and text is not None), responses)
 
     if with_server_list:
         return non_empty_responses, server_list
@@ -117,15 +121,15 @@ def build_return_value(with_server_list, responses, server_list):
 def query_server(whois_server, query):
     """
     Send out the query, if the server is available. if the server is still in cool down,
-    return an empty string
+    return a RawWhoisResponse instance describing the failure
     :param whois_server: The WHOIS server to query
     :param query: The query to send
-    :return: The result, or an empty string if the server is unavailable
+    :return: A RawWhoisResponse containing either the response or the reason of failure
     """
     if whois_server and cool_down_tracker.try_to_use_server(whois_server):
         return whois_request(query, whois_server)
     else:
-        return WhoisResponse(cool_down_failure=True)
+        return RawWhoisResponse(cool_down_failure=True)
 
 
 def prepare_query(whois_server, domain):
@@ -151,7 +155,7 @@ def get_target_server(domain, previous_results, given_server):
     :param domain: The domain to get the server for
     :param previous_results: The previously acquired results, as a result of referrals
     :param given_server:
-    :return:
+    :return: The server to use
     """
     if len(previous_results) == 0 and given_server == "":
         # Root query
@@ -195,6 +199,11 @@ def get_tld(domain):
 
 
 def get_root_server(domain):
+    """
+    Find the WHOIS server for a given domain
+    :param domain: The domain to find a WHOIS server for
+    :return: The WHOIS server, or an empty string if no server is found
+    """
     data = whois_request(domain, "whois.iana.org").response or ""
     for line in [x.strip() for x in data.splitlines()]:
         match = re.match("refer:\s*([^\s]+)", line)
@@ -205,6 +214,13 @@ def get_root_server(domain):
 
 
 def whois_request(domain, server, port=43):
+    """
+    Request WHOIS information. Has a timeout of 10 seconds
+    :param domain: The domain to request WHOIS information for
+    :param server: The WHOIS server to use
+    :param port: The port to use, 43 by default
+    :return: A WHOIS response containing either the result, or containing information about the failure
+    """
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(10)
@@ -216,7 +232,7 @@ def whois_request(domain, server, port=43):
             if len(data) == 0:
                 break
             buff += data
-        return WhoisResponse(buff.decode("utf-8", "replace"))
+        return RawWhoisResponse(buff.decode("utf-8", "replace"))
     except Exception:
         server_is_dead = not server_is_alive(server)
-        return WhoisResponse(request_failure=True, server_is_dead=server_is_dead)
+        return RawWhoisResponse(request_failure=True, server_is_dead=server_is_dead)
