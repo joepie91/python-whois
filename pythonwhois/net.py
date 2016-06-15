@@ -79,7 +79,7 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
         new_list = [incomplete_result_message] + previous
         cool_down_tracker.warn_limit_exceeded(target_server)
         return build_return_value(with_server_list, new_list, server_list)
-    elif whois_response.cool_down_failure:
+    elif whois_response.still_in_cool_down:
         new_list = [incomplete_result_message] + previous
         return build_return_value(with_server_list, new_list, server_list)
 
@@ -110,7 +110,7 @@ def build_return_value(with_server_list, responses, server_list):
     :param server_list: The server list
     :return: A list of responses without the empty ones, plus possibly a server list
     """
-    non_empty_responses = filter((lambda text: text is not '' and text is not None), responses)
+    non_empty_responses = filter((lambda text: text), responses)
 
     if with_server_list:
         return non_empty_responses, server_list
@@ -129,7 +129,7 @@ def query_server(whois_server, query):
     if whois_server and cool_down_tracker.try_to_use_server(whois_server):
         return whois_request(query, whois_server)
     else:
-        return RawWhoisResponse(cool_down_failure=True)
+        return RawWhoisResponse(still_in_cool_down=True)
 
 
 def prepare_query(whois_server, domain):
