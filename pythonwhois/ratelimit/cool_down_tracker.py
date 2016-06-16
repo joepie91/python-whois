@@ -60,7 +60,7 @@ class CoolDownTracker:
     def double_cool_down(self):
         """
         Double the cool down length, as in, the cool down length that is always used,
-        not the current cool down that is going on.
+        not the current cool down that happening.
         """
         self.cool_down_length *= 2
         self.start_cool_down()
