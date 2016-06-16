@@ -14,7 +14,7 @@ class CoolDown:
         Creates a dictionary for storing cool downs.
         """
         self.servers_on_cool_down = {}
-        self.default_cool_down_length = 1.0
+        self.default_cool_down_seconds = 2.0
         self.last_request_time = datetime.datetime.now()
 
     def can_use_server(self, whois_server):
@@ -39,7 +39,7 @@ class CoolDown:
             return False
 
         if whois_server not in self.servers_on_cool_down:
-            self.servers_on_cool_down[whois_server] = CoolDownTracker(self.default_cool_down_length)
+            self.servers_on_cool_down[whois_server] = CoolDownTracker(self.default_cool_down_seconds)
         self.servers_on_cool_down[whois_server].use_whois_server()
         return True
 
@@ -50,6 +50,15 @@ class CoolDown:
         time_diff = self.get_time_difference()
         for server, cool_down_tracker in self.servers_on_cool_down.iteritems():
             cool_down_tracker.decrement_cool_down(time_diff)
+
+    def warn_limit_exceeded(self, whois_server):
+        """
+        Warn the CoolDown instance of an exceeded limit for a WHOIS server.
+        The CoolDown instance will then make sure that the cool down for the WHOIS server
+        will be longer next time
+        :param whois_server: The WHOIS server the limit has been exceeded for
+        """
+        self.servers_on_cool_down[whois_server].double_cool_down()
 
     def get_time_difference(self):
         """
@@ -69,6 +78,6 @@ class CoolDown:
         the cool down dictionary.
         :param path_to_file: The path to the configuration file
         """
-        cool_down_config = CoolDownConfig(path_to_file, self.default_cool_down_length)
+        cool_down_config = CoolDownConfig(path_to_file, self.default_cool_down_seconds)
         for whois_server in cool_down_config.get_sections():
             self.servers_on_cool_down[whois_server] = cool_down_config.get_cool_down_tracker_for_server(whois_server)
