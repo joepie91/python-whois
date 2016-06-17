@@ -213,13 +213,13 @@ def get_root_server(domain):
     return ""
 
 
-def whois_request(domain, server, port=43, timeout=10):
+def whois_request(domain, server, port=43, timeout=3):
     """
     Request WHOIS information.
     :param domain: The domain to request WHOIS information for
     :param server: The WHOIS server to use
     :param port: The port to use, 43 by default
-    :param timeout: The length of the time out, 10 seconds by default
+    :param timeout: The length of the time out, 3 seconds by default
     :return: A WHOIS response containing either the result, or containing information about the failure
     """
     try:

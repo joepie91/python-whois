@@ -1,8 +1,9 @@
 from setuptools import setup
 
 setup(name='whois-oracle',
-      version='1.0.3',
+      version='1.1.1',
       description='Module for retrieving and parsing the WHOIS data for a domain. Supports most domains. No dependencies.',
+      keywords='whois cool down',
       author='Sander ten Hoor, original by Sven Slootweg',
       url='https://github.com/MasterFenrir/whois-oracle',
       packages=['pythonwhois', 'pythonwhois.caching', 'pythonwhois.ratelimit', 'pythonwhois.response'],
