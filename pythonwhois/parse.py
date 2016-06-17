@@ -786,16 +786,18 @@ def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_
         if match is not None:
             data["registrar"] = [match.group(1).strip()]
         match = re.search("(?:Domain nameservers|Name servers):([\s\S]*?\n)\n", segment)
-        if match is not None:
+        if match:
             chunk = match.group(1)
             for match in re.findall("\s+?(.+)\n", chunk):
-                match = match.split()[0]
-                # Prevent nameserver aliases from being picked up.
-                if not match.startswith("[") and not match.endswith("]"):
-                    try:
-                        data["nameservers"].append(match.strip())
-                    except KeyError as e:
-                        data["nameservers"] = [match.strip()]
+                match = match.split()
+                if match:
+                    match = match[0]
+                    # Prevent nameserver aliases from being picked up.
+                    if not match.startswith("[") and not match.endswith("]"):
+                        try:
+                            data["nameservers"].append(match.strip())
+                        except KeyError as e:
+                            data["nameservers"] = [match.strip()]
         # The .ie WHOIS server puts ambiguous status information in an unhelpful order
         match = re.search('ren-status:\s*(.+)', segment)
         if match is not None:
