@@ -93,7 +93,7 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
             if match is not None:
                 referal_server = match.group(2)
                 if referal_server != server and "://" not in referal_server \
-                        and "www." not in referal_server and server_is_alive(referal_server):
+                        and "www." not in referal_server:
                     # We want to ignore anything non-WHOIS (eg. HTTP) for now, and servers that are not reachable
                     # Referal to another WHOIS server...
                     return get_whois_raw(domain, referal_server, new_list, server_list=server_list,
