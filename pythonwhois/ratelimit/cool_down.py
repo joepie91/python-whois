@@ -14,7 +14,7 @@ class CoolDown:
         Creates a dictionary for storing cool downs.
         """
         self.servers_on_cool_down = {}
-        self.default_cool_down_seconds = 2.0
+        self.default_cool_down_seconds = 4.0
         self.last_request_time = datetime.datetime.now()
 
     def can_use_server(self, whois_server):
@@ -79,5 +79,6 @@ class CoolDown:
         :param path_to_file: The path to the configuration file
         """
         cool_down_config = CoolDownConfig(path_to_file, self.default_cool_down_seconds)
+        self.default_cool_down_seconds = cool_down_config.cool_down_length
         for whois_server in cool_down_config.get_sections():
             self.servers_on_cool_down[whois_server] = cool_down_config.get_cool_down_tracker_for_server(whois_server)
