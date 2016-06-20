@@ -1,4 +1,4 @@
-class RawWhoisResponse:
+class RawResponseHolder:
     """
     Holder class for WHOIS responses. Is capable of marking the retrieval as a failure.
     """
