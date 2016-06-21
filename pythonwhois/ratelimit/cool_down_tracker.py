@@ -32,11 +32,12 @@ class CoolDownTracker:
         """
         Start a new cool_down
         """
-        if self.max_requests_reached(self.max_requests_day):
+        time_passed = self.cool_down_length - self.current_cool_down
+        if time_passed < 86400 and self.max_requests_reached(self.max_requests_day):
             self.current_cool_down = 86400
-        elif self.max_requests_reached(self.max_requests_hour):
+        elif time_passed < 3600 and self.max_requests_reached(self.max_requests_hour):
             self.current_cool_down = 3600
-        elif self.max_requests_reached(self.max_requests_minute):
+        elif time_passed < 60 and self.max_requests_reached(self.max_requests_minute):
             self.current_cool_down = 60
         else:
             self.current_cool_down = self.cool_down_length
@@ -57,10 +58,11 @@ class CoolDownTracker:
         """
         return limit is not None and self.request_count % limit == 0
 
-    def double_cool_down(self):
+    def increase_cool_down(self):
         """
-        Double the cool down length, as in, the cool down length that is always used,
+        Increase the cool down length, as in, the cool down length that is always used,
         not the current cool down that happening.
+        The cool down length is multiplied by 1.5
         """
-        self.cool_down_length *= 2
+        self.cool_down_length *= 1.5
         self.start_cool_down()

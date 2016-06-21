@@ -7,9 +7,8 @@ from codecs import encode, decode
 
 from pythonwhois.caching.whois_server_cache import server_cache
 from pythonwhois.ratelimit.cool_down import CoolDown
-from pythonwhois.response.raw_whois_response import RawWhoisResponse
-
-incomplete_result_message = "THE_WHOIS_ORACLE_INCOMPLETE_RESULT"
+from pythonwhois.response.raw_response_holder import RawResponseHolder
+from pythonwhois.response.whois_results import WhoisResult
 
 cool_down_tracker = CoolDown()
 
@@ -39,6 +38,15 @@ exceptions = {
 
 def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=False, with_server_list=False,
                   server_list=None):
+    final_result = get_whois_raw_wrapped(domain, server, previous, rfc3490, never_cut, with_server_list, server_list)
+    if with_server_list:
+        return final_result.responses, final_result.server_list
+    else:
+        return final_result.responses
+
+
+def get_whois_raw_wrapped(domain, server="", previous=None, rfc3490=True, never_cut=False, with_server_list=False,
+                          server_list=None):
     previous = previous or []
     server_list = server_list or []
 
@@ -49,6 +57,8 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
             domain = encode(domain, "idna").decode("ascii")
 
     target_server = get_target_server(domain, previous, server)
+    if not target_server:
+        return build_return_value(with_server_list, [], server_list, True, False)
     query = prepare_query(target_server, domain)
     whois_response = query_server(target_server, query)
     response = whois_response.response
@@ -73,15 +83,13 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
 
     if whois_response.server_is_dead:
         # That's probably as far as we can go, the road ends here
-        return build_return_value(with_server_list, new_list, server_list)
+        return build_return_value(with_server_list, new_list, server_list, True, True, )
     elif whois_response.request_failure:
         # Mark this result as incomplete, so we can try again later but still use the data if we have any
-        new_list = [incomplete_result_message] + previous
         cool_down_tracker.warn_limit_exceeded(target_server)
-        return build_return_value(with_server_list, new_list, server_list)
+        return build_return_value(with_server_list, new_list, server_list, False, True)
     elif whois_response.still_in_cool_down:
-        new_list = [incomplete_result_message] + previous
-        return build_return_value(with_server_list, new_list, server_list)
+        return build_return_value(with_server_list, new_list, server_list, False, True)
 
     server_list.append(target_server)
 
@@ -92,30 +100,32 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
                              re.IGNORECASE)
             if match is not None:
                 referal_server = match.group(2)
-                if referal_server != server and "://" not in referal_server \
-                        and "www." not in referal_server and server_is_alive(referal_server):
-                    # We want to ignore anything non-WHOIS (eg. HTTP) for now, and servers that are not reachable
+                if referal_server != target_server and "://" not in referal_server \
+                        and "www." not in referal_server:
+                    # We want to ignore anything non-WHOIS (eg. HTTP) for now
                     # Referal to another WHOIS server...
-                    return get_whois_raw(domain, referal_server, new_list, server_list=server_list,
-                                         with_server_list=with_server_list)
+                    return get_whois_raw_wrapped(domain, referal_server, new_list, server_list=server_list,
+                                                 with_server_list=with_server_list)
 
     return build_return_value(with_server_list, new_list, server_list)
 
 
-def build_return_value(with_server_list, responses, server_list):
+def build_return_value(with_server_list, responses, server_list, complete=True, whois_server_available=True):
     """
     Create a return value
     :param with_server_list: Whether the server list should be returned as well
     :param responses: The list of responses
     :param server_list: The server list
+    :param complete: Whether the result was complete or not
+    :param whois_server_available: Whether there was a WHOIS server available
     :return: A list of responses without the empty ones, plus possibly a server list
     """
     non_empty_responses = filter((lambda text: text), responses)
 
     if with_server_list:
-        return non_empty_responses, server_list
+        return WhoisResult(non_empty_responses, complete, whois_server_available, server_list)
     else:
-        return non_empty_responses
+        return WhoisResult(non_empty_responses, complete, whois_server_available)
 
 
 def query_server(whois_server, query):
@@ -129,7 +139,7 @@ def query_server(whois_server, query):
     if whois_server and cool_down_tracker.try_to_use_server(whois_server):
         return whois_request(query, whois_server)
     else:
-        return RawWhoisResponse(still_in_cool_down=True)
+        return RawResponseHolder(still_in_cool_down=True)
 
 
 def prepare_query(whois_server, domain):
@@ -233,7 +243,7 @@ def whois_request(domain, server, port=43, timeout=3):
             if len(data) == 0:
                 break
             buff += data
-        return RawWhoisResponse(buff.decode("utf-8", "replace"))
+        return RawResponseHolder(buff.decode("utf-8", "replace"))
     except Exception:
         server_is_dead = not server_is_alive(server)
-        return RawWhoisResponse(request_failure=True, server_is_dead=server_is_dead)
+        return RawResponseHolder(request_failure=True, server_is_dead=server_is_dead)

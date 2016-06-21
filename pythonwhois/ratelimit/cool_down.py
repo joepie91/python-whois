@@ -58,7 +58,7 @@ class CoolDown:
         will be longer next time
         :param whois_server: The WHOIS server the limit has been exceeded for
         """
-        self.servers_on_cool_down[whois_server].double_cool_down()
+        self.servers_on_cool_down[whois_server].increase_cool_down()
 
     def get_time_difference(self):
         """

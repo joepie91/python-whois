@@ -32,7 +32,9 @@ def json_fallback(obj):
 
 
 if args.file is None:
-    data, server_list = pythonwhois.net.get_whois_raw(args.domain[0], with_server_list=True)
+    final_result = pythonwhois.net.get_whois_raw_wrapped(args.domain[0], with_server_list=True)
+    data = final_result.responses
+    server_list = final_result.server_list
 else:
     server_list = []
     with open(args.file, "r") as f:
