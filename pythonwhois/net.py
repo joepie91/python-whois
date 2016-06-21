@@ -38,6 +38,15 @@ exceptions = {
 
 def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=False, with_server_list=False,
                   server_list=None):
+    final_result = get_whois_raw_wrapped(domain, server, previous, rfc3490, never_cut, with_server_list, server_list)
+    if with_server_list:
+        return final_result.responses, final_result.server_list
+    else:
+        return final_result.responses
+
+
+def get_whois_raw_wrapped(domain, server="", previous=None, rfc3490=True, never_cut=False, with_server_list=False,
+                          server_list=None):
     previous = previous or []
     server_list = server_list or []
 
@@ -95,8 +104,8 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
                         and "www." not in referal_server:
                     # We want to ignore anything non-WHOIS (eg. HTTP) for now
                     # Referal to another WHOIS server...
-                    return get_whois_raw(domain, referal_server, new_list, server_list=server_list,
-                                         with_server_list=with_server_list)
+                    return get_whois_raw_wrapped(domain, referal_server, new_list, server_list=server_list,
+                                                 with_server_list=with_server_list)
 
     return build_return_value(with_server_list, new_list, server_list)
 
