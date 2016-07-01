@@ -1,0 +1,447 @@
+[  1/270] 0007games.com passed in normalized mode.
+[  2/270] 0007games.com passed in default mode.
+[  3/270] 0031fashion.com passed in normalized mode.
+[  4/270] 0031fashion.com passed in default mode.
+[  5/270] 123vitamine.com passed in normalized mode.
+[  6/270] 123vitamine.com passed in default mode.
+[  7/270] 2x4.ru passed in normalized mode.
+[  8/270] 2x4.ru passed in default mode.
+[  9/270] 365calendars.com passed in normalized mode.
+[ 10/270] 365calendars.com passed in default mode.
+[ 11/270] 9v.lt passed in normalized mode.
+[ 12/270] 9v.lt passed in default mode.
+[ 13/270] about.museum passed in normalized mode.
+[ 14/270] about.museum passed in default mode.
+[ 15/270] abouttubes.com passed in normalized mode.
+[ 16/270] abouttubes.com passed in default mode.
+[ 17/270] actu.org.au TEST CASE FAILED, ERRORS BELOW
+Mode: normalized
+=======================================
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `email`
+   [+++] visit whois.ausregistry.com.au for web based whois
+(root -> contacts -> registrant) New key present in current data, but missing in previous data: `email`
+   [+++] visit whois.ausregistry.com.au for web based whois
+=======================================
+[ 18/270] actu.org.au TEST CASE FAILED, ERRORS BELOW
+Mode: default
+=======================================
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `email`
+   [+++] Visit whois.ausregistry.com.au for Web based WhoIs
+(root -> contacts -> registrant) New key present in current data, but missing in previous data: `email`
+   [+++] Visit whois.ausregistry.com.au for Web based WhoIs
+=======================================
+[ 19/270] ajp.xyz passed in normalized mode.
+[ 20/270] ajp.xyz passed in default mode.
+[ 21/270] alibaba.jp passed in normalized mode.
+[ 22/270] alibaba.jp passed in default mode.
+[ 23/270] alliancefrançaise.nu passed in normalized mode.
+[ 24/270] alliancefrançaise.nu passed in default mode.
+[ 25/270] anink.com passed in normalized mode.
+[ 26/270] anink.com passed in default mode.
+[ 27/270] anonne.ws passed in normalized mode.
+[ 28/270] anonne.ws passed in default mode.
+[ 29/270] anonnews.org passed in normalized mode.
+[ 30/270] anonnews.org passed in default mode.
+[ 31/270] aol.com passed in normalized mode.
+[ 32/270] aol.com passed in default mode.
+[ 33/270] apple.ai passed in normalized mode.
+[ 34/270] apple.ai passed in default mode.
+[ 35/270] aridns.net.au TEST CASE FAILED, ERRORS BELOW
+Mode: normalized
+=======================================
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `email`
+   [+++] visit whois.ausregistry.com.au for web based whois
+(root -> contacts -> registrant) New key present in current data, but missing in previous data: `email`
+   [+++] visit whois.ausregistry.com.au for web based whois
+=======================================
+[ 36/270] aridns.net.au TEST CASE FAILED, ERRORS BELOW
+Mode: default
+=======================================
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `email`
+   [+++] Visit whois.ausregistry.com.au for Web based WhoIs
+(root -> contacts -> registrant) New key present in current data, but missing in previous data: `email`
+   [+++] Visit whois.ausregistry.com.au for Web based WhoIs
+=======================================
+[ 37/270] arkeysolutions.com passed in normalized mode.
+[ 38/270] arkeysolutions.com passed in default mode.
+[ 39/270] asiahotel.co.th passed in normalized mode.
+[ 40/270] asiahotel.co.th passed in default mode.
+[ 41/270] atheme.org passed in normalized mode.
+[ 42/270] atheme.org passed in default mode.
+[ 43/270] australia.gov.au TEST CASE FAILED, ERRORS BELOW
+Mode: normalized
+=======================================
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `email`
+   [+++] visit whois.ausregistry.com.au for web based whois
+(root -> contacts -> registrant) New key present in current data, but missing in previous data: `email`
+   [+++] visit whois.ausregistry.com.au for web based whois
+=======================================
+[ 44/270] australia.gov.au TEST CASE FAILED, ERRORS BELOW
+Mode: default
+=======================================
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `email`
+   [+++] Visit whois.ausregistry.com.au for Web based WhoIs
+(root -> contacts -> registrant) New key present in current data, but missing in previous data: `email`
+   [+++] Visit whois.ausregistry.com.au for Web based WhoIs
+=======================================
+[ 45/270] b.ro passed in normalized mode.
+[ 46/270] b.ro passed in default mode.
+[ 47/270] baligems.co.uk passed in normalized mode.
+[ 48/270] baligems.co.uk passed in default mode.
+[ 49/270] bidtheatre.com passed in normalized mode.
+[ 50/270] bidtheatre.com passed in default mode.
+[ 51/270] blackburn.ac.uk passed in normalized mode.
+[ 52/270] blackburn.ac.uk passed in default mode.
+[ 53/270] bristol.ac.uk passed in normalized mode.
+[ 54/270] bristol.ac.uk passed in default mode.
+[ 55/270] bts.co.th passed in normalized mode.
+[ 56/270] bts.co.th passed in default mode.
+[ 57/270] byme.at passed in normalized mode.
+[ 58/270] byme.at passed in default mode.
+[ 59/270] bäckerei.de passed in normalized mode.
+[ 60/270] bäckerei.de passed in default mode.
+[ 61/270] communigal.net passed in normalized mode.
+[ 62/270] communigal.net passed in default mode.
+[ 63/270] cryto.net passed in normalized mode.
+[ 64/270] cryto.net passed in default mode.
+[ 65/270] daemonrage.net passed in normalized mode.
+[ 66/270] daemonrage.net passed in default mode.
+[ 67/270] dailym.ai passed in normalized mode.
+[ 68/270] dailym.ai passed in default mode.
+[ 69/270] davicom.com.tw passed in normalized mode.
+[ 70/270] davicom.com.tw passed in default mode.
+[ 71/270] defunctkernel.me passed in normalized mode.
+[ 72/270] defunctkernel.me passed in default mode.
+[ 73/270] direct.gov.uk passed in normalized mode.
+[ 74/270] direct.gov.uk passed in default mode.
+[ 75/270] dns4pro.com passed in normalized mode.
+[ 76/270] dns4pro.com passed in default mode.
+[ 77/270] donuts.co passed in normalized mode.
+[ 78/270] donuts.co passed in default mode.
+[ 79/270] drpciv.biz passed in normalized mode.
+[ 80/270] drpciv.biz passed in default mode.
+[ 81/270] edis.at passed in normalized mode.
+[ 82/270] edis.at passed in default mode.
+[ 83/270] engine.com passed in normalized mode.
+[ 84/270] engine.com passed in default mode.
+[ 85/270] evalsed.info TEST CASE FAILED, ERRORS BELOW
+Mode: normalized
+=======================================
+(root -> contacts) Data mismatch in key `billing`.
+   [old] None
+   [new] {u'city': u'Bruxelles', u'fax': u'+32.22355699', u'handle': u'Edns-b3324733', u'name': u'Dulieu Arnaud', u'country': u'Belgium', u'phone': u'+32.25374400', u'street': u'Globe village chaussee Alsemberg 1001', u'organization': u'Mostra s.a.', u'postal': u'1180', u'email': u'webadmin@mostra.com'}
+=======================================
+[ 86/270] evalsed.info TEST CASE FAILED, ERRORS BELOW
+Mode: default
+=======================================
+(root -> contacts) Data mismatch in key `billing`.
+   [old] None
+   [new] {u'city': u'Bruxelles', u'fax': u'+32.22355699', u'handle': u'Edns-b3324733', u'name': u'Dulieu Arnaud', u'country': u'BE', u'phone': u'+32.25374400', u'street': u'Globe village chaussee Alsemberg 1001', u'organization': u'Mostra s.a.', u'postal': u'1180', u'email': u'webadmin@mostra.com'}
+=======================================
+[ 87/270] example.com passed in normalized mode.
+[ 88/270] example.com passed in default mode.
+[ 89/270] expopack.com.mx passed in normalized mode.
+[ 90/270] expopack.com.mx passed in default mode.
+[ 91/270] f63.net passed in normalized mode.
+[ 92/270] f63.net passed in default mode.
+[ 93/270] formule1fo.com passed in normalized mode.
+[ 94/270] formule1fo.com passed in default mode.
+[ 95/270] foxiepa.ws passed in normalized mode.
+[ 96/270] foxiepa.ws passed in default mode.
+[ 97/270] geko.dk passed in normalized mode.
+[ 98/270] geko.dk passed in default mode.
+[ 99/270] get.moe passed in normalized mode.
+[100/270] get.moe passed in default mode.
+[101/270] globallatedeals.com passed in normalized mode.
+[102/270] globallatedeals.com passed in default mode.
+[103/270] globaltravelgroup.com passed in normalized mode.
+[104/270] globaltravelgroup.com passed in default mode.
+[105/270] google.cn passed in normalized mode.
+[106/270] google.cn passed in default mode.
+[107/270] google.co.jp passed in normalized mode.
+[108/270] google.co.jp passed in default mode.
+[109/270] google.co.th passed in normalized mode.
+[110/270] google.co.th passed in default mode.
+[111/270] google.co.uk passed in normalized mode.
+[112/270] google.co.uk passed in default mode.
+[113/270] google.com passed in normalized mode.
+[114/270] google.com passed in default mode.
+[115/270] google.com.tw passed in normalized mode.
+[116/270] google.com.tw passed in default mode.
+[117/270] google.durban passed in normalized mode.
+[118/270] google.durban passed in default mode.
+[119/270] google.eu passed in normalized mode.
+[120/270] google.eu passed in default mode.
+[121/270] google.it passed in normalized mode.
+[122/270] google.it passed in default mode.
+[123/270] google.luxury passed in normalized mode.
+[124/270] google.luxury passed in default mode.
+[125/270] hl3.eu passed in normalized mode.
+[126/270] hl3.eu passed in default mode.
+[127/270] hopjb.eu passed in normalized mode.
+[128/270] hopjb.eu passed in default mode.
+[129/270] huskeh.net passed in normalized mode.
+[130/270] huskeh.net passed in default mode.
+[131/270] hyves.nl TEST CASE FAILED, ERRORS BELOW
+Mode: normalized
+=======================================
+(root) List mismatch in key `registrar`.
+   [old] set([u'Domeinbalie.nl', u'NL Domain Registry'])
+   [new] set([u'Domeinbalie.nl'])
+=======================================
+[132/270] hyves.nl TEST CASE FAILED, ERRORS BELOW
+Mode: default
+=======================================
+(root) List mismatch in key `registrar`.
+   [old] set([u'Domeinbalie.nl', u'NL Domain Registry'])
+   [new] set([u'Domeinbalie.nl'])
+=======================================
+[133/270] imperial.ac.uk passed in normalized mode.
+[134/270] imperial.ac.uk passed in default mode.
+[135/270] ireland.ie passed in normalized mode.
+[136/270] ireland.ie passed in default mode.
+[137/270] ismtgoxdeadyet.com passed in normalized mode.
+[138/270] ismtgoxdeadyet.com passed in default mode.
+[139/270] jizzbo.com passed in normalized mode.
+[140/270] jizzbo.com passed in default mode.
+[141/270] keybase.io passed in normalized mode.
+[142/270] keybase.io passed in default mode.
+[143/270] linux.conf.au TEST CASE FAILED, ERRORS BELOW
+Mode: normalized
+=======================================
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `email`
+   [+++] visit whois.ausregistry.com.au for web based whois
+(root -> contacts -> registrant) New key present in current data, but missing in previous data: `email`
+   [+++] visit whois.ausregistry.com.au for web based whois
+=======================================
+[144/270] linux.conf.au TEST CASE FAILED, ERRORS BELOW
+Mode: default
+=======================================
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `email`
+   [+++] Visit whois.ausregistry.com.au for Web based WhoIs
+(root -> contacts -> registrant) New key present in current data, but missing in previous data: `email`
+   [+++] Visit whois.ausregistry.com.au for Web based WhoIs
+=======================================
+[145/270] lowendbox.com passed in normalized mode.
+[146/270] lowendbox.com passed in default mode.
+[147/270] lowendshare.com passed in normalized mode.
+[148/270] lowendshare.com passed in default mode.
+[149/270] luka-netconsult.com TEST CASE FAILED, ERRORS BELOW
+Mode: normalized
+=======================================
+(root -> contacts -> admin) New key present in current data, but missing in previous data: `fax`
+   [+++] +496948000570
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `fax`
+   [+++] +496948000570
+=======================================
+[150/270] luka-netconsult.com TEST CASE FAILED, ERRORS BELOW
+Mode: default
+=======================================
+(root -> contacts -> admin) New key present in current data, but missing in previous data: `fax`
+   [+++] +496948000570
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `fax`
+   [+++] +496948000570
+=======================================
+[151/270] microsoft.com passed in normalized mode.
+[152/270] microsoft.com passed in default mode.
+[153/270] mu.oz.au passed in normalized mode.
+[154/270] mu.oz.au passed in default mode.
+[155/270] nepasituation.com passed in normalized mode.
+[156/270] nepasituation.com passed in default mode.
+[157/270] nic.buzz passed in normalized mode.
+[158/270] nic.buzz passed in default mode.
+[159/270] nic.ir passed in normalized mode.
+[160/270] nic.ir passed in default mode.
+[161/270] nic.ps passed in normalized mode.
+[162/270] nic.ps passed in default mode.
+[163/270] nic.pw passed in normalized mode.
+[164/270] nic.pw passed in default mode.
+[165/270] nic.ru passed in normalized mode.
+[166/270] nic.ru passed in default mode.
+[167/270] noir.haus passed in normalized mode.
+[168/270] noir.haus passed in default mode.
+[169/270] nominet.org.uk passed in normalized mode.
+[170/270] nominet.org.uk passed in default mode.
+[171/270] nsa.gov passed in normalized mode.
+[172/270] nsa.gov passed in default mode.
+[173/270] nttpc.co.jp passed in normalized mode.
+[174/270] nttpc.co.jp passed in default mode.
+[175/270] nytimes.com passed in normalized mode.
+[176/270] nytimes.com passed in default mode.
+[177/270] oli.id.au TEST CASE FAILED, ERRORS BELOW
+Mode: normalized
+=======================================
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `email`
+   [+++] visit whois.ausregistry.com.au for web based whois
+(root -> contacts -> registrant) New key present in current data, but missing in previous data: `email`
+   [+++] visit whois.ausregistry.com.au for web based whois
+=======================================
+[178/270] oli.id.au TEST CASE FAILED, ERRORS BELOW
+Mode: default
+=======================================
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `email`
+   [+++] Visit whois.ausregistry.com.au for Web based WhoIs
+(root -> contacts -> registrant) New key present in current data, but missing in previous data: `email`
+   [+++] Visit whois.ausregistry.com.au for Web based WhoIs
+=======================================
+[179/270] ovh.fr passed in normalized mode.
+[180/270] ovh.fr passed in default mode.
+[181/270] pcmups.com.tw passed in normalized mode.
+[182/270] pcmups.com.tw passed in default mode.
+[183/270] pixelmania.asia passed in normalized mode.
+[184/270] pixelmania.asia passed in default mode.
+[185/270] porn.com.tw passed in normalized mode.
+[186/270] porn.com.tw passed in default mode.
+[187/270] prq.se passed in normalized mode.
+[188/270] prq.se passed in default mode.
+[189/270] quadranet.com passed in normalized mode.
+[190/270] quadranet.com passed in default mode.
+[191/270] realtek.com.tw passed in normalized mode.
+[192/270] realtek.com.tw passed in default mode.
+[193/270] redd.it passed in normalized mode.
+[194/270] redd.it passed in default mode.
+[195/270] ricoh.co.th passed in normalized mode.
+[196/270] ricoh.co.th passed in default mode.
+[197/270] rs.co.th passed in normalized mode.
+[198/270] rs.co.th passed in default mode.
+[199/270] servequake.com passed in normalized mode.
+[200/270] servequake.com passed in default mode.
+[201/270] siamparagon.co.th passed in normalized mode.
+[202/270] siamparagon.co.th passed in default mode.
+[203/270] simpardaz.com passed in normalized mode.
+[204/270] simpardaz.com passed in default mode.
+[205/270] sina.com.cn passed in normalized mode.
+[206/270] sina.com.cn passed in default mode.
+[207/270] singularity.fr passed in normalized mode.
+[208/270] singularity.fr passed in default mode.
+[209/270] starasaservice.com passed in normalized mode.
+[210/270] starasaservice.com passed in default mode.
+[211/270] starbucks.co.th passed in normalized mode.
+[212/270] starbucks.co.th passed in default mode.
+[213/270] swisscom.ch passed in normalized mode.
+[214/270] swisscom.ch passed in default mode.
+[215/270] sydney.edu.au TEST CASE FAILED, ERRORS BELOW
+Mode: normalized
+=======================================
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `email`
+   [+++] visit whois.ausregistry.com.au for web based whois
+(root -> contacts -> registrant) New key present in current data, but missing in previous data: `email`
+   [+++] visit whois.ausregistry.com.au for web based whois
+=======================================
+[216/270] sydney.edu.au TEST CASE FAILED, ERRORS BELOW
+Mode: default
+=======================================
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `email`
+   [+++] Visit whois.ausregistry.com.au for Web based WhoIs
+(root -> contacts -> registrant) New key present in current data, but missing in previous data: `email`
+   [+++] Visit whois.ausregistry.com.au for Web based WhoIs
+=======================================
+[217/270] tattitude.co.uk passed in normalized mode.
+[218/270] tattitude.co.uk passed in default mode.
+[219/270] test.de passed in normalized mode.
+[220/270] test.de passed in default mode.
+[221/270] textfiles.com passed in normalized mode.
+[222/270] textfiles.com passed in default mode.
+[223/270] the.ai passed in normalized mode.
+[224/270] the.ai passed in default mode.
+[225/270] theregister.com passed in normalized mode.
+[226/270] theregister.com passed in default mode.
+[227/270] tip.it passed in normalized mode.
+[228/270] tip.it passed in default mode.
+[229/270] toyota.co.th passed in normalized mode.
+[230/270] toyota.co.th passed in default mode.
+[231/270] twitter.com passed in normalized mode.
+[232/270] twitter.com passed in default mode.
+[233/270] ufpa.br passed in normalized mode.
+[234/270] ufpa.br passed in default mode.
+[235/270] unwire.hk passed in normalized mode.
+[236/270] unwire.hk passed in default mode.
+[237/270] urlte.am passed in normalized mode.
+[238/270] urlte.am passed in default mode.
+[239/270] via.com.tw passed in normalized mode.
+[240/270] via.com.tw passed in default mode.
+[241/270] vulnweb.com passed in normalized mode.
+[242/270] vulnweb.com passed in default mode.
+[243/270] wa.us TEST CASE FAILED, ERRORS BELOW
+Mode: normalized
+=======================================
+(root -> contacts -> admin) Key present in previous data, but missing in current data: `facsimile`
+   [---] +1.5714345758
+(root -> contacts -> admin) New key present in current data, but missing in previous data: `fax`
+   [+++] +1.5714345758
+(root -> contacts -> tech) Key present in previous data, but missing in current data: `facsimile`
+   [---] +1.5714345758
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `fax`
+   [+++] +1.5714345758
+(root -> contacts -> registrant) Key present in previous data, but missing in current data: `facsimile`
+   [---] +1.5714345758
+(root -> contacts -> registrant) New key present in current data, but missing in previous data: `fax`
+   [+++] +1.5714345758
+(root -> contacts -> billing) Key present in previous data, but missing in current data: `facsimile`
+   [---] +1.5714345758
+(root -> contacts -> billing) New key present in current data, but missing in previous data: `fax`
+   [+++] +1.5714345758
+=======================================
+[244/270] wa.us TEST CASE FAILED, ERRORS BELOW
+Mode: default
+=======================================
+(root -> contacts -> admin) Key present in previous data, but missing in current data: `facsimile`
+   [---] +1.5714345758
+(root -> contacts -> admin) New key present in current data, but missing in previous data: `fax`
+   [+++] +1.5714345758
+(root -> contacts -> tech) Key present in previous data, but missing in current data: `facsimile`
+   [---] +1.5714345758
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `fax`
+   [+++] +1.5714345758
+(root -> contacts -> registrant) Key present in previous data, but missing in current data: `facsimile`
+   [---] +1.5714345758
+(root -> contacts -> registrant) New key present in current data, but missing in previous data: `fax`
+   [+++] +1.5714345758
+(root -> contacts -> billing) Key present in previous data, but missing in current data: `facsimile`
+   [---] +1.5714345758
+(root -> contacts -> billing) New key present in current data, but missing in previous data: `fax`
+   [+++] +1.5714345758
+=======================================
+[245/270] warwick.ac.uk passed in normalized mode.
+[246/270] warwick.ac.uk passed in default mode.
+[247/270] whirlpool.net.au TEST CASE FAILED, ERRORS BELOW
+Mode: normalized
+=======================================
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `email`
+   [+++] visit whois.ausregistry.com.au for web based whois
+(root -> contacts -> registrant) New key present in current data, but missing in previous data: `email`
+   [+++] visit whois.ausregistry.com.au for web based whois
+=======================================
+[248/270] whirlpool.net.au TEST CASE FAILED, ERRORS BELOW
+Mode: default
+=======================================
+(root -> contacts -> tech) New key present in current data, but missing in previous data: `email`
+   [+++] Visit whois.ausregistry.com.au for Web based WhoIs
+(root -> contacts -> registrant) New key present in current data, but missing in previous data: `email`
+   [+++] Visit whois.ausregistry.com.au for Web based WhoIs
+=======================================
+[249/270] whois.com passed in normalized mode.
+[250/270] whois.com passed in default mode.
+[251/270] whois.us passed in normalized mode.
+[252/270] whois.us passed in default mode.
+[253/270] whoiser.ir passed in normalized mode.
+[254/270] whoiser.ir passed in default mode.
+[255/270] winamp.com passed in normalized mode.
+[256/270] winamp.com passed in default mode.
+[257/270] wit.ai passed in normalized mode.
+[258/270] wit.ai passed in default mode.
+[259/270] wosoccer.com passed in normalized mode.
+[260/270] wosoccer.com passed in default mode.
+[261/270] x.it passed in normalized mode.
+[262/270] x.it passed in default mode.
+[263/270] xboxmoments.com passed in normalized mode.
+[264/270] xboxmoments.com passed in default mode.
+[265/270] yahoo.com.tw passed in normalized mode.
+[266/270] yahoo.com.tw passed in default mode.
+[267/270] yahoo.it passed in normalized mode.
+[268/270] yahoo.it passed in default mode.
+[269/270] zem.org.uk passed in normalized mode.
+[270/270] zem.org.uk passed in default mode.
+Timing in default mode: 16ms avg, 0ms min, 59ms max
+Timing in normalized mode: 23ms avg, 0ms min, 71ms max
+22 tests failed, 52 errors in total.
