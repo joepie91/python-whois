@@ -111,6 +111,7 @@ grammar = {
 					 'Record last updated on[.]*: [a-zA-Z]+, (?P<val>.+)',
 					 'Updated Date:\s?(?P<val>.+)',
 					 'Updated date\s*:\s?(?P<val>.+)',
+					 'Update date\s*:\s?(?P<val>.+)',
 					 #'Database last updated on\s?[.]*:?\s*?(?P<val>.+)\s[a-z]+\.?',
 					 'Record last updated on\s?[.]*:?\s?(?P<val>.+)\.',
 					 'Domain record last updated\s?[.]*:\s*?(?P<val>.+)',
@@ -251,6 +252,7 @@ registrant_regexes = [
 	"owner:\s+(?P<name>.+)", # .br
 	"person:\s+(?P<name>.+)", # nic.ru (person)
 	"org:\s+(?P<organization>.+)", # nic.ru (organization)
+	"Registrant ID:(?P<handle>.*)\nRegistrant Name:(?P<name>.*)\n(?:Registrant Organization:(?P<organization>.*)\n)?Registrant Address?:(?P<street1>.*)\nRegistrant City:(?P<city>.*)\nRegistrant Province/state:(?P<state>.*)\nRegistrant Country:(?P<country>.*)\nRegistrant Postal Code:(?P<postalcode>.*)\nRegistrant Phone:(?P<phone>.*)\n(?:Registrant Phone Ext:(?P<phone_ext>.*)\n)?(?:Registrant Fax:(?P<fax>.*)\n)?(?:Registrant Fax Ext:(?P<fax_ext>.*)\n)?Registrant Email:(?P<email>.*)",  # Eranet
 ]
 
 tech_contact_regexes = [
@@ -286,6 +288,7 @@ tech_contact_regexes = [
 	"   Technical Contact:\n      (?P<name>.+)  (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)\n", # .com.tw (Western registrars)
 	"Technical Contact Information:\n\n(?:Given name: (?P<firstname>.+)\n)?(?:Family name: (?P<lastname>.+)\n)?(?:Company name: (?P<organization>.+)\n)?Address: (?P<street>.+)\nCountry: (?P<country>.+)\nPhone: (?P<phone>.*)\nFax: (?P<fax>.*)\nEmail: (?P<email>.+)\n(?:Account Name: (?P<handle>.+)\n)?", # HKDNR (.hk)
 	"TECH ID:(?P<handle>.+)\nTECH Name:(?P<name>.*)\n(?:TECH Organization:(?P<organization>.*)\n)?TECH Street1:(?P<street1>.+?)\n(?:TECH Street2:(?P<street2>.+?)\n(?:TECH Street3:(?P<street3>.+?)\n)?)?TECH City:(?P<city>.+)\nTECH State:(?P<state>.*)\nTECH Postal Code:(?P<postalcode>.+)\nTECH Country:(?P<country>[A-Z]+)\nTECH Phone:(?P<phone>.*?)\nTECH Fax:(?P<fax>.*)\nTECH Email:(?P<email>.+)\n", # Realtime Register
+	"Tech ID:(?P<handle>.*)\nTech Name:(?P<name>.*)\n(?:Tech Organization:(?P<organization>.*)\n)?Tech Address?:(?P<street1>.*)\nTech City:(?P<city>.*)\nTech State/Province:(?P<state>.*)\nTech Country:(?P<country>.*)\nTech Postal Code:(?P<postalcode>.*)\nTech Phone:(?P<phone>.*)\n(?:Tech Phone Ext:(?P<phone_ext>.*)\n)?(?:Tech Fax:(?P<fax>.*)\n)?(?:Tech Fax Ext:(?P<fax_ext>.*)\n)?Tech Email:(?P<email>.*)",  # Eranet
 ]
 
 admin_contact_regexes = [
@@ -312,6 +315,7 @@ admin_contact_regexes = [
 	"   Administrative Contact:\n      (?P<name>.+)  (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)\n", # .com.tw (Western registrars)
 	"Administrative Contact Information:\n\n(?:Given name: (?P<firstname>.+)\n)?(?:Family name: (?P<lastname>.+)\n)?(?:Company name: (?P<organization>.+)\n)?Address: (?P<street>.+)\nCountry: (?P<country>.+)\nPhone: (?P<phone>.*)\nFax: (?P<fax>.*)\nEmail: (?P<email>.+)\n(?:Account Name: (?P<handle>.+)\n)?", # HKDNR (.hk)
 	"ADMIN ID:(?P<handle>.+)\nADMIN Name:(?P<name>.*)\n(?:ADMIN Organization:(?P<organization>.*)\n)?ADMIN Street1:(?P<street1>.+?)\n(?:ADMIN Street2:(?P<street2>.+?)\n(?:ADMIN Street3:(?P<street3>.+?)\n)?)?ADMIN City:(?P<city>.+)\nADMIN State:(?P<state>.*)\nADMIN Postal Code:(?P<postalcode>.+)\nADMIN Country:(?P<country>[A-Z]+)\nADMIN Phone:(?P<phone>.*?)\nADMIN Fax:(?P<fax>.*)\nADMIN Email:(?P<email>.+)\n", # Realtime Register
+	"Admin ID:(?P<handle>.*)\nAdmin Name:(?P<name>.*)\n(?:Admin Organization:(?P<organization>.*)\n)?Admin Address?:(?P<street1>.*)\nAdmin City:(?P<city>.*)\nAdmin Province/state:(?P<state>.*)\nAdmin Country:(?P<country>.*)\nAdmin Postal Code:(?P<postalcode>.*)\nAdmin Phone:(?P<phone>.*)\n(?:Admin Phone Ext:(?P<phone_ext>.*)\n)?(?:Admin Fax:(?P<fax>.*)\n)?(?:Admin Fax Ext:(?P<fax_ext>.*)\n)?Admin Email:(?P<email>.*)", # Eranet
 ]
 
 billing_contact_regexes = [
