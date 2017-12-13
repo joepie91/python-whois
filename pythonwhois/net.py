@@ -11,10 +11,23 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
 		".ps": "whois.pnina.ps",
 		".buzz": "whois.nic.buzz",
 		".moe": "whois.nic.moe",
+		".arpa": "whois.iana.org",
+		".bid": "whois.nic.bid",
+		".int": "whois.iana.org",
+		".kred": "whois.nic.kred",
+		".nagoya": "whois.gmoregistry.net",
+		".nyc": "whois.nic.nyc",
+		".okinawa": "whois.gmoregistry.net",
+		".qpon": "whois.nic.qpon",
+		".sohu": "whois.gtld.knet.cn",
+		".tokyo": "whois.nic.tokyo",
+		".trade": "whois.nic.trade",
+		".webcam": "whois.nic.webcam",
+		".xn--rhqv96g": "whois.nic.xn--rhqv96g",
 		# The following is a bit hacky, but IANA won't return the right answer for example.com because it's a direct registration.
 		"example.com": "whois.verisign-grs.com"
 	}
-	
+
 	if rfc3490:
 		if sys.version_info < (3, 0):
 			domain = encode( domain if type(domain) is unicode else decode(domain, "utf8"), "idna" )
@@ -60,18 +73,22 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
 	if never_cut == False:
 		new_list = [response] + previous
 	server_list.append(target_server)
-	for line in [x.strip() for x in response.splitlines()]:
-		match = re.match("(refer|whois server|referral url|whois server|registrar whois):\s*([^\s]+\.[^\s]+)", line, re.IGNORECASE)
-		if match is not None:
-			referal_server = match.group(2)
-			if referal_server != server and "://" not in referal_server: # We want to ignore anything non-WHOIS (eg. HTTP) for now.
-				# Referal to another WHOIS server...
-				return get_whois_raw(domain, referal_server, new_list, server_list=server_list, with_server_list=with_server_list)
+	
+	# Ignore redirects from registries who publish the registrar data themselves
+	if target_server not in ('whois.nic.xyz',):
+		for line in [x.strip() for x in response.splitlines()]:
+			match = re.match("(refer|whois server|referral url|whois server|registrar whois):\s*([^\s]+\.[^\s]+)", line, re.IGNORECASE)
+			if match is not None:
+				referal_server = match.group(2)
+				if referal_server != server and "://" not in referal_server: # We want to ignore anything non-WHOIS (eg. HTTP) for now.
+					# Referal to another WHOIS server...
+					return get_whois_raw(domain, referal_server, new_list, server_list=server_list, with_server_list=with_server_list)
+				
 	if with_server_list:
 		return (new_list, server_list)
 	else:
 		return new_list
-	
+
 def get_root_server(domain):
 	data = whois_request(domain, "whois.iana.org")
 	for line in [x.strip() for x in data.splitlines()]:
@@ -80,7 +97,7 @@ def get_root_server(domain):
 			continue
 		return match.group(1)
 	raise shared.WhoisException("No root WHOIS server found for domain.")
-	
+
 def whois_request(domain, server, port=43):
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	sock.connect((server, port))
@@ -91,4 +108,4 @@ def whois_request(domain, server, port=43):
 		if len(data) == 0:
 			break
 		buff += data
-	return buff.decode("utf-8")
+	return buff.decode("utf-8", "replace")

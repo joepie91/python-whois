@@ -2,7 +2,7 @@ from __future__ import print_function
 import re, sys, datetime, csv, pkgutil
 from . import net, shared
 
-try: 
+try:
 	from io import StringIO
 except ImportError:
 	from cStringIO import StringIO
@@ -25,13 +25,22 @@ def read_dataset(filename, destination, abbrev_key, name_key, is_dict=False):
 			destination[line[abbrev_key]] = line[name_key]
 	except IOError as e:
 		pass
-	
+
+common_first_names = set()
 airports = {}
 countries = {}
 states_au = {}
 states_us = {}
 states_ca = {}
-	
+
+try:
+	reader = csv.DictReader(pkgdata("common_first_names.dat").splitlines())
+
+	for line in reader:
+		common_first_names.add(line["name"].lower())
+except IOError as e:
+	pass
+
 try:
 	reader = csv.reader(pkgdata("airports.dat").splitlines())
 
@@ -48,9 +57,17 @@ read_dataset("states_au.dat", states_au, 0, 1)
 read_dataset("states_us.dat", states_us, "abbreviation", "name", is_dict=True)
 read_dataset("states_ca.dat", states_ca, "abbreviation", "name", is_dict=True)
 
+# Because 'UK' is commonly used to refer to the United Kingdom, but formally not the ISO code...
+countries['UK'] = countries['GB']
+
+country_names = set([name.lower() for name in countries.values()])
+
 def precompile_regexes(source, flags=0):
 	return [re.compile(regex, flags) for regex in source]
-	
+
+def precompile_regexes_dict(source, flags=0):
+	return dict((key, re.compile(regex, flags)) for (key, regex) in source.items())
+
 grammar = {
 	"_data": {
 		'id':			['Domain ID:[ ]*(?P<val>.+)'],
@@ -127,8 +144,7 @@ grammar = {
 					 'Last updated on (?P<val>.+) [a-z]{3,4}',
 					 'Last updated:\s*(?P<val>.+)',
 					 'last-updated:\s*(?P<val>.+)',
-					 '\[Last Update\]\s*(?P<val>.+) \([A-Z]+\)',
-					 'Last update of whois database:\s?[a-z]{3}, (?P<val>.+) [a-z]{3,4}'],
+					 '\[Last Update\]\s*(?P<val>.+) \([A-Z]+\)'],
 		'registrar':		['registrar:\s*(?P<val>.+)',
 					 'Registrar:\s*(?P<val>.+)',
 					 'Sponsoring Registrar Organization:\s*(?P<val>.+)',
@@ -157,7 +173,8 @@ grammar = {
 					 '(?<=[ .]{2})(?P<val>[a-z0-9-]+\.d?ns[0-9]*\.([a-z0-9-]+\.)+[a-z0-9]+)',
 					 '(?<=[ .]{2})(?P<val>([a-z0-9-]+\.)+[a-z0-9]+)(\s+([0-9]{1,3}\.){3}[0-9]{1,3})',
 					 '(?<=[ .]{2})[^a-z0-9.-](?P<val>d?ns\.([a-z0-9-]+\.)+[a-z0-9]+)',
-                                         'Nserver:\s*(?P<val>.+)'],
+					 '^ *(?:Primary|Secondary|Third|Fourth) Server Hostname\.*: +(?P<val>.+)$',
+					 'Nserver:\s*(?P<val>.+)'],
 		'emails':		['(?P<val>[\w.-]+@[\w.-]+\.[\w]{2,6})', # Really need to fix this, much longer TLDs now exist...
 					 '(?P<val>[\w.-]+\sAT\s[\w.-]+\sDOT\s[\w]{2,6})']
 	},
@@ -200,6 +217,7 @@ grammar = {
 	}
 }
 
+# Regex modification utilities
 def preprocess_regex(regex):
 	# Fix for #2; prevents a ridiculous amount of varying size permutations.
 	regex = re.sub(r"\\s\*\(\?P<([^>]+)>\.\+\)", r"\s*(?P<\1>\S.*)", regex)
@@ -207,6 +225,18 @@ def preprocess_regex(regex):
 	# matching, since we're stripping results anyway.
 	regex = re.sub(r"\[ \]\*\(\?P<([^>]+)>\.\*\)", r"(?P<\1>.*)", regex)
 	return regex
+
+def dotify(string):
+	return "".join([char + r"\.?" for char in string])
+
+def commaify_dict(source):
+	return dict((key + ",", regex.replace("$", ",$")) for (key, regex) in source.items())
+
+def allow_trailing_comma_dict(regexes):
+	combined_dict = dict()
+	combined_dict.update(regexes)
+	combined_dict.update(commaify_dict(regexes))
+	return combined_dict
 
 registrant_regexes = [
 	"   Registrant:[ ]*\n      (?P<organization>.*)\n      (?P<name>.*)\n      (?P<street>.*)\n      (?P<city>.*), (?P<state>.*) (?P<postalcode>.*)\n      (?P<country>.*)\n(?:      Phone: (?P<phone>.*)\n)?      Email: (?P<email>.*)\n", # Corporate Domains, Inc.
@@ -230,12 +260,12 @@ registrant_regexes = [
 	"Registrant:[ ]*(?P<name>.+)\n[\s\S]*Eligibility Name:[ ]*(?P<organization>.+)\n[\s\S]*Registrant Contact ID:[ ]*(?P<handle>.+)\n", # .au business
 	"Eligibility Type:[ ]*Citizen\/Resident\n[\s\S]*Registrant Contact ID:[ ]*(?P<handle>.+)\n[\s\S]*Registrant Contact Name:[ ]*(?P<name>.+)\n", # .au individual
 	"Registrant:[ ]*(?P<organization>.+)\n[\s\S]*Eligibility Type:[ ]*(Higher Education Institution|Company|Incorporated Association|Other)\n[\s\S]*Registrant Contact ID:[ ]*(?P<handle>.+)\n[\s\S]*Registrant Contact Name:[ ]*(?P<name>.+)\n", # .au educational, company, 'incorporated association' (non-profit?), other (spotted for linux.conf.au, unsure if also for others)
-	"    Registrant:\n        (?P<name>.+)\n\n    Registrant type:\n        .*\n\n    Registrant's address:\n        The registrant .* opted to have", # Nominet (.uk) with hidden address
-	"    Registrant:\n        (?P<name>.+)\n\n[\s\S]*    Registrant type:\n        .*\n\n    Registrant's address:\n        (?P<street1>.+)\n(?:        (?P<street2>.+)\n(?:        (?P<street3>.+)\n)??)??        (?P<city>[^0-9\n]+)\n(?:        (?P<state>.+)\n)?        (?P<postalcode>.+)\n        (?P<country>.+)\n\n", # Nominet (.uk) with visible address
+	"    Registrant:\n        (?P<name>.+)\n\n(?:    Trading as:\s?\n        (?P<organization>.+)\n\n)?[\s\S]*    Registrant type:\n        .*\n\n    Registrant's address:\n        The registrant .* opted to have", # Nominet (.uk) with hidden address
+	"    Registrant:\n        (?P<name>.+)\n\n(?:    Trading as:\s?\n        (?P<organization>.+)\n\n)?[\s\S]*    Registrant type:\n        .*\n\n    Registrant's address:\n        (?P<street1>.+)\n(?:        (?P<street2>.+)\n(?:        (?P<street3>.+)\n)??)??        (?P<city>[^0-9\n]+)\n(?:        (?P<state>.+)\n)?        (?P<postalcode>.+)\n        (?P<country>.+)\n\n", # Nominet (.uk) with visible address
 	"Domain Owner:\n\t(?P<organization>.+)\n\n[\s\S]*?(?:Registrant Contact:\n\t(?P<name>.+))?\n\nRegistrant(?:'s)? (?:a|A)ddress:(?:\n\t(?P<street1>.+)\n(?:\t(?P<street2>.+)\n)?(?:\t(?P<street3>.+)\n)?\t(?P<city>.+)\n\t(?P<postalcode>.+))?\n\t(?P<country>.+)(?:\n\t(?P<phone>.+) \(Phone\)\n\t(?P<fax>.+) \(FAX\)\n\t(?P<email>.+))?\n\n", # .ac.uk - what a mess...
 	"Registrant ID: (?P<handle>.+)\nRegistrant: (?P<name>.+)\nRegistrant Contact Email: (?P<email>.+)", # .cn (CNNIC)
 	"Registrant contact:\n  (?P<name>.+)\n  (?P<street>.*)\n  (?P<city>.+), (?P<state>.+) (?P<postalcode>.+) (?P<country>.+)\n\n", # Fabulous.com
-	"registrant-name:\s*(?P<name>.+)\nregistrant-type:\s*(?P<type>.+)\nregistrant-address:\s*(?P<street>.+)\nregistrant-postcode:\s*(?P<postalcode>.+)\nregistrant-city:\s*(?P<city>.+)\nregistrant-country:\s*(?P<country>.+)\n(?:registrant-phone:\s*(?P<phone>.+)\n)?(?:registrant-email:\s*(?P<email>.+)\n)?", # Hetzner
+	"registrant-name:\s*(?P<name>.+)\n(?:registrant-organization:\s*(?P<organization>.*)\n)?registrant-type:\s*(?P<type>.+)\nregistrant-address:\s*(?P<street>.+)\nregistrant-postcode:\s*(?P<postalcode>.+)\nregistrant-city:\s*(?P<city>.+)\nregistrant-country:\s*(?P<country>.+)\n(?:registrant-phone:\s*(?P<phone>.+)\n)?(?:registrant-email:\s*(?P<email>.+)\n)?", # Hetzner
 	"Registrant Contact Information :[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication
 	"Contact Information : For Customer # [0-9]+[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication alternative (private WHOIS) format?
 	"Registrant:\n   Name:           (?P<name>.+)\n   City:           (?P<city>.+)\n   State:          (?P<state>.+)\n   Country:        (?P<country>.+)\n", # Akky (.com.mx)
@@ -248,6 +278,7 @@ registrant_regexes = [
 	"Registrant:\n(?P<organization1>.+)\n(?P<organization2>.+)\n(?P<street1>.+?)(?:,+(?P<street2>.+?)(?:,+(?P<street3>.+?)(?:,+(?P<street4>.+?)(?:,+(?P<street5>.+?)(?:,+(?P<street6>.+?)(?:,+(?P<street7>.+?))?)?)?)?)?)?,(?P<city>.+),(?P<country>.+)\n\n   Contact:\n      (?P<name>.+)   (?P<email>.+)\n      TEL:  (?P<phone>.+?)(?:(?:#|ext.?)(?P<phone_ext>.+))?\n      FAX:  (?P<fax>.+)(?:(?:#|ext.?)(?P<fax_ext>.+))?\n", # .com.tw (TWNIC/SEEDNET, Taiwanese companies only?)
 	"Registrant Contact Information:\n\nCompany English Name \(It should be the same as the registered/corporation name on your Business Register Certificate or relevant documents\):(?P<organization1>.+)\nCompany Chinese name:(?P<organization2>.+)\nAddress: (?P<street>.+)\nCountry: (?P<country>.+)\nEmail: (?P<email>.+)\n", # HKDNR (.hk)
 	"Registrant ID:(?P<handle>.+)\nRegistrant Name:(?P<name>.*)\n(?:Registrant Organization:(?P<organization>.*)\n)?Registrant Street1:(?P<street1>.+?)\n(?:Registrant Street2:(?P<street2>.+?)\n(?:Registrant Street3:(?P<street3>.+?)\n)?)?Registrant City:(?P<city>.+)\nRegistrant State:(?P<state>.*)\nRegistrant Postal Code:(?P<postalcode>.+)\nRegistrant Country:(?P<country>[A-Z]+)\nRegistrant Phone:(?P<phone>.*?)\nRegistrant Fax:(?P<fax>.*)\nRegistrant Email:(?P<email>.+)\n", # Realtime Register
+	"Organization Using Domain Name\n Organization Name\.+:(?P<name>.*)\n Street Address\.+:(?P<street1>.*)\n City\.+:(?P<city>.*)\n State\.+:(?P<state>.*)\n Postal Code\.+:(?P<postalcode>.*)\n Country\.+:(?P<country>.*)", # .ai
 	"owner:\s+(?P<name>.+)", # .br
 	"person:\s+(?P<name>.+)", # nic.ru (person)
 	"org:\s+(?P<organization>.+)", # nic.ru (organization)
@@ -271,7 +302,7 @@ tech_contact_regexes = [
 	"Technical Contacts\n  Name:             (?P<name>.+)\n(?:  Organization:     (?P<organization>.+)\n)?  ContactID:        (?P<handle>.+)\n(?:  Address:          (?P<street1>.+)\n(?:                    (?P<street2>.+)\n(?:                    (?P<street3>.+)\n)?)?                    (?P<city>.+)\n                    (?P<postalcode>.+)\n                    (?P<state>.+)\n                    (?P<country>.+)\n)?(?:  Created:          (?P<creationdate>.+)\n)?(?:  Last Update:      (?P<changedate>.+)\n)?", # nic.it  //  NOTE: Why does this say 'Contacts'? Can it have multiple?
 	"Tech Name[.]* (?P<name>.*)\n  Tech Address[.]* (?P<street1>.*)\n  Tech Address[.]* (?P<street2>.*)\n(?:  Tech Address[.]* (?P<street3>.*)\n)?  Tech Address[.]* (?P<city>.*)\n  Tech Address[.]* (?P<postalcode>.*)\n  Tech Address[.]* (?P<state>.*)\n  Tech Address[.]* (?P<country>.*)\n  Tech Email[.]* (?P<email>.*)\n  Tech Phone[.]* (?P<phone>.*)\n  Tech Fax[.]* (?P<fax>.*)", # Melbourne IT
 	"Technical contact:\n(?:  (?P<organization>.+)\n)?  (?P<name>.+)\n  (?P<email>.+)\n  (?P<street>.+)\n  (?P<city>.+), (?P<state>.+) (?P<postalcode>.+) (?P<country>.+)\n  Phone: (?P<phone>.*)\n  Fax: (?P<fax>.*)\n", # Fabulous.com
-	"tech-c-name:\s*(?P<name>.+)\ntech-c-type:\s*(?P<type>.+)\ntech-c-address:\s*(?P<street>.+)\ntech-c-postcode:\s*(?P<postalcode>.+)\ntech-c-city:\s*(?P<city>.+)\ntech-c-country:\s*(?P<country>.+)\n(?:tech-c-phone:\s*(?P<phone>.+)\n)?(?:tech-c-email:\s*(?P<email>.+)\n)?", # Hetzner
+	"tech-c-name:\s*(?P<name>.+)\n(?:tech-c-organization:\s*(?P<organization>.*)\n)?tech-c-type:\s*(?P<type>.+)\ntech-c-address:\s*(?P<street>.+)\ntech-c-postcode:\s*(?P<postalcode>.+)\ntech-c-city:\s*(?P<city>.+)\ntech-c-country:\s*(?P<country>.+)\n(?:tech-c-phone:\s*(?P<phone>.+)\n)?(?:tech-c-email:\s*(?P<email>.+)\n)?", # Hetzner
 	"Admin Contact Information :[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication
 	"   Technical contact:\n      (?P<name>.+)\n      (?P<organization>.*)\n      (?P<street>.+)\n      (?P<city>.+) (?P<state>\S+),[ ]+(?P<postalcode>.+)\n      (?P<country>.+)\n      (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)", # .am
 	"Technical:\n\s*Name:\s*(?P<name>.*)\n\s*Organisation:\s*(?P<organization>.*)\n\s*Language:.*\n\s*Phone:\s*(?P<phone>.*)\n\s*Fax:\s*(?P<fax>.*)\n\s*Email:\s*(?P<email>.*)\n", # EURid
@@ -286,6 +317,7 @@ tech_contact_regexes = [
 	"   Technical Contact:\n      (?P<name>.+)  (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)\n", # .com.tw (Western registrars)
 	"Technical Contact Information:\n\n(?:Given name: (?P<firstname>.+)\n)?(?:Family name: (?P<lastname>.+)\n)?(?:Company name: (?P<organization>.+)\n)?Address: (?P<street>.+)\nCountry: (?P<country>.+)\nPhone: (?P<phone>.*)\nFax: (?P<fax>.*)\nEmail: (?P<email>.+)\n(?:Account Name: (?P<handle>.+)\n)?", # HKDNR (.hk)
 	"TECH ID:(?P<handle>.+)\nTECH Name:(?P<name>.*)\n(?:TECH Organization:(?P<organization>.*)\n)?TECH Street1:(?P<street1>.+?)\n(?:TECH Street2:(?P<street2>.+?)\n(?:TECH Street3:(?P<street3>.+?)\n)?)?TECH City:(?P<city>.+)\nTECH State:(?P<state>.*)\nTECH Postal Code:(?P<postalcode>.+)\nTECH Country:(?P<country>[A-Z]+)\nTECH Phone:(?P<phone>.*?)\nTECH Fax:(?P<fax>.*)\nTECH Email:(?P<email>.+)\n", # Realtime Register
+	"Technical Contact\n NIC Handle \(if known\)\.+:(?P<handle>.*)\n \(I\)ndividual \(R\)ole\.+:(?P<role>.*)\n Name \(Last, First\)\.+:(?P<name>.*)\n Organization Name\.+:(?P<organization>.*)\n Street Address\.+:(?P<street1>.*)\n City\.+: (?P<city>.*)\n State\.+: (?P<state>.*)\n Postal Code\.+:(?P<postalcode>.*)\n Country\.+:(?P<country>.*)\n Phone Number\.+:(?P<phone>.*)\n Fax Number\.+:(?P<fax>.*)\n E-Mailbox\.+:(?P<email>.*)", # .ai
 ]
 
 admin_contact_regexes = [
@@ -304,7 +336,7 @@ admin_contact_regexes = [
 	"Admin Contact\n  Name:             (?P<name>.+)\n(?:  Organization:     (?P<organization>.+)\n)?  ContactID:        (?P<handle>.+)\n(?:  Address:          (?P<street1>.+)\n(?:                    (?P<street2>.+)\n(?:                    (?P<street3>.+)\n)?)?                    (?P<city>.+)\n                    (?P<postalcode>.+)\n                    (?P<state>.+)\n                    (?P<country>.+)\n)?(?:  Created:          (?P<creationdate>.+)\n)?(?:  Last Update:      (?P<changedate>.+)\n)?", # nic.it
 	"Admin Name[.]* (?P<name>.*)\n  Admin Address[.]* (?P<street1>.*)\n  Admin Address[.]* (?P<street2>.*)\n(?:  Admin Address[.]* (?P<street3>.*)\n)?  Admin Address[.]* (?P<city>.*)\n  Admin Address[.]* (?P<postalcode>.*)\n  Admin Address[.]* (?P<state>.*)\n  Admin Address[.]* (?P<country>.*)\n  Admin Email[.]* (?P<email>.*)\n  Admin Phone[.]* (?P<phone>.*)\n  Admin Fax[.]* (?P<fax>.*)", # Melbourne IT
 	"Administrative contact:\n(?:  (?P<organization>.+)\n)?  (?P<name>.+)\n  (?P<email>.+)\n  (?P<street>.+)\n  (?P<city>.+), (?P<state>.+) (?P<postalcode>.+) (?P<country>.+)\n  Phone: (?P<phone>.*)\n  Fax: (?P<fax>.*)\n", # Fabulous.com
-	"admin-c-name:\s*(?P<name>.+)\nadmin-c-type:\s*(?P<type>.+)\nadmin-c-address:\s*(?P<street>.+)\nadmin-c-postcode:\s*(?P<postalcode>.+)\nadmin-c-city:\s*(?P<city>.+)\nadmin-c-country:\s*(?P<country>.+)\n(?:admin-c-phone:\s*(?P<phone>.+)\n)?(?:admin-c-email:\s*(?P<email>.+)\n)?", # Hetzner
+	"admin-c-name:\s*(?P<name>.+)\n(?:admin-c-organization:\s*(?P<organization>.*)\n)?admin-c-type:\s*(?P<type>.+)\nadmin-c-address:\s*(?P<street>.+)\nadmin-c-postcode:\s*(?P<postalcode>.+)\nadmin-c-city:\s*(?P<city>.+)\nadmin-c-country:\s*(?P<country>.+)\n(?:admin-c-phone:\s*(?P<phone>.+)\n)?(?:admin-c-email:\s*(?P<email>.+)\n)?", # Hetzner
 	"Tech Contact Information :[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication
 	"   Administrative contact:\n      (?P<name>.+)\n      (?P<organization>.*)\n      (?P<street>.+)\n      (?P<city>.+) (?P<state>\S+),[ ]+(?P<postalcode>.+)\n      (?P<country>.+)\n      (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)", # .am
 	"Administrative Contact:\n   Name:           (?P<name>.+)\n   City:           (?P<city>.+)\n   State:          (?P<state>.+)\n   Country:        (?P<country>.+)\n", # Akky (.com.mx)
@@ -312,6 +344,7 @@ admin_contact_regexes = [
 	"   Administrative Contact:\n      (?P<name>.+)  (?P<email>.+)\n      (?P<phone>.*)\n      (?P<fax>.*)\n", # .com.tw (Western registrars)
 	"Administrative Contact Information:\n\n(?:Given name: (?P<firstname>.+)\n)?(?:Family name: (?P<lastname>.+)\n)?(?:Company name: (?P<organization>.+)\n)?Address: (?P<street>.+)\nCountry: (?P<country>.+)\nPhone: (?P<phone>.*)\nFax: (?P<fax>.*)\nEmail: (?P<email>.+)\n(?:Account Name: (?P<handle>.+)\n)?", # HKDNR (.hk)
 	"ADMIN ID:(?P<handle>.+)\nADMIN Name:(?P<name>.*)\n(?:ADMIN Organization:(?P<organization>.*)\n)?ADMIN Street1:(?P<street1>.+?)\n(?:ADMIN Street2:(?P<street2>.+?)\n(?:ADMIN Street3:(?P<street3>.+?)\n)?)?ADMIN City:(?P<city>.+)\nADMIN State:(?P<state>.*)\nADMIN Postal Code:(?P<postalcode>.+)\nADMIN Country:(?P<country>[A-Z]+)\nADMIN Phone:(?P<phone>.*?)\nADMIN Fax:(?P<fax>.*)\nADMIN Email:(?P<email>.+)\n", # Realtime Register
+	"Administrative Contact\n NIC Handle \(if known\)\.+:(?P<handle>.*)\n \(I\)ndividual \(R\)ole\.+:(?P<role>.*)\n Name \(Last, First\)\.+:(?P<name>.*)\n Organization Name\.+:(?P<organization>.*)\n Street Address\.+:(?P<street1>.*)\n City\.+: (?P<city>.*)\n State\.+: (?P<state>.*)\n Postal Code\.+:(?P<postalcode>.*)\n Country\.+:(?P<country>.*)\n Phone Number\.+:(?P<phone>.*)\n Fax Number\.+:(?P<fax>.*)\n E-Mailbox\.+:(?P<email>.*)", # .ai
 ]
 
 billing_contact_regexes = [
@@ -329,6 +362,7 @@ billing_contact_regexes = [
 	"Billing Contact Information :[ ]*\n[ ]+(?P<firstname>.*)\n[ ]+(?P<lastname>.*)\n[ ]+(?P<organization>.*)\n[ ]+(?P<email>.*)\n[ ]+(?P<street>.*)\n[ ]+(?P<city>.*)\n[ ]+(?P<postalcode>.*)\n[ ]+(?P<phone>.*)\n[ ]+(?P<fax>.*)\n\n", # GAL Communication
 	"Billing Contact:\n   Name:           (?P<name>.+)\n   City:           (?P<city>.+)\n   State:          (?P<state>.+)\n   Country:        (?P<country>.+)\n", # Akky (.com.mx)
 	"BILLING ID:(?P<handle>.+)\nBILLING Name:(?P<name>.*)\n(?:BILLING Organization:(?P<organization>.*)\n)?BILLING Street1:(?P<street1>.+?)\n(?:BILLING Street2:(?P<street2>.+?)\n(?:BILLING Street3:(?P<street3>.+?)\n)?)?BILLING City:(?P<city>.+)\nBILLING State:(?P<state>.*)\nBILLING Postal Code:(?P<postalcode>.+)\nBILLING Country:(?P<country>[A-Z]+)\nBILLING Phone:(?P<phone>.*?)\nBILLING Fax:(?P<fax>.*)\nBILLING Email:(?P<email>.+)\n", # Realtime Register
+	"Billing Contact\n NIC Handle \(if known\)\.+:(?P<handle>.*)\n \(I\)ndividual \(R\)ole\.+:(?P<role>.*)\n Name \(Last, First\)\.+:(?P<name>.*)\n Organization Name\.+:(?P<organization>.*)\n Street Address\.+:(?P<street1>.*)\n City\.+: (?P<city>.*)\n State\.+: (?P<state>.*)\n Postal Code\.+:(?P<postalcode>.*)\n Country\.+:(?P<country>.*)\n Phone Number\.+:(?P<phone>.*)\n Fax Number\.+:(?P<fax>.*)\n E-Mailbox\.+:(?P<email>.*)", # .ai
 ]
 
 # Some registries use NIC handle references instead of directly listing contacts...
@@ -377,35 +411,68 @@ nic_contact_regexes = [
 	"nic-hdl:\s*(?P<handle>.+)\ntype:\s*(?P<type>.+)\ncontact:\s*(?P<name>.+)\n(?:.+\n)*?(?:address:\s*(?P<street1>.+)\n)?(?:address:\s*(?P<street2>.+)\n)?(?:address:\s*(?P<street3>.+)\n)?(?:address:\s*(?P<street4>.+)\n)?country:\s*(?P<country>.+)\n(?:phone:\s*(?P<phone>.+)\n)?(?:fax-no:\s*(?P<fax>.+)\n)?(?:.+\n)*?(?:e-mail:\s*(?P<email>.+)\n)?(?:.+\n)*?changed:\s*(?P<changedate>[0-9]{2}\/[0-9]{2}\/[0-9]{4}).*\n", # AFNIC madness with country field
 ]
 
-organization_regexes = (
-	r"\sltd\.?($|\s)",
-	r"\sco\.?($|\s)",
-	r"\scorp\.?($|\s)",
-	r"\sinc\.?($|\s)",
-	r"\ss\.?p\.?a\.?($|\s)",
-	r"\ss\.?(c\.?)?r\.?l\.?($|\s)",
-	r"\ss\.?a\.?s\.?($|\s)",
-	r"\sa\.?g\.?($|\s)",
-	r"\sn\.?v\.?($|\s)",
-	r"\sb\.?v\.?($|\s)",
-	r"\sp\.?t\.?y\.?($|\s)",
-	r"\sp\.?l\.?c\.?($|\s)",
-	r"\sv\.?o\.?f\.?($|\s)",
-	r"\sb\.?v\.?b\.?a\.?($|\s)",
-	r"\sg\.?m\.?b\.?h\.?($|\s)",
-	r"\ss\.?a\.?r\.?l\.?($|\s)",
+abbreviated_organization_regexes = (
+	r"(?:^|\s|,)ltd\.?($|\s)",
+	r"(?:^|\s|,)co\.?($|\s)",
+	r"(?:^|\s|,)corp\.?($|\s)",
+	r"(?:^|\s|,)inc\.?($|\s)",
+	r"(?:^|\s|,)s\.?p\.?a\.?($|\s)",
+	r"(?:^|\s|,)s\.?(c\.?)?r\.?l\.?($|\s)",
+	r"(?:^|\s|,)s\.?a\.?s\.?($|\s)",
+	r"(?:^|\s|,)a\.?g\.?($|\s)",
+	r"(?:^|\s|,)n\.?v\.?($|\s)",
+	r"(?:^|\s|,)b\.?v\.?($|\s)",
+	r"(?:^|\s|,)p\.?t\.?y\.?($|\s)",
+	r"(?:^|\s|,)p\.?l\.?c\.?($|\s)",
+	r"(?:^|\s|,)v\.?o\.?f\.?($|\s)",
+	r"(?:^|\s|,)b\.?v\.?b\.?a\.?($|\s)",
+	r"(?:^|\s|,)g\.?m\.?b\.?h\.?($|\s)",
+	r"(?:^|\s|,)s\.?a\.?r\.?l\.?($|\s)",
+	r"(?:^|\s|,)g\.?b\.?r\.?($|\s)",
+	r"(?:^|\s|,)s\.?r\.?o\.?($|\s)",
 )
 
-grammar["_data"]["id"] = precompile_regexes(grammar["_data"]["id"], re.IGNORECASE)
-grammar["_data"]["status"] = precompile_regexes(grammar["_data"]["status"], re.IGNORECASE)
-grammar["_data"]["creation_date"] = precompile_regexes(grammar["_data"]["creation_date"], re.IGNORECASE)
-grammar["_data"]["expiration_date"] = precompile_regexes(grammar["_data"]["expiration_date"], re.IGNORECASE)
-grammar["_data"]["updated_date"] = precompile_regexes(grammar["_data"]["updated_date"], re.IGNORECASE)
-grammar["_data"]["registrar"] = precompile_regexes(grammar["_data"]["registrar"], re.IGNORECASE)
-grammar["_data"]["whois_server"] = precompile_regexes(grammar["_data"]["whois_server"], re.IGNORECASE)
-grammar["_data"]["nameservers"] = precompile_regexes(grammar["_data"]["nameservers"], re.IGNORECASE)
-grammar["_data"]["emails"] = precompile_regexes(grammar["_data"]["emails"], re.IGNORECASE)
+organization_regexes = (
+	r"(?:^|\s|,)limited\.?($|\s|,)",
+	r"(?:^|\s|,)holdings\.?($|\s|,)",
+	r"(?:^|\s|,)(?:in)?corporat(?:ed?|ion)\.?($|\s|,)",
+	r"(?:^|\s|,)company\.?($|\s|,)",
+	r"(?:^|\s|,)operations\.?($|\s|,)",
+	r"(?:^|\s|,)association\.?($|\s|,)",
+	r"(?:^|\s|,)council\.?($|\s|,)",
+	r"(?:^|\s|,)university\.?($|\s|,)",
+	r"(?:^|\s|,)college\.?($|\s|,)",
+	r"(?:^|\s|,)services?\.?($|\s|,)",
+	r"(?:^|\s|,)cabinet\.?($|\s|,)",
+	r"(?:^|\s|,)billing\.?($|\s|,)",
+	r"(?:^|\s|,)administration\.?($|\s|,)",
+)
 
+known_abbreviations = allow_trailing_comma_dict({
+	"GPO Box": r"gpo box",
+	"OVH": r"^ovh\.?$",
+	"GmbH": r"^gmbh$",
+	"Inc.": r"^inc\.?$",
+	"of": r"^of$",
+	"Ltd.": r"^ltd\.?$",
+	"Pty": r"^pty\.?$",
+	"Co.": r"^co\.$",
+	"SARL": r"^sarl$",
+	"d/b/a": r"^(?:d\/b\/a|dba)$",
+})
+
+role_regexes = (
+	r"(?:^|\s|,)administrator\.?($|\s|,)",
+)
+
+country_regexes = [r"(?:\s|,)" + dotify(country_code.upper()) + r"($|\s)" for country_code in countries.keys()]
+
+for key in ('id', 'status', 'creation_date', 'expiration_date', 'updated_date', 'registrar', 'whois_server', 'nameservers', 'emails'):
+	grammar["_data"][key] = precompile_regexes(grammar["_data"][key], re.IGNORECASE)
+
+for key in ('registrant', 'tech', 'admin', 'billing'):
+	nic_contact_references[key] = precompile_regexes(nic_contact_references[key])
+	
 grammar["_dateformats"] = precompile_regexes(grammar["_dateformats"], re.IGNORECASE)
 
 registrant_regexes = precompile_regexes(registrant_regexes)
@@ -413,12 +480,18 @@ tech_contact_regexes = precompile_regexes(tech_contact_regexes)
 billing_contact_regexes = precompile_regexes(billing_contact_regexes)
 admin_contact_regexes = precompile_regexes(admin_contact_regexes)
 nic_contact_regexes = precompile_regexes(nic_contact_regexes)
-organization_regexes = precompile_regexes(organization_regexes, re.IGNORECASE)
 
-nic_contact_references["registrant"] = precompile_regexes(nic_contact_references["registrant"])
-nic_contact_references["tech"] = precompile_regexes(nic_contact_references["tech"])
-nic_contact_references["admin"] = precompile_regexes(nic_contact_references["admin"])
-nic_contact_references["billing"] = precompile_regexes(nic_contact_references["billing"])
+role_regexes = precompile_regexes(role_regexes, re.IGNORECASE)
+organization_regexes = precompile_regexes(organization_regexes, re.IGNORECASE)
+abbreviated_organization_regexes = precompile_regexes(abbreviated_organization_regexes, re.IGNORECASE)
+country_regexes = precompile_regexes(country_regexes)
+
+known_abbreviations = precompile_regexes_dict(known_abbreviations, re.IGNORECASE)
+
+duplicate_spaces = re.compile(" {2,}")
+non_name_characters = ''.join(char for char in map(chr, range(256)) if not char.isalpha())
+name_separators = re.compile(r'[, ]+')
+comma_without_space = re.compile(r',([a-z])', re.IGNORECASE)
 
 if sys.version_info < (3, 0):
 	def is_string(data):
@@ -429,6 +502,8 @@ else:
 		"""Test for string with support for python 3."""
 		return isinstance(data, str)
 
+def filter_characters(string, delete_characters):
+	return ''.join([char for char in string if char not in delete_characters])
 
 def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_server=""):
 	normalized = normalized or []
@@ -452,12 +527,12 @@ def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_
 									data[rule_key] = [val]
 
 		# Whois.com is a bit special... Fabulous.com also seems to use this format. As do some others.
-		match = re.search("^\s?Name\s?[Ss]ervers:?\s*\n((?:\s*.+\n)+?\s?)\n", segment, re.MULTILINE)
+		match = re.search("^\s?Name\s?[Ss]ervers:?\s*\n((?:\s*.+\n)+?\s?)(?:\n|$)", segment, re.MULTILINE)
 		if match is not None:
 			chunk = match.group(1)
 			for match in re.findall("[ ]*(.+)\n", chunk):
 				if match.strip() != "":
-					if not re.match("^[a-zA-Z]+:", match):
+					if not re.match("^[a-zA-Z .]+:", match):
 						try:
 							data["nameservers"].append(match.strip())
 						except KeyError as e:
@@ -553,7 +628,7 @@ def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_
 					data["nameservers"].append(match.strip())
 				except KeyError as e:
 					data["nameservers"] = [match.strip()]
-		
+
 
 	data["contacts"] = parse_registrants(raw_data, never_query_handles, handle_server)
 
@@ -592,7 +667,6 @@ def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_
 	except KeyError as e:
 		pass # Not present
 
-	# Remove e-mail addresses if they are already listed for any of the contacts
 	known_emails = []
 	for contact in ("registrant", "tech", "admin", "billing"):
 		if data["contacts"][contact] is not None:
@@ -600,6 +674,8 @@ def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_
 				known_emails.append(data["contacts"][contact]["email"])
 			except KeyError as e:
 				pass # No e-mail recorded for this contact...
+		
+	# Remove e-mail addresses if they are already listed for any of the contacts
 	try:
 		data['emails'] = [email for email in data["emails"] if email not in known_emails]
 	except KeyError as e:
@@ -645,7 +721,148 @@ def normalize_data(data, normalized):
 				for country, source in (("united states", states_us), ("australia", states_au), ("canada", states_ca)):
 					if country in contact["country"].lower() and contact["state"] in source:
 						contact["state"] = source[contact["state"]]
+					
+
+			# Some registries (eg. Instra via .ai) may duplicate the name of a person into the organization field
+			if 'name' in contact and 'organization' in contact and contact['name'] == contact['organization']:
+				del contact['organization']
 			
+			new_organization_lines = []
+			new_name_lines = []
+			
+			for key in list(contact.keys()):
+				# First deduplication pass
+				if is_string(contact[key]):
+					if key in ('organization', 'name'):
+						contact[key] = deduplicate(contact[key], fuzzy=True)
+					else:
+						contact[key] = deduplicate(contact[key])
+			
+			if 'name' in contact:
+				name_lines = [x.strip() for x in contact["name"].splitlines()]
+			else:
+				name_lines = []
+							
+			if 'organization' in contact:
+				organization_lines = [x.strip() for x in contact["organization"].splitlines()]
+			else:
+				organization_lines = []
+				
+			# Move names that look like organizations, to the organization field
+			for i, line in enumerate(name_lines):
+				if 'type' in contact and contact['type'].lower() == "person":
+					# To deal with sole proprietors who name their company after themselves
+					is_organization = is_organization_name(line)
+				else:
+					is_organization = is_organization_name(line) or is_fuzzy_duplicate(line, organization_lines)
+				
+				if is_organization:
+					if "," in line:
+						name_words = re.split(name_separators, line)
+						if is_full_incorporation_form(name_words[0]):
+							line = reverse_name_comma(line)
+					
+					new_organization_lines.append(line)
+					del name_lines[i]
+				
+			# ... and move organizations that look like names, to the name field.
+			for i, line in enumerate(organization_lines):
+				is_name = is_person_name(line)
+				is_organization = is_organization_name(line)
+
+				if is_name == True and is_organization == False:
+					new_name_lines.append(line)
+					del organization_lines[i]
+				
+			combined_name_lines = name_lines + new_name_lines
+			combined_organization_lines = new_organization_lines + organization_lines
+			
+			if len(combined_name_lines) > 0:
+				contact["name"] = "\n".join(combined_name_lines)
+			elif 'name' in contact:
+				del contact["name"]
+				
+			if len(combined_organization_lines) > 0:
+				contact["organization"] = "\n".join(combined_organization_lines)
+			elif 'organization' in contact:
+				del contact["organization"]
+				
+			new_roles = []
+				
+			if 'name' in contact:
+				# Check whether the name is reversed; first name last, last name first.
+				names = contact['name'].splitlines()
+				unswapped_names = []
+				
+				for name in names:
+					if "," in name:
+						name = reverse_name_comma(name)
+					else:
+						# Split the name into normalized (ie. alpha-only) 'words' for comparison. We only care about ASCII, as our first-name
+						# list currently only contains English names.
+						name_words = [filter_characters(segment, non_name_characters) for segment in name.split()]
+
+						if len(name_words) > 1 and is_first_name(name_words[-1]) and not is_first_name(name_words[0]):
+							# The last 'word' was in the common first names, but the first one was not. Likely swapped around.
+							name = reverse_name(name)
+							
+					if is_role(name):
+						new_roles.append(name)
+					else:
+						unswapped_names.append(name)
+					
+				if len(unswapped_names) > 0:
+					contact['name'] = "\n".join(unswapped_names)
+				else:
+					del contact['name']
+				
+			if 'organization' in contact:
+				organizations = contact['organization'].splitlines()
+				new_organizations = []
+				
+				for organization in organizations:
+					if is_role(organization):
+						new_roles.append(organization)
+					else:
+						new_organizations.append(organization)
+						
+				if len(new_organizations) > 0:
+					contact['organization'] = "\n".join(new_organizations)
+				else:
+					del contact['organization']
+					
+			if 'street' in contact:
+				streets = contact['street'].splitlines()
+				
+				if is_role(streets[0]):
+					new_roles.append(streets[0])
+					streets = streets[1:]
+					
+				contact['street'] = "\n".join(streets)
+				
+			if 'role' in contact:
+				existing_roles = contact['role'].splitlines()
+			else:
+				existing_roles = []
+				
+			if len(new_roles) > 0:
+				contact['role'] = "\n".join(new_roles + existing_roles)
+
+			if "street" in contact:
+				lines = [x.strip() for x in contact["street"].splitlines()]
+				if len(lines) > 1:
+					if is_organization_name(lines[0], include_countries=False):
+						if "organization" in contact:
+							organizations = contact["organization"].splitlines()
+						else:
+							organizations = []
+
+						contact["organization"] = "\n".join([lines[0]] + organizations)
+						contact["street"] = "\n".join(lines[1:])
+							
+			if 'organization' in contact:
+				contact['organization'] = re.sub(comma_without_space, r", \1", contact['organization'])
+				
 			for key in ("email",):
 				if key in contact and contact[key] is not None and (normalized == True or key in normalized):
 					if is_string(contact[key]):
@@ -653,54 +870,200 @@ def normalize_data(data, normalized):
 					else:
 						contact[key] = [item.lower() for item in contact[key]]
 
+			for key in ("street",):
+				if key in contact and contact[key] is not None and (normalized == True or key in normalized):
+					for phrase in ("GPO Box",):
+						regex = known_abbreviations[phrase]
+						contact[key] = re.sub(regex, phrase, contact[key])
+					
 			for key in ("name", "street"):
 				if key in contact and contact[key] is not None and (normalized == True or key in normalized):
 					contact[key] = normalize_name(contact[key], abbreviation_threshold=3)
 
-			for key in ("city", "organization", "state", "country"):
+			for key in ("role", "city", "organization", "state", "country"):
 				if key in contact and contact[key] is not None and (normalized == True or key in normalized):
-					contact[key] = normalize_name(contact[key], abbreviation_threshold=3, length_threshold=3)
-			
-			if "name" in contact and "organization" not in contact:
-				lines = [x.strip() for x in contact["name"].splitlines()]
-				new_lines = []
-				for i, line in enumerate(lines):
-					for regex in organization_regexes:
-						if re.search(regex, line):
-							new_lines.append(line)
-							del lines[i]
-							break
-				if len(lines) > 0:
-					contact["name"] = "\n".join(lines)
-				else:
-					del contact["name"]
-					
-				if len(new_lines) > 0:
-					contact["organization"] = "\n".join(new_lines)
-						
-			if "street" in contact and "organization" not in contact:
-				lines = [x.strip() for x in contact["street"].splitlines()]
-				if len(lines) > 1:
-					for regex in organization_regexes:
-						if re.search(regex, lines[0]):
-							contact["organization"] = lines[0]
-							contact["street"] = "\n".join(lines[1:])
-							break
-			
+					contact[key] = normalize_name(contact[key], abbreviation_threshold=3, length_threshold=3, check_known_incorrect=True)
+
 			for key in list(contact.keys()):
-				try:
+				# Certain registries like .co.th have HTML entities in their WHOIS data...
+				if is_string(contact[key]):
+					contact[key] = contact[key].replace("&lt;", "<")
+					contact[key] = contact[key].replace("&gt;", ">")
+					contact[key] = contact[key].replace("&nbsp;", " ")
+					contact[key] = contact[key].replace("&amp;", "&")
+
 					contact[key] = contact[key].strip(", ")
-					if contact[key] == "-" or contact[key].lower() == "n/a":
+					contact[key] = re.sub(duplicate_spaces, " ", contact[key])
+					
+					# Second deduplication pass
+					if key in ('organization', 'name'):
+						contact[key] = deduplicate(contact[key], fuzzy=True)
+					else:
+						contact[key] = deduplicate(contact[key])
+					
+					if contact[key] == "-" or contact[key].lower() == "n/a" or contact[key].lower() == "null":
 						del contact[key]
-				except AttributeError as e:
-					pass # Not a string
+		
+		if contact is not None and len(contact) == 0:
+			# We don't have any actual data.
+			data['contacts'][contact_type] = None
 	return data
 
-def normalize_name(value, abbreviation_threshold=4, length_threshold=8, lowercase_domains=True, ignore_nic=False):
+def deduplicate(value, fuzzy=False):
+	lines = value.splitlines()
+	unique_lines = []
+	
+	# Filter out obviously identical lines first.
+	for i, line in enumerate(lines):
+		if line not in unique_lines:
+			unique_lines.append(line)
+	
+	if fuzzy == True:
+		# Do a fuzzy comparison to the shortest line for the remainder...
+		duplicates = get_fuzzy_duplicates(unique_lines)
+		
+		if len(duplicates) > 1:
+			longest_duplicate = max(duplicates, key=len)
+			duplicates.remove(longest_duplicate)
+			
+			for duplicate in duplicates:
+				unique_lines.remove(duplicate)
+	
+	return "\n".join(unique_lines)
+	
+def is_fuzzy_duplicate(line, other_lines):
+	if len(other_lines) == 0:
+		return False
+	
+	duplicates = get_fuzzy_duplicates([line] + other_lines)
+	return (len(duplicates) > 1 and line in duplicates)
+	
+def get_fuzzy_duplicates(lines):
+	shortest = min(lines, key=len)
+	words = re.split(name_separators, shortest)
+
+	return [line for line in lines if not fuzzy_word_match(line, words)]
+	
+def fuzzy_word_match(line, words):
+	unique = False
+	for word in words:
+		if word.lower() not in line.lower():
+			unique = True
+
+	return unique
+
+def is_organization_name(name, include_countries=True):
+	if is_incorporation_form(name):
+		return True
+		
+	# Special (common) cases
+	if name.lower() in ('neustar',):
+		return True
+		
+	if include_countries == True:
+		if is_country(name):
+			return True
+		
+	return False
+
+def is_person_name(name):
+	name_segments = re.split(name_separators, name)
+					
+	for segment in name_segments:
+		if is_first_name(segment):
+			return True
+		
+	return False
+
+def is_first_name(name):
+	return (name.lower() in common_first_names)
+
+def is_abbreviation(word, abbreviation_threshold):
+	is_regular_abbreviation = not (len(word) >= abbreviation_threshold and "." not in word)
+	return (is_regular_abbreviation or is_abbreviated_incorporation_form(word) or is_country(word))
+
+def is_domain(word):
+	return ("." in word and not word.endswith(".") and not word.startswith("."))
+
+def is_incorporation_form(word):
+	return (is_abbreviated_incorporation_form(word) or is_full_incorporation_form(word))
+
+def is_full_incorporation_form(word):
+	return match_regexes(word, organization_regexes)
+	
+def is_abbreviated_incorporation_form(word):
+	return match_regexes(word, abbreviated_organization_regexes)
+
+def is_role(line):
+	return match_regexes(line, role_regexes) 
+	
+def is_country(word):
+	return match_regexes(word, country_regexes)
+
+def is_known_abbreviation(word):
+	return match_regexes(word, known_abbreviations.values())
+
+def has_country(line, country):
+	return country in line.lower()
+
+def has_incorrect_known_abbreviation(line):
+	for word in line.split():
+		for sub, regex in known_abbreviations.items():
+			if re.search(regex, word):
+				if sub not in word:
+					return True
+	
+	return False
+
+# TODO: Cache/memoize lookup results?
+def get_known_abbreviation(word):
+	return match_regexes_dict(word, known_abbreviations)
+
+def match_regexes(string, regexes):
+	for regex in regexes:
+		if re.search(regex, string):
+			return True
+		
+	return False
+
+def match_regexes_dict(string, regexes):
+	for sub, regex in regexes.items():
+		if re.search(regex, string):
+			return sub
+		
+	raise Error("No matching values.")
+	
+def capitalize_words(line):
+	return ' '.join([word.capitalize() for word in line.split(" ")])
+
+def reverse_name(name):
+	name_segments = re.split(name_separators, name)
+	name_segments.insert(0, name_segments.pop())
+	return ' '.join(name_segments)
+
+def reverse_name_comma(name):
+	name_segments = [segment.strip() for segment in name.split(",")]
+	first_segment = name_segments.pop()
+	return first_segment + " " + ', '.join(name_segments)
+
+def normalize_word(word, abbreviation_threshold=4, lowercase_domains=True, never_abbreviations=[]):
+	if word.lower() in never_abbreviations:
+		return word.capitalize()
+	elif is_known_abbreviation(word):
+		return get_known_abbreviation(word)
+	elif not is_abbreviation(word, abbreviation_threshold):
+		return word.capitalize()
+	elif lowercase_domains and is_domain(word):
+		return word.lower()
+	else:
+		# Probably an abbreviation or domain, leave it alone
+		return word
+
+def normalize_name(value, abbreviation_threshold=4, length_threshold=8, lowercase_domains=True, ignore_nic=False, check_known_incorrect=False):
 	normalized_lines = []
 	for line in value.split("\n"):
 		line = line.strip(",") # Get rid of useless comma's
-		if (line.isupper() or line.islower()) and len(line) >= length_threshold:
+		if (line.isupper() or line.islower() or (check_known_incorrect and has_incorrect_known_abbreviation(line))) and len(line) >= length_threshold:
 			# This line is likely not capitalized properly
 			if ignore_nic == True and "nic" in line.lower():
 				# This is a registrar name containing 'NIC' - it should probably be all-uppercase.
@@ -710,33 +1073,21 @@ def normalize_name(value, abbreviation_threshold=4, length_threshold=8, lowercas
 				normalized_words = []
 				if len(words) >= 1:
 					# First word
-					if len(words[0]) >= abbreviation_threshold and "." not in words[0]:
-						normalized_words.append(words[0].capitalize())
-					elif lowercase_domains and "." in words[0] and not words[0].endswith(".") and not words[0].startswith("."):
-						normalized_words.append(words[0].lower())
-					else:
-						# Probably an abbreviation or domain, leave it alone
-						normalized_words.append(words[0])
+					normalized_words.append(normalize_word(words[0], abbreviation_threshold=abbreviation_threshold, lowercase_domains=lowercase_domains))
 				if len(words) >= 3:
 					# Words between the first and last
 					for word in words[1:-1]:
-						if len(word) >= abbreviation_threshold and "." not in word:
-							normalized_words.append(word.capitalize())
-						elif lowercase_domains and "." in word and not word.endswith(".") and not word.startswith("."):
-							normalized_words.append(word.lower())
-						else:
-							# Probably an abbreviation or domain, leave it alone
-							normalized_words.append(word)
+						normalized_words.append(normalize_word(word, abbreviation_threshold=abbreviation_threshold, lowercase_domains=lowercase_domains, never_abbreviations=('as',)))
 				if len(words) >= 2:
 					# Last word
-					if len(words[-1]) >= abbreviation_threshold and "." not in words[-1]:
-						normalized_words.append(words[-1].capitalize())
-					elif lowercase_domains and "." in words[-1] and not words[-1].endswith(".") and not words[-1].startswith("."):
-						normalized_words.append(words[-1].lower())
-					else:
-						# Probably an abbreviation or domain, leave it alone
-						normalized_words.append(words[-1])
+					normalized_words.append(normalize_word(words[-1], abbreviation_threshold=abbreviation_threshold, lowercase_domains=lowercase_domains))
 				line = " ".join(normalized_words)
+		
+		# Fix country capitalization
+		for country in country_names:
+			if has_country(line, country):
+				line = re.sub(re.compile(country, re.IGNORECASE), capitalize_words(country), line)
+				
 		normalized_lines.append(line)
 	return "\n".join(normalized_lines)
 
@@ -831,10 +1182,10 @@ def remove_suffixes(data):
 	# Removes everything before and after the first non-whitespace continuous string.
 	# Used to get rid of IP suffixes for nameservers.
 	cleaned_list = []
-	
+
 	for entry in data:
 		cleaned_list.append(re.search("([^\s]+)\s*[\s]*", entry).group(1).lstrip())
-		
+
 	return cleaned_list
 
 def parse_registrants(data, never_query_handles=True, handle_server=""):
@@ -911,7 +1262,7 @@ def parse_registrants(data, never_query_handles=True, handle_server=""):
 						elif category == "admin":
 							admin_contact = data_reference
 					break
-					
+
 	# Post-processing
 	for obj in (registrant, tech_contact, billing_contact, admin_contact):
 		if obj is not None:
@@ -986,12 +1337,12 @@ def fetch_nic_contact(handle, lookup_server):
 	response = net.get_whois_raw(handle, lookup_server)
 	response = [segment.replace("\r", "") for segment in response] # Carriage returns are the devil
 	results = parse_nic_contact(response)
-	
+
 	if len(results) > 0:
 		return results[0]
 	else:
 		raise shared.WhoisException("No contact data found in the response.")
-	
+
 def parse_nic_contact(data):
 	handle_contacts = []
 	for regex in nic_contact_regexes:
@@ -999,5 +1350,5 @@ def parse_nic_contact(data):
 			matches = re.finditer(regex, segment)
 			for match in matches:
 				handle_contacts.append(match.groupdict())
-				
+
 	return handle_contacts

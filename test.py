@@ -4,6 +4,18 @@ import sys, argparse, os, pythonwhois, json, datetime, codecs, time
 import pkgutil
 import encodings
 
+unicode_stdout = codecs.getwriter(sys.stdout.encoding)(sys.stdout)
+unicode_stderr = codecs.getwriter(sys.stderr.encoding)(sys.stderr)
+
+if sys.version_info < (3, 0):
+	def is_string(data):
+		"""Test for string with support for python 2."""
+		return isinstance(data, basestring)
+else:
+	def is_string(data):
+		"""Test for string with support for python 3."""
+		return isinstance(data, str)
+
 # FIXME: The testing script is currently incapable of testing referenced NIC handles that are
 #        retrieved separately, such as is the case with the JPRS registry for .co.jp. This
 #        really needs to be fixed, to ensure that contact parsing for this doesn't break.
@@ -25,7 +37,6 @@ def read_encoded_file(file_path):
 		except Exception:
 			pass
 
-
 parser = argparse.ArgumentParser(description="Runs or modifies the test suite for python-whois.")
 parser.add_argument("mode", nargs=1, choices=["run", "update"], default="run", help="Whether to run or update the tests. Only update if you know what you're doing!")
 parser.add_argument("target", nargs="+", help="The targets to run/modify tests for. Use 'all' to run the full test suite.")
@@ -44,9 +55,14 @@ def encoded_json_dumps(obj):
 def json_fallback(obj):
 	if isinstance(obj, datetime.datetime):
 		return obj.isoformat()
+	elif is_string(obj):
+		return indent_values(obj)
 	else:
 		return obj
 
+def indent_values(string):
+	return string.replace("\n", "\n         ")
+	
 def recursive_encode(obj, encoding):
 	for key in list(obj.keys()):
 		if isinstance(obj[key], dict):
@@ -66,11 +82,13 @@ def recursive_compare(obj1, obj2, chain=[]):
 	s1 = set(obj1.keys())
 	s2 = set(obj2.keys())
 	
-	for item in s1.difference(s2):
-		errors.append("(%s) Key present in previous data, but missing in current data: %s" % (chain_name, item))
+	for key in s1.difference(s2):
+		value = json_fallback(obj1[key])
+		errors.append("(%s) Key present in previous data, but missing in current data: `%s`\n   [---] %s" % (chain_name, key, value))
 	
-	for item in s2.difference(s1):
-		errors.append("(%s) New key present in current data, but missing in previous data: %s" % (chain_name, item))
+	for key in s2.difference(s1):
+		value = json_fallback(obj2[key])
+		errors.append("(%s) New key present in current data, but missing in previous data: `%s`\n   [+++] %s" % (chain_name, key, value))
 		
 	for key in s1.intersection(s2):
 		if isinstance(obj1[key], dict) and isinstance(obj2[key], dict):
@@ -79,10 +97,10 @@ def recursive_compare(obj1, obj2, chain=[]):
 			lst1 = [json_fallback(x) for x in obj1[key]]
 			lst2 = [json_fallback(x) for x in obj2[key]]
 			if set(lst1) != set(lst2):
-				errors.append("(%s) List mismatch in key %s.\n   [old] %s\n   [new] %s" % (chain_name, key, set(lst1), set(lst2)))
+				errors.append("(%s) List mismatch in key `%s`.\n   [old] %s\n   [new] %s" % (chain_name, key, set(lst1), set(lst2)))
 		else:
 			if json_fallback(obj1[key]) != json_fallback(obj2[key]):
-				errors.append("(%s) Data mismatch in key %s.\n   [old] %s\n   [new] %s" % (chain_name, key, json_fallback(obj1[key]), json_fallback(obj2[key])))
+				errors.append("(%s) Data mismatch in key `%s`.\n   [old] %s\n   [new] %s" % (chain_name, key, json_fallback(obj1[key]), json_fallback(obj2[key])))
 				
 	return errors
 
@@ -170,7 +188,7 @@ if args.mode[0] == "run":
 				sys.stderr.write("Mode: %s\n" % mode)
 				sys.stderr.write("=======================================\n")
 				for error in errors:
-					sys.stderr.write(error + "\n")
+					unicode_stderr.write(error + "\n")
 				sys.stderr.write("=======================================\n")
 				sys.stderr.write(ENDC)
 				total_errors += len(errors)
