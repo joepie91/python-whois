@@ -105,6 +105,7 @@ grammar = {
 					 'expiration_date:\s*(?P<val>.+)',
 					 'expire-date:\s*(?P<val>.+)',
 					 'renewal:\s*(?P<val>.+)',
+					 'validity:\s*(?P<val>.+)',
 					 'expire:\s*(?P<val>.+)'],
 		'updated_date':		['\[Last Updated\]\s*(?P<val>.+)',
 					 'Record modified on[.]*: (?P<val>.+) [a-zA-Z]+',
