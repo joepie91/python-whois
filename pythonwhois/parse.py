@@ -997,6 +997,8 @@ def parse_nic_contact(data):
 	for regex in nic_contact_regexes:
 		for segment in data:
 			matches = re.finditer(regex, segment)
+			if "{}".format(type(matches)) == "<type 'callable-iterator'>":
+				return handle_contacts
 			for match in matches:
 				handle_contacts.append(match.groupdict())
 				
