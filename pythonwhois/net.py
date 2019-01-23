@@ -1,6 +1,17 @@
-import socket, re, sys
+import socket, re, sys, json, os
 from codecs import encode, decode
 from . import shared
+
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+tlds  = None
+
+dble_ext_str = "chirurgiens-dentistes.fr,in-addr.arpa,uk.net,za.org,mod.uk,org.za,za.com,de.com,us.com,hk.org,co.ca,avocat.fr,com.uy,gr.com,e164.arpa,hu.net,us.org,com.se,aeroport.fr,gov.uk,ru.com,alt.za,africa.com,geometre-expert.fr,in.net,co.com,kr.com,bl.uk,uk.com,port.fr,police.uk,gov.za,eu.com,eu.org,br.com,web.za,net.za,co.za,hk.com,ae.org,edu.ru,ar.com,jet.uk,icnet.uk,com.de,inc.hk,ltd.hk,parliament.uk,jp.net,gb.com,veterinaire.fr,edu.cn,qc.com,pharmacien.fr,ac.za,sa.com,medecin.fr,uy.com,se.net,co.pl,cn.com,hu.com,no.com,ac.uk,jpn.com,priv.at,za.net,nls.uk,nhs.uk,za.bz,experts-comptables.fr,chambagri.fr,gb.net,in.ua,notaires.fr,se.com,british-library.uk"
+dble_ext = dble_ext_str.split(",")
+
+with open(os.path.join(dir_path, "tld.json")) as fp:
+    tlds = json.load(fp)
 
 def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=False, with_server_list=False, server_list=None):
 	previous = previous or []
@@ -61,7 +72,7 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
 		new_list = [response] + previous
 	server_list.append(target_server)
 	for line in [x.strip() for x in response.splitlines()]:
-		match = re.match("(refer|whois server|referral url|whois server|registrar whois):\s*([^\s]+\.[^\s]+)", line, re.IGNORECASE)
+		match = re.match("(refer|whois server|referral url|registrar whois(?: server)?):\s*([^\s]+\.[^\s]+)", line, re.IGNORECASE)
 		if match is not None:
 			referal_server = match.group(2)
 			if referal_server != server and "://" not in referal_server: # We want to ignore anything non-WHOIS (eg. HTTP) for now.
@@ -73,14 +84,27 @@ def get_whois_raw(domain, server="", previous=None, rfc3490=True, never_cut=Fals
 		return new_list
 	
 def get_root_server(domain):
-	data = whois_request(domain, "whois.iana.org")
-	for line in [x.strip() for x in data.splitlines()]:
-		match = re.match("refer:\s*([^\s]+)", line)
-		if match is None:
-			continue
-		return match.group(1)
-	raise shared.WhoisException("No root WHOIS server found for domain.")
-	
+        try:
+                data = whois_request(domain, "whois.iana.org")
+                for line in [x.strip() for x in data.splitlines()]:
+                        match = re.match("refer:\s*([^\s]+)", line)
+                        if match is None:
+                                continue
+                        return match.group(1)
+                raise shared.WhoisException("No root WHOIS server found for domain.")
+        except:
+                ext = domain.split(".")[-1]
+                for dble in dble_ext:
+                        if domain.endswith(dble):
+                                ext = dble
+
+                if ext in tlds.keys():
+                        entry = tlds[ext]
+                        return entry["host"]
+                else:
+                        raise shared.WhoisException("No root WHOIS server found for domain.")
+
+
 def whois_request(domain, server, port=43):
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	sock.connect((server, port))
@@ -91,4 +115,14 @@ def whois_request(domain, server, port=43):
 		if len(data) == 0:
 			break
 		buff += data
-	return buff.decode("utf-8")
+	try:
+		d = buff.decode("utf-8")
+	except UnicodeDecodeError:
+		d = buff.decode("latin-1")
+
+	return d
+
+
+if __name__ == "__main__":
+	d = get_whois_raw("orange.cm")
+	print(d)
