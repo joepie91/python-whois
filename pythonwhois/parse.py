@@ -140,7 +140,8 @@ grammar = {
 					 'Domain Registrar :\s?(?P<val>.+)',
 					 'Registration Service Provider: (?P<val>.+)',
 					 '\tName:\t\s(?P<val>.+)'],
-		'whois_server':		['Whois Server:\s?(?P<val>.+)',
+		'whois_server':		['Registrar WHOIS Server:\s?(?P<val>.+)',
+                                         'Whois Server:\s?(?P<val>.+)',
 					 'Registrar Whois:\s?(?P<val>.+)'],
 		'nameservers':		['Name Server:[ ]*(?P<val>[^ ]+)',
 					 'Nameservers:[ ]*(?P<val>[^ ]+)',
@@ -202,7 +203,7 @@ grammar = {
 
 def preprocess_regex(regex):
 	# Fix for #2; prevents a ridiculous amount of varying size permutations.
-	regex = re.sub(r"\\s\*\(\?P<([^>]+)>\.\+\)", r"\s*(?P<\1>\S.*)", regex)
+	regex = re.sub(r"\\s\*\(\?P<([^>]+)>\.\+\)", r"\\s*(?P<\1>\\S.*)", regex)
 	# Experimental fix for #18; removes unnecessary variable-size whitespace
 	# matching, since we're stripping results anyway.
 	regex = re.sub(r"\[ \]\*\(\?P<([^>]+)>\.\*\)", r"(?P<\1>.*)", regex)
@@ -997,6 +998,8 @@ def parse_nic_contact(data):
 	for regex in nic_contact_regexes:
 		for segment in data:
 			matches = re.finditer(regex, segment)
+			if "{}".format(type(matches)) == "<type 'callable-iterator'>":
+				return handle_contacts			
 			for match in matches:
 				handle_contacts.append(match.groupdict())
 				

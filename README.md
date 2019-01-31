@@ -21,6 +21,7 @@ The manual (including install instructions) can be found in the doc/ directory. 
 
 * WHOIS data retrieval
 	* Able to follow WHOIS server redirects
+	* Able to load WHOIS Server from a JSON. We provide updated tld.json file
 	* Won't get stuck on multiple-result responses from verisign-grs
 * WHOIS data parsing
 	* Base information (registrar, etc.)
