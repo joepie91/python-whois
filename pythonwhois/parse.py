@@ -2,7 +2,7 @@ from __future__ import print_function
 import re, sys, datetime, csv, pkgutil
 from . import net, shared
 
-try: 
+try:
 	from io import StringIO
 except ImportError:
 	from cStringIO import StringIO
@@ -25,13 +25,13 @@ def read_dataset(filename, destination, abbrev_key, name_key, is_dict=False):
 			destination[line[abbrev_key]] = line[name_key]
 	except IOError as e:
 		pass
-	
+
 airports = {}
 countries = {}
 states_au = {}
 states_us = {}
 states_ca = {}
-	
+
 try:
 	reader = csv.reader(pkgdata("airports.dat").splitlines())
 
@@ -50,7 +50,7 @@ read_dataset("states_ca.dat", states_ca, "abbreviation", "name", is_dict=True)
 
 def precompile_regexes(source, flags=0):
 	return [re.compile(regex, flags) for regex in source]
-	
+
 grammar = {
 	"_data": {
 		'id':			['Domain ID:[ ]*(?P<val>.+)'],
@@ -201,8 +201,8 @@ grammar = {
 }
 
 def preprocess_regex(regex):
-	# Fix for #2; prevents a ridiculous amount of varying size permutations.
-	regex = re.sub(r"\\s\*\(\?P<([^>]+)>\.\+\)", r"\s*(?P<\1>\S.*)", regex)
+	# Fix for #2; prevents a ridiculous amount of varying size permutations
+	regex = re.sub(r"\\s\*\(\?P<([^>]+)>\.\+\)", r"\\s*(?P<\1>\\S.*)", regex)
 	# Experimental fix for #18; removes unnecessary variable-size whitespace
 	# matching, since we're stripping results anyway.
 	regex = re.sub(r"\[ \]\*\(\?P<([^>]+)>\.\*\)", r"(?P<\1>.*)", regex)
@@ -553,7 +553,7 @@ def parse_raw_whois(raw_data, normalized=None, never_query_handles=True, handle_
 					data["nameservers"].append(match.strip())
 				except KeyError as e:
 					data["nameservers"] = [match.strip()]
-		
+
 
 	data["contacts"] = parse_registrants(raw_data, never_query_handles, handle_server)
 
@@ -645,7 +645,7 @@ def normalize_data(data, normalized):
 				for country, source in (("united states", states_us), ("australia", states_au), ("canada", states_ca)):
 					if country in contact["country"].lower() and contact["state"] in source:
 						contact["state"] = source[contact["state"]]
-			
+
 			for key in ("email",):
 				if key in contact and contact[key] is not None and (normalized == True or key in normalized):
 					if is_string(contact[key]):
@@ -660,7 +660,7 @@ def normalize_data(data, normalized):
 			for key in ("city", "organization", "state", "country"):
 				if key in contact and contact[key] is not None and (normalized == True or key in normalized):
 					contact[key] = normalize_name(contact[key], abbreviation_threshold=3, length_threshold=3)
-			
+
 			if "name" in contact and "organization" not in contact:
 				lines = [x.strip() for x in contact["name"].splitlines()]
 				new_lines = []
@@ -674,10 +674,10 @@ def normalize_data(data, normalized):
 					contact["name"] = "\n".join(lines)
 				else:
 					del contact["name"]
-					
+
 				if len(new_lines) > 0:
 					contact["organization"] = "\n".join(new_lines)
-						
+
 			if "street" in contact and "organization" not in contact:
 				lines = [x.strip() for x in contact["street"].splitlines()]
 				if len(lines) > 1:
@@ -686,7 +686,7 @@ def normalize_data(data, normalized):
 							contact["organization"] = lines[0]
 							contact["street"] = "\n".join(lines[1:])
 							break
-			
+
 			for key in list(contact.keys()):
 				try:
 					contact[key] = contact[key].strip(", ")
@@ -831,10 +831,10 @@ def remove_suffixes(data):
 	# Removes everything before and after the first non-whitespace continuous string.
 	# Used to get rid of IP suffixes for nameservers.
 	cleaned_list = []
-	
+
 	for entry in data:
 		cleaned_list.append(re.search("([^\s]+)\s*[\s]*", entry).group(1).lstrip())
-		
+
 	return cleaned_list
 
 def parse_registrants(data, never_query_handles=True, handle_server=""):
@@ -911,7 +911,7 @@ def parse_registrants(data, never_query_handles=True, handle_server=""):
 						elif category == "admin":
 							admin_contact = data_reference
 					break
-					
+
 	# Post-processing
 	for obj in (registrant, tech_contact, billing_contact, admin_contact):
 		if obj is not None:
@@ -986,12 +986,12 @@ def fetch_nic_contact(handle, lookup_server):
 	response = net.get_whois_raw(handle, lookup_server)
 	response = [segment.replace("\r", "") for segment in response] # Carriage returns are the devil
 	results = parse_nic_contact(response)
-	
+
 	if len(results) > 0:
 		return results[0]
 	else:
 		raise shared.WhoisException("No contact data found in the response.")
-	
+
 def parse_nic_contact(data):
 	handle_contacts = []
 	for regex in nic_contact_regexes:
@@ -999,5 +999,5 @@ def parse_nic_contact(data):
 			matches = re.finditer(regex, segment)
 			for match in matches:
 				handle_contacts.append(match.groupdict())
-				
+
 	return handle_contacts
