@@ -105,6 +105,7 @@ grammar = {
 					 'expiration_date:\s*(?P<val>.+)',
 					 'expire-date:\s*(?P<val>.+)',
 					 'renewal:\s*(?P<val>.+)',
+					 'validity:\s*(?P<val>.+)',
 					 'expire:\s*(?P<val>.+)'],
 		'updated_date':		['\[Last Updated\]\s*(?P<val>.+)',
 					 'Record modified on[.]*: (?P<val>.+) [a-zA-Z]+',
@@ -202,7 +203,7 @@ grammar = {
 
 def preprocess_regex(regex):
 	# Fix for #2; prevents a ridiculous amount of varying size permutations.
-	regex = re.sub(r"\\s\*\(\?P<([^>]+)>\.\+\)", r"\s*(?P<\1>\S.*)", regex)
+	regex = re.sub(r"\\s\*\(\?P<([^>]+)>\.\+\)", r"\\s*(?P<\1>\\S.*)", regex)
 	# Experimental fix for #18; removes unnecessary variable-size whitespace
 	# matching, since we're stripping results anyway.
 	regex = re.sub(r"\[ \]\*\(\?P<([^>]+)>\.\*\)", r"(?P<\1>.*)", regex)
