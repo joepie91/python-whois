@@ -17,7 +17,7 @@ def get_codecs():
 
 
 def read_encoded_file(file_path):
-	"""Try reading file using all codecs. Return the first succesfull one."""
+	"""Try reading file using all codecs. Return the first successful one."""
 	for encoding in get_codecs():
 		try:
 			with codecs.open(file_path, "r", encoding) as f:
